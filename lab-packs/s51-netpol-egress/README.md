@@ -2,7 +2,7 @@
 
 **Track:** CKS, CKA · **Level:** Advanced · **Time:** 15 min · **Namespace:** `eg`
 
-Pod `client` (role=client) has a default-deny egress policy, so it cannot reach anything. It must reach Service `api` (app=api, port 80) but NOT Service `admin`. Add an egress allow policy named `client-to-api`.
+Pod `client` (role=client) has a default-deny egress policy, so it cannot reach anything. It must reach Service `api` (app=api, port 80) but NOT Service `admin`. Add an egress allow policy named `client-to-api` (remember that the client must also resolve `api`: allow DNS to CoreDNS, port 53, in `kube-system`).
 
 ## Tasks
 
@@ -33,6 +33,7 @@ Pod `client` (role=client) has a default-deny egress policy, so it cannot reach 
 1. Create NetworkPolicy `client-to-api`: podSelector role=client, policyTypes [Egress].
 2. egress[0].to[0].podSelector.matchLabels app: api; ports TCP 80
 3. Policies are additive allow-lists.
+4. Name resolution is traffic too: add a second egress rule to namespace kube-system on port 53 (UDP and TCP), or `wget api` fails with `bad address`.
 </details>
 
 <details><summary>Task 3 hints</summary>
@@ -64,6 +65,15 @@ spec:
     ports:
     - protocol: TCP
       port: 80
+  - to:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: kube-system
+    ports:
+    - protocol: UDP
+      port: 53
+    - protocol: TCP
+      port: 53
 EOF
 kubectl exec client -n eg -- wget -qO- -T 2 admin
 ```

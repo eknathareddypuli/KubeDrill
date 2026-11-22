@@ -9,5 +9,5 @@ chk() { # $1=task title, rest = condition
 }
 sleep 1
 echo 'Task 1: answer.txt names the crashing pod'
-chk 'answer.txt names the crashing pod' '[ -f "$HOME/answer.txt" ] && grep -q -- '\''flaky'\'' '\''answer.txt'\'''
+chk 'answer.txt names the crashing pod' '[ -f "$HOME/answer.txt" ] && grep -q -F -- '\''flaky'\'' "$HOME/answer.txt"'
 echo; echo "Result: $pass passed, $fail failed"; [ "$fail" -eq 0 ] && echo "🎉 Lab complete!"; exit $fail
