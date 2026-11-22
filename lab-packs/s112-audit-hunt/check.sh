@@ -9,7 +9,7 @@ chk() { # $1=task title, rest = condition
 }
 sleep 1
 echo 'Task 1: answer.txt names the user who read `prod-db` successfully'
-chk 'answer.txt names the user who read `prod-db` successfully' '[ -f "$HOME/answer.txt" ] && grep -q -- '\''user=mallory'\'' '\''answer.txt'\'''
+chk 'answer.txt names the user who read `prod-db` successfully' '[ -f "$HOME/answer.txt" ] && grep -q -F -- '\''user=mallory'\'' "$HOME/answer.txt"'
 echo 'Task 2: denied.txt holds the number of 403 events'
-chk 'denied.txt holds the number of 403 events' '[ -f "$HOME/denied.txt" ] && grep -q -- '\''3'\'' '\''denied.txt'\'''
+chk 'denied.txt holds the number of 403 events' '[ -f "$HOME/denied.txt" ] && grep -q -F -- '\''3'\'' "$HOME/denied.txt"'
 echo; echo "Result: $pass passed, $fail failed"; [ "$fail" -eq 0 ] && echo "🎉 Lab complete!"; exit $fail

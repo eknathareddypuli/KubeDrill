@@ -12,7 +12,7 @@ metadata:
 
 KUBEDRILL_EOF
 
-cat > 'audit.log' <<'KUBEDRILL_EOF'
+cat > "$HOME/audit.log" <<'KUBEDRILL_EOF'
 user=alice verb=list resource=pods name=- code=200
 user=bob verb=get resource=secrets name=web-tls code=200
 user=mallory verb=get resource=secrets name=prod-db code=403
