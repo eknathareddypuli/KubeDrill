@@ -22,6 +22,8 @@ const srv = http.createServer((q, r) => { let p = decodeURIComponent(q.url.split
   await run('kubectl get pods'); ok((await pg.innerText('#lrOut')).includes('ImagePullBackOff') || (await pg.innerText('#lrOut')).includes('ErrImagePull'), 'runner shows broken pods');
   await pg.click('#lrCheck'); ok((await pg.innerText('#lrFeedback')).includes('Still failing'), 'check fails before fix');
   await run('kubectl set image deployment/web web=nginx:1.25'); await pg.click('#lrWait'); await pg.waitForTimeout(100); await pg.click('#lrCheck');
+  ok((await pg.innerText('#lrFeedback')).includes('Not done yet'), 'stage 1 passes and the hidden second fault is revealed');
+  await run('kubectl create configmap worker-config --from-literal=QUEUE_URL=amqp://q -n shop'); await pg.click('#lrWait'); await pg.waitForTimeout(100); await pg.click('#lrCheck');
   ok((await pg.innerText('#lrFeedback')).includes('Lab complete'), 'check passes after fix');
   await run('cat > a.yaml <<EOF'); await run('x: 1'); await run('EOF'); await run('cat a.yaml'); ok((await pg.innerText('#lrOut')).includes('x: 1'), 'heredoc multi-line in terminal');
   await run('vi a.yaml'); ok(await pg.isVisible('#lrEditor'), 'editor opens'); await pg.keyboard.press('Escape');

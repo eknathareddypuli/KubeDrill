@@ -113,6 +113,13 @@ MIT — see [LICENSE](LICENSE). Bundled: js-yaml (MIT), Inter, Syne, JetBrains M
 ## Landing page redesign
 Split hero (copy + live terminal), three exam path cards (CKA/CKAD/CKS, with progress rings), "how it works" dark band, four stats, tools grid, quieter free-promise band, closing call to action. Styles in `assets/css/home.css`; dark bands use local tokens so they stay dark in the light theme.
 
+## Gap-fill labs (S115–S129) and the design layer
+15 more labs (129 total): etcd restore, static pods, CoreDNS Corefile, StatefulSet scale-down, quota × LimitRange, ambassador, config reload, Job limits, Helm rollback, RuntimeClass, encryption at rest, runtime-alert hunt, API-server hardening, manifest review, zero-downtime rollout. Original scenarios, not exam questions.
+
+Design layer: competency tags and a Coverage page (CKA/CKAD/CKS), constraints, traps, hidden stage 2 on four labs, difficulty ladders, speed rounds, checker reasons, "why this works", dead-end nudges, hint costs and weak spots, and seeded variants (9 labs × 3 versions, also used by the daily challenge). Variants change names and values, not the fault class.
+
+Honest limits: etcd restore, static pods, Helm (one toy chart), encryption config and Falco output are scripted models, marked on the Fidelity page. Skills that need a real cluster (HA, CNI, mTLS, host OS, AppArmor, upgrades) are listed as not simulable on the Coverage page. S115, S116, S123–S127 are simulator-only (no kind pack).
+
 ## Exam-curriculum labs (S97–S114)
 18 new labs (6 CKA, 6 CKAD, 6 CKS; 114 total) filling gaps against the current public CNCF curricula: PV reclaim/expansion, draining unmanaged pods, NoExecute + tolerationSeconds, HPA requests, ClusterRole reuse, Gateway API HTTPRoute, Job/CronJob policy, startup probes, envFrom/Secret volumes, rollout strategy, deprecated apiVersions, seccomp/securityContext, default-deny NetworkPolicy, secrets as files, audit-log hunting, over-broad RBAC, Pod Security staged rollout. They are original scenarios built from the official competency lists — not exam questions. Checks are state-based (the simulator has no CSR, RuntimeClass, static pods, or Falco/audit-policy files).
 
@@ -125,3 +132,17 @@ New files: `assets/js/pro-term.js`, `pro-explain.js`, `pro-fidelity.js`, `assets
 - **Terminal**: Tab completes verbs, kinds, object names, namespaces, flags and `-o` values from the live cluster; Ctrl-R history search; Ctrl-U/W/K/A/E line editing; `$do` and `$now` like the exam image; unquoted `$var` now word-splits like bash. A touch key bar (Tab, arrows, `|`, `~`, `/`, Ctrl-C/R/Z, Enter) appears on phones.
 - **Exam realism**: curriculum-weighted mocks (official CNCF domain weights), question navigator with attempted/flagged status, domain report with exam weights, and a speed coach (alias `k`, `$do`, imperative commands, `explain`, unattempted tasks). The time machine, explainers and alerts are disabled during exams.
 - **Fidelity**: every lab shows Exact / Modelled / Scripted; `#fidelity` lists what the simulator covers and what it does not model.
+
+## Incidents, worked examples, YAML repair (S130–S146) and learning features
+- **S130–S135** CSR/PKI and PriorityClass/context labs. **S136–S139** multi-fault incidents (3–4 stacked faults behind one symptom, a "do not touch" constraint). **S140–S142** worked examples (watch the expert's commands, then repeat the pattern). **S143–S146** YAML repair (tab, indentation, removed apiVersion, selector mismatch). 146 labs after that block.
+- **Simulator:** CertificateSigningRequest + `kubectl certificate`, scripted `openssl`, `config set-credentials`, certificate-derived identity for RBAC (`--as-group`), PriorityClass immutability and `preemptionPolicy: Never`, DNS needs egress to CoreDNS, client-side YAML validation (removed apiVersions, misplaced fields).
+- **Learning layer** (`assets/js/learn-features.js`): worked-example panel, fading hints (Nudge, Approach, Answer; labs that needed the Answer come back as "Revisit"), optional "Predict, then run", and "Compare solutions" after a pass. All local.
+- **Conformance:** `node tools/conformance.cjs` runs every pack's `setup.sh` / `check.sh` / `solution.sh` under real bash against the simulator and compares with the JS checks. `tools/conformance-real.sh` does the same on a real kind cluster (not run in CI here).
+
+## Content-gap labs, mobile keys, readiness and source credits (S147–S155) — 155 labs in total
+- **S147–S148** Gateway API: header match plus a 90/10 weighted split, and a cross-namespace backend that needs a `ReferenceGrant`. **S149** a custom resource rejected by its CRD schema (the simulator now validates required, type, enum, minimum and unknown fields). **S150** Helm values and `--reuse-values`. **S151** write an audit policy and enable it on the API server. **S152** AppArmor field plus profile text. **S153** fix a Falco rule. **S154** read a Trivy report. **S155** Kubernetes version-skew policy.
+- Audit policy, AppArmor and Falco are checked as **file content**; the simulator runs no API server, kernel module or Falco engine. Those labs say so, and the Fidelity page marks them Scripted.
+- **Mobile terminal:** the key bar gained cursor keys, more symbols and one-tap flag snippets (`-n`, `-A`, `-o yaml`, `$do`), and pins above the on-screen keyboard. Tested with touch emulation only, not on real phone keyboards.
+- **Why did my check fail:** every failing check suggests the command that shows what it looked at. **Completion card:** a PNG drawn in your browser (nothing is uploaded).
+- **Readiness range** (Coverage and Exam result pages): the range of your last timed exam scores per track, never a single number or a pass prediction, and always with a reminder to practise more before the real exam. It needs at least two timed exams.
+- **Source credits:** each lab lists the official docs for its skills (`assets/js/data/sources.js`). Run `node tools/check-links.cjs` (needs network) to test every link.

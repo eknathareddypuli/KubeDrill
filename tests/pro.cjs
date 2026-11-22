@@ -104,6 +104,9 @@ await mp.goto(BASE+'#lab/s97-pv-retain');await mp.waitForSelector('.lr-mtabs');a
 ok(await mp.locator('.pro-keys').isVisible(),'mobile key toolbar visible on a phone');
 await mp.locator('.pro-keys .pk.wide').dispatchEvent('pointerdown');await mp.locator('.pro-keys .pk[data-k="|"]').dispatchEvent('pointerdown');
 ok((await mp.inputValue('#lrIn'))==='kubectl |','toolbar inserts text at the cursor');
+await mp.fill('#lrIn','kubectl get pods');await mp.locator('.pro-keys .pk.snip[data-ins=" -n "]').dispatchEvent('pointerdown');ok((await mp.inputValue('#lrIn'))==='kubectl get pods -n ','flag snippet button appends -n');
+await mp.fill('#lrIn','kubectl get pods');await mp.locator('.pro-keys .pk[data-k="Home"]').dispatchEvent('pointerdown');await mp.locator('.pro-keys .pk[data-k="#"]').dispatchEvent('pointerdown');ok((await mp.inputValue('#lrIn'))==='#kubectl get pods','Home moves the caret, then a symbol inserts there');
+await mp.fill('#lrIn','abc');await mp.locator('.pro-keys .pk[data-k="End"]').dispatchEvent('pointerdown');await mp.locator('.pro-keys .pk[data-k="ArrowLeft"]').dispatchEvent('pointerdown');await mp.locator('.pro-keys .pk[data-k="["]').dispatchEvent('pointerdown');ok((await mp.inputValue('#lrIn'))==='ab[c','left arrow moves the caret one character');
 await mp.fill('#lrIn','kubectl get sc');await mp.locator('.pro-keys .pk[data-k="Enter"]').dispatchEvent('pointerdown');await mp.waitForTimeout(300);ok((await mp.locator('#lrOut').innerText()).includes('fast'),'toolbar Enter runs the command');
 await mp.fill('#lrIn','kubectl describe pv pv-r');await mp.locator('.pro-keys .pk[data-k="Tab"]').dispatchEvent('pointerdown');ok((await mp.inputValue('#lrIn')).includes('pv-reports'),'toolbar Tab completes');
 const ov=await mp.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1);ok(ov,'no horizontal overflow on mobile lab');

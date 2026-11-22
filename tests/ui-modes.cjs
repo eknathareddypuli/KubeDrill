@@ -12,7 +12,7 @@ await pg.screenshot({path:'/tmp/s01-before.png'});
 for(const c of ['kubectl set resources deployment/api --requests=cpu=100m -n payments','kubectl rollout status deployment/api -n payments']){await pg.fill('#lrIn',c);await pg.press('#lrIn','Enter');await pg.waitForTimeout(150);if(await pg.locator('.br-pop').count())await pg.keyboard.press('Enter');await pg.waitForTimeout(500);}
 await pg.waitForTimeout(2500);
 ok(await pg.locator('.dia-pod.st-ok').count()>=2,'pods turn green after fix: '+await pg.locator('.dia-pod.st-ok').count());
-await pg.click('#lrCheck');await pg.waitForSelector('.lr-debrief');
+await pg.click('#lrCheck');await pg.waitForTimeout(600);if(await pg.locator('.lr-stage2').count()){for(const c of ['kubectl set image deployment/cache cache=nginx:1.25 -n payments']){await pg.fill('#lrIn',c);await pg.press('#lrIn','Enter');await pg.waitForTimeout(150);if(await pg.locator('.br-pop').count())await pg.keyboard.press('Enter');await pg.waitForTimeout(500);}await pg.waitForTimeout(2500);await pg.click('#lrCheck');}await pg.waitForSelector('.lr-debrief');
 ok((await pg.textContent('.lr-debrief')).includes('Root cause'),'debrief card after pass');
 ok(await pg.locator('.lr-stats div').count()===4,'learn stats 4 tiles');
 await pg.screenshot({path:'/tmp/s01-after.png'});

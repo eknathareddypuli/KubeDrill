@@ -28,7 +28,7 @@ await pg.locator('.lr-doc-cmd').first().click();ok((await pg.inputValue('#lrIn')
 await pg.screenshot({path:'/tmp/docs.png'});await pg.keyboard.press('Escape');
 // ---- service hover highlight
 await pg.goto(BASE+'#lab/s04-no-endpoints');await pg.waitForSelector('#lrIn');await T(2500);
-await pg.locator('.dia-svc').first().hover();ok(await pg.evaluate(()=>document.querySelector('#lrDia').classList.contains('hl-on')),'svc hover → highlight mode');
+await pg.waitForTimeout(700);{const bx=await pg.locator('.dia-svc').first().boundingBox();await pg.mouse.move(bx.x+bx.width/2,bx.y+bx.height/2);await pg.waitForTimeout(250)}ok(await pg.evaluate(()=>document.querySelector('#lrDia').classList.contains('hl-on')),'svc hover → highlight mode');
 // ---- real mode contexts
 await pg.goto(BASE+'#lab/s01-pending-cpu');await pg.waitForSelector('#lrIn');
 await pg.evaluate(()=>localStorage.setItem('kl.labmode','real'));
