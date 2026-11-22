@@ -11,13 +11,13 @@
   var admit0 = P.admitPod;
   P.admitPod = function (o) {
     var r = admit0.apply(this, arguments), s = o.spec, name = s.priorityClassName;
-    if (name) { var pc = this.get('PriorityClass', '', name); if (!pc && !/^system-/.test(name)) throw new KErr('Error from server (Forbidden): pods "' + o.metadata.name + '" is forbidden: no PriorityClass with name ' + name + ' was found'); s.priority = pc ? (pc.value || 0) : (name === 'system-cluster-critical' ? 2000000000 : 2000001000); }
+    if (name) { var pc = this.get('PriorityClass', '', name); if (!pc && !/^system-/.test(name)) throw new KErr('Error from server (Forbidden): pods "' + o.metadata.name + '" is forbidden: no PriorityClass with name ' + name + ' was found'); s.priority = pc ? (pc.value || 0) : (name === 'system-cluster-critical' ? 2000000000 : 2000001000); if (pc && pc.preemptionPolicy) s.preemptionPolicy = pc.preemptionPolicy; }
     else if (s.priority === undefined) { var d = this.list('PriorityClass').filter(function (x) { return x.globalDefault; })[0]; s.priority = d ? (d.value || 0) : 0; }
     return r;
   };
   var sched0 = P.schedule;
   P.schedule = function (pod) {
-    var r = sched0.apply(this, arguments), self = this, pr = (pod.spec && pod.spec.priority) || 0;
+    var r = sched0.apply(this, arguments), self = this, pr = (pod.spec && pod.spec.preemptionPolicy !== 'Never' && pod.spec.priority) || 0; // preemptionPolicy: Never queues but never evicts
     if (!r.fail || !/Insufficient/.test(r.fail) || pr <= 0) return r;
     var victims = this.list('Pod').filter(function (p) { return p !== pod && p.spec.nodeName && (p.spec.priority || 0) < pr && p.status.phase !== 'Failed' && p.status.phase !== 'Succeeded' && !/^kube-/.test(p.metadata.namespace); }).sort(function (a, b) { return (a.spec.priority || 0) - (b.spec.priority || 0); });
     var nodes = this.list('Node').map(function (n) { return n.metadata.name; });

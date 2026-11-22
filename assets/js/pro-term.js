@@ -116,18 +116,23 @@
   document.addEventListener('keydown', onKey, true);
 
   // ───────── mobile / touch key toolbar ─────────
-  var KEYS = [['Tab', 'Tab', 'Complete'], ['↑', 'ArrowUp', 'Previous command'], ['↓', 'ArrowDown', 'Next command'], ['^C', 'Ctrl-c', 'Cancel line'], ['^R', 'Ctrl-r', 'Search history'], ['↶', 'Ctrl-z', 'Undo last change'], ['|', '|'], ['~', '~'], ['/', '/'], ['-', '-'], ['_', '_'], ['.', '.'], ['=', '='], ['"', '"'], ["'", "'"], ['>', '>'], ['$', '$'], ['{', '{'], ['}', '}'], [':', ':'], ['⏎', 'Enter', 'Run']];
+  var KEYS = [['Tab', 'Tab', 'Complete'], ['↑', 'ArrowUp', 'Previous command'], ['↓', 'ArrowDown', 'Next command'], ['^C', 'Ctrl-c', 'Cancel line'], ['^R', 'Ctrl-r', 'Search history'], ['↶', 'Ctrl-z', 'Undo last change'], ['←', 'ArrowLeft', 'Cursor left'], ['→', 'ArrowRight', 'Cursor right'], ['⇤', 'Home', 'Line start'], ['⇥', 'End', 'Line end'], ['|', '|'], ['~', '~'], ['/', '/'], ['-', '-'], ['_', '_'], ['.', '.'], ['=', '='], ['"', '"'], ["'", "'"], ['>', '>'], ['<', '<'], ['$', '$'], ['{', '{'], ['}', '}'], ['[', '['], [']', ']'], ['(', '('], [')', ')'], [':', ':'], [';', ';'], ['&', '&'], ['*', '*'], ['\\', '\\'], ['!', '!'], ['#', '#'], ['@', '@'], ['⏎', 'Enter', 'Run']]
+  // one-tap flag snippets (typing these on a phone is the slow part)
+  var SNIPS = [['-n', ' -n '], ['-A', ' -A '], ['-o yaml', ' -o yaml'], ['-o wide', ' -o wide'], ['$do', ' --dry-run=client -o yaml'], ['-l', ' -l '], ['--all', ' --all']];
   function keyBar() {
     var bar = document.createElement('div'); bar.className = 'pro-keys'; bar.setAttribute('role', 'toolbar'); bar.setAttribute('aria-label', 'Terminal keys');
-    bar.innerHTML = '<button type="button" class="pk wide" data-ins="kubectl ">kubectl</button>' + KEYS.map(function (k) { return '<button type="button" class="pk' + (k[1].length > 1 ? ' fn' : '') + '" data-k="' + esc(k[1]) + '" aria-label="' + esc(k[2] || k[0]) + '">' + esc(k[0]) + '</button>'; }).join('');
+    bar.innerHTML = '<button type="button" class="pk wide" data-ins="kubectl ">kubectl</button>' + SNIPS.map(function (x) { return '<button type="button" class="pk snip" data-ins="' + esc(x[1]) + '" aria-label="Insert ' + esc(x[0]) + '">' + esc(x[0]) + '</button>'; }).join('') + KEYS.map(function (k) { return '<button type="button" class="pk' + (k[1].length > 1 ? ' fn' : '') + '" data-k="' + esc(k[1]) + '" aria-label="' + esc(k[2] || k[0]) + '">' + esc(k[0]) + '</button>'; }).join('');
     function press(b) {
       var inp = $('lrIn'); if (!inp) return; var ins = b.dataset.ins, key = b.dataset.k;
       if (ins) { put(inp, ins); return; }
       if (key.length === 1) { put(inp, key); return; }
+      if (key === 'ArrowLeft' || key === 'ArrowRight' || key === 'Home' || key === 'End') { var n = inp.value.length, c = inp.selectionStart == null ? n : inp.selectionStart; c = key === 'Home' ? 0 : key === 'End' ? n : Math.max(0, Math.min(n, c + (key === 'ArrowLeft' ? -1 : 1))); inp.focus(); inp.setSelectionRange(c, c); return; }
       var ctrl = /^Ctrl-/.test(key), kk = ctrl ? key.slice(5) : key;
       inp.dispatchEvent(new KeyboardEvent('keydown', { key: kk, ctrlKey: ctrl, bubbles: true, cancelable: true }));
     }
     function put(inp, s) { var a = inp.selectionStart == null ? inp.value.length : inp.selectionStart, z = inp.selectionEnd == null ? a : inp.selectionEnd; inp.value = inp.value.slice(0, a) + s + inp.value.slice(z); inp.setSelectionRange(a + s.length, a + s.length); }
+    // when the on-screen keyboard opens, pin the bar just above it (visualViewport); otherwise the sticky default applies
+    try { var vv = window.visualViewport; if (vv) { var fit = function () { var kb = window.innerHeight - vv.height - vv.offsetTop; if (kb > 120 && bar.isConnected) { bar.classList.add('kb'); bar.style.bottom = kb + 'px'; } else { bar.classList.remove('kb'); bar.style.bottom = ''; } }; vv.addEventListener('resize', fit); vv.addEventListener('scroll', fit); } } catch (x) { /* ignore */ }
     bar.addEventListener('pointerdown', function (e) { var b = e.target.closest('button'); if (!b) return; e.preventDefault(); press(b); try { if (navigator.vibrate) navigator.vibrate(5); } catch (x) { /* ignore */ } });
     bar.addEventListener('keydown', function (e) { if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('button')) { e.preventDefault(); press(e.target.closest('button')); } });
     return bar;

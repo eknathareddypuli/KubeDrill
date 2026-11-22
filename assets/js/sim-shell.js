@@ -61,13 +61,19 @@
     push(); return toks;
   };
 
+  // unquoted heredoc delimiter: $(...), $VAR and ${VAR} expand, \$ stays literal (bash semantics)
+  P.expandHeredoc = function (t, depth) {
+    var self = this;
+    return t.replace(/\\\$/g, '\u0000').replace(/\$\(([^()]*)\)/g, function (_, c) { return self.exec(c, (depth || 0) + 1).stdout.replace(/\n+$/, ''); }).replace(/\$\{?([A-Za-z_][A-Za-z0-9_]*)\}?/g, function (_, n) { return self.env[n] !== undefined ? self.env[n] : ''; }).replace(/\u0000/g, '$');
+  };
+
   // run a whole script (may contain heredocs and several lines)
   P.exec = function (script, depth) {
     depth = depth || 0; if (depth > 5) return { stdout: '', stderr: 'shell: too deep', code: 1 };
     var lines = String(script).split('\n'), out = '', err = '', code = 0, i = 0, edit, applyOnSave;
     while (i < lines.length) {
       var line = lines[i++], hd = null, m = line.match(/<<-?\s*['"]?([A-Za-z_][A-Za-z0-9_]*)['"]?/);
-      if (m) { var body = []; while (i < lines.length && lines[i].trim() !== m[1]) body.push(lines[i++]); i++; hd = body.join('\n') + '\n'; }
+      if (m) { var body = []; while (i < lines.length && lines[i].trim() !== m[1]) body.push(lines[i++]); i++; hd = body.join('\n') + '\n'; if (!/<<-?\s*['"]/.test(line)) hd = this.expandHeredoc(hd, depth); }
       if (!line.trim() || line.trim()[0] === '#') continue;
       var r = this.runLine(line, hd, depth);
       out += r.stdout; err += r.stderr; code = r.code; if (r.edit) { edit = r.edit; applyOnSave = r.applyOnSave; }
@@ -160,10 +166,12 @@
       }
       case 'sort': { var ls2 = (stdin || '').replace(/\n$/, '').split('\n'); ls2.sort(); if (a.indexOf('-r') >= 0) ls2.reverse(); return ok(ls2.join('\n') + '\n'); }
       case 'uniq': { var ls3 = (stdin || '').replace(/\n$/, '').split('\n').filter(function (x, ix, ar) { return ix === 0 || ar[ix - 1] !== x; }); return ok(ls3.join('\n') + '\n'); }
-      case 'tr': { var from = (a[0] || '').replace(/\[:upper:\]/, 'A-Z').replace(/\[:lower:\]/, 'a-z'), to = (a[1] || ''); if (a[0] === '-d') return ok((stdin || '').split(a[1]).join('')); if (from === 'A-Z' && to === 'a-z') return ok((stdin || '').toLowerCase()); if (from === 'a-z' && to === 'A-Z') return ok((stdin || '').toUpperCase()); return ok(stdin || ''); }
+      case 'tr': { var trExp = function (x) { x = String(x || '').replace(/\[:upper:\]/g, 'A-Z').replace(/\[:lower:\]/g, 'a-z').replace(/\[:digit:\]/g, '0-9').replace(/\[:space:\]/g, ' \\t\\n\\r').replace(/\\n/g, '\n').replace(/\\t/g, '\t').replace(/\\r/g, '\r'); var o2 = '', k; for (k = 0; k < x.length; k++) { if (x[k + 1] === '-' && k + 2 < x.length) { for (var c2 = x.charCodeAt(k); c2 <= x.charCodeAt(k + 2); c2++) o2 += String.fromCharCode(c2); k += 2; } else o2 += x[k]; } return o2; }, flags = a.filter(function (x) { return /^-[a-z]+$/.test(x); }), sets = a.filter(function (x) { return !/^-[a-z]+$/.test(x); }), inp = stdin || '';
+        if (flags.some(function (x) { return x.indexOf('d') >= 0; })) { var del = trExp(sets[0]); return ok(inp.split('').filter(function (ch) { return del.indexOf(ch) < 0; }).join('')); }
+        var f1 = trExp(sets[0]), t1 = trExp(sets[1]); if (!t1) return ok(inp); var sq = flags.some(function (x) { return x.indexOf('s') >= 0; }); var r1 = inp.split('').map(function (ch) { var ix = f1.indexOf(ch); return ix < 0 ? ch : (t1[Math.min(ix, t1.length - 1)]); }).join(''); return ok(r1); }
       case 'cut': { var di = a.indexOf('-d'), fi = a.indexOf('-f'); var dl = di >= 0 ? a[di + 1] : '\t', fn = fi >= 0 ? parseInt(a[fi + 1], 10) : 1; return ok((stdin || '').replace(/\n$/, '').split('\n').map(function (l) { return l.split(dl)[fn - 1] || ''; }).join('\n') + '\n'); }
       case 'awk': { var mm2 = (a[0] || '').match(/\{print \$(\d+)\}/); if (!mm2) return bad('awk: only {print $N} is supported in the simulator\n'); var nth = parseInt(mm2[1], 10); return ok((stdin || '').replace(/\n$/, '').split('\n').map(function (l) { return nth === 0 ? l : (l.trim().split(/\s+/)[nth - 1] || ''); }).join('\n') + '\n'); }
-      case 'base64': { var dec = a.indexOf('-d') >= 0 || a.indexOf('--decode') >= 0, inp = (stdin || a.filter(function (x) { return x[0] !== '-'; }).join(' ')).replace(/\n$/, ''); try { return ok(dec ? (typeof Buffer !== 'undefined' ? Buffer.from(inp, 'base64').toString() : decodeURIComponent(escape(atob(inp)))) + (a.indexOf('-n') >= 0 ? '' : '') : (typeof Buffer !== 'undefined' ? Buffer.from(inp).toString('base64') : btoa(unescape(encodeURIComponent(inp)))) + '\n'); } catch (e) { return bad('base64: invalid input\n'); } }
+      case 'base64': { var dec = a.indexOf('-d') >= 0 || a.indexOf('--decode') >= 0 || a.indexOf('-D') >= 0, raw = stdin !== undefined && stdin !== null && stdin !== '' ? stdin : a.filter(function (x) { return x[0] !== '-'; }).join(' '), wi = a.indexOf('-w'), wrap = wi >= 0 ? parseInt(a[wi + 1], 10) : (a.filter(function (x) { return /^--wrap(=|$)/.test(x); })[0] ? parseInt(String(a.filter(function (x) { return /^--wrap/.test(x); })[0]).split('=')[1], 10) : 76); try { if (dec) { var inp = raw.replace(/\s+/g, ''); return ok(typeof Buffer !== 'undefined' ? Buffer.from(inp, 'base64').toString() : decodeURIComponent(escape(atob(inp)))); } var enc = typeof Buffer !== 'undefined' ? Buffer.from(raw).toString('base64') : btoa(unescape(encodeURIComponent(raw))); return ok((wrap > 0 ? (enc.match(new RegExp('.{1,' + wrap + '}', 'g')) || ['']).join('\n') : enc) + '\n'); } catch (e) { return bad('base64: invalid input\n'); } }
       case 'sed': return this.sed(a, stdin);
       case 'curl': case 'wget': return this.hostNet(c, a);
       case 'trivy': return this.trivy(a);

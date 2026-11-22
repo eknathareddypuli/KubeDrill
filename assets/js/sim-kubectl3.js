@@ -28,7 +28,21 @@
     catch (e) { throw new KErr('error: error parsing ' + name + ': ' + String(e.reason || e.message).split('\n')[0] + (e.mark ? ' at line ' + (e.mark.line + 1) : '')); }
     var flat = []; out.forEach(function (d) { if (d.kind === 'List' && d.items) flat = flat.concat(d.items); else flat.push(d); });
     flat.forEach(function (d) { if (!d.kind) throw new KErr('error: error validating "' + name + '": error validating data: kind not set'); if (!d.apiVersion) throw new KErr('error: error validating "' + name + '": error validating data: apiVersion not set'); });
+    flat.forEach(function (d) { P.strictCheck(d, name); });
     return flat;
+  };
+  // client-side validation kubectl does before sending: removed API versions, and fields placed where the schema has none (the classic indentation mistake)
+  var GONE = { 'apps/v1beta1': 1, 'apps/v1beta2': 1, 'extensions/v1beta1': 1 }, GONEK = /^(Deployment|DaemonSet|ReplicaSet|StatefulSet|Ingress|NetworkPolicy|PodSecurityPolicy)$/;
+  var PODSPEC = 'containers initContainers ephemeralContainers volumes restartPolicy serviceAccountName serviceAccount nodeName nodeSelector affinity tolerations terminationGracePeriodSeconds activeDeadlineSeconds dnsPolicy dnsConfig hostNetwork hostPID hostIPC hostname subdomain hostAliases imagePullSecrets priorityClassName priority preemptionPolicy schedulerName securityContext shareProcessNamespace topologySpreadConstraints automountServiceAccountToken enableServiceLinks runtimeClassName readinessGates overhead setHostnameAsFQDN os hostUsers resourceClaims schedulingGates'.split(' ');
+  P.strictCheck = function (d, name) {
+    var q = '"' + name + '"';
+    if (GONE[d.apiVersion] && GONEK.test(d.kind)) throw new KErr('error: resource mapping not found for name: "' + ((d.metadata || {}).name || '') + '" namespace: "' + ((d.metadata || {}).namespace || '') + '" from ' + q + ': no matches for kind "' + d.kind + '" in version "' + d.apiVersion + '"\nensure CRDs are installed first');
+    var spec = null, path = '';
+    if (d.kind === 'Pod') { spec = d.spec; path = 'Pod.spec'; }
+    else if (/^(Deployment|DaemonSet|ReplicaSet|StatefulSet|Job)$/.test(d.kind) && d.spec && d.spec.template) { spec = d.spec.template.spec; path = d.kind + '.spec.template.spec'; }
+    if (!spec || typeof spec !== 'object') return;
+    Object.keys(spec).forEach(function (k) { if (PODSPEC.indexOf(k) < 0) throw new KErr('error: error validating ' + q + ': error validating data: ValidationError(' + path + '): unknown field "' + k + '" in io.k8s.api.core.v1.PodSpec; if you choose to ignore these errors, turn validation off with --validate=false'); });
+    (spec.containers || []).forEach(function (c, i) { if (c && typeof c === 'object' && !c.image) throw new KErr('The ' + d.kind + ' "' + ((d.metadata || {}).name || '') + '" is invalid: spec' + (d.kind === 'Pod' ? '' : '.template.spec') + '.containers[' + i + '].image: Required value'); });
   };
   P.resName = function (o) { var d = this.kindOf(o); return this.disp(d) + '/' + o.metadata.name; };
 

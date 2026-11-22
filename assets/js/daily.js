@@ -25,7 +25,7 @@
       var nx = new Date(); nx.setHours(24, 0, 0, 0); var hrs = Math.max(1, Math.ceil((nx - Date.now()) / 3600000));
       host.innerHTML = '<div class="daily ' + (done ? 'done' : '') + '"><div class="daily-l"><span class="daily-tag">📅 Daily challenge</span><b>' + esc(lab.num + ' · ' + lab.title) + '</b><span class="daily-m">' + esc(lab.diff) + ' · ⏱ ' + esc(lab.time) + ' · ' + esc(lab.track.join('/')) + '</span></div>' +
         '<div class="daily-r"><div class="daily-dots" aria-label="Last 14 days">' + dots + '</div><span class="daily-s">🔥 ' + D.streak() + '-day streak' + (done ? ' · ✓ done in ' + Math.floor(d[dkey()].secs / 60) + 'm ' + (d[dkey()].secs % 60) + 's · next in ~' + hrs + 'h' : '') + '</span>' +
-        '<a class="btn-primary" href="#lab/' + lab.id + '">' + (done ? 'Replay' : 'Start today\'s challenge') + '</a></div></div>';
+        '<a class="btn-primary" href="#lab/' + (Labs.variantFor ? Labs.variantFor(lab.id, dkey()) : lab.id) + '">' + (done ? 'Replay' : 'Start today\'s challenge') + '</a></div></div>';
     }
   };
   KL.route('labs', D.render);

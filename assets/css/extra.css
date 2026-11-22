@@ -346,3 +346,9 @@ button,.btn-primary,.btn-secondary,.ilab-card,.fail-card,.fg-lab{transition:bord
 .tour-card{position:fixed;z-index:9999;width:min(340px,calc(100vw - 20px));background:var(--bg-card,#0f172a);color:var(--text,#e2e8f0);border:1px solid #38bdf8;border-radius:12px;padding:14px;box-shadow:0 10px 40px rgba(0,0,0,.5)}
 .tour-card h4{margin:2px 0 6px}.tour-card p{margin:0 0 10px;font-size:13.5px;line-height:1.45}.tour-n{font-size:11px;opacity:.6}.tour-btns{display:flex;gap:6px;align-items:center}.tour-btns span{flex:1}
 html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *::after{animation:none!important;transition:none!important}
+
+.rd{border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:12px 0;background:var(--bg2,rgba(255,255,255,.03))}.rd h3{margin:0 0 6px;font-size:14px}
+.rd-line{margin:4px 0;font-size:13.5px}.rd-note{margin:3px 0;font-size:12.5px;color:var(--text2)}.rd-foot{margin:10px 0 0;font-size:12.5px;color:var(--text2);border-top:1px solid var(--border);padding-top:8px}
+.rd-unknown{border-left:3px solid var(--text3)}.rd-notyet{border-left:3px solid var(--red,#f87171)}.rd-borderline{border-left:3px solid var(--yellow,#fbbf24)}.rd-strong{border-left:3px solid var(--green,#22d3a5)}
+.rd-bar{position:relative;height:14px;background:var(--border);border-radius:7px;margin:14px 0 20px}.rd-band{position:absolute;top:0;height:14px;background:var(--accent2,#63a4ff);border-radius:7px;opacity:.9}
+.rd-pass{position:absolute;top:-4px;width:2px;height:22px;background:var(--green,#22d3a5)}.rd-pl{position:absolute;top:19px;transform:translateX(-50%);font-size:11px;color:var(--text3);white-space:nowrap}

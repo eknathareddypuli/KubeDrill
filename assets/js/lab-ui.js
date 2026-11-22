@@ -132,21 +132,21 @@
   function stopTicker() { if (ticker) clearInterval(ticker); ticker = null; }
 
   function renderRunner() {
-    var r = cur, lab = r.lab, root = $('labRunner'), idx = Labs.list.indexOf(lab), nxt = Labs.list[idx + 1];
+    var r = cur, lab = r.lab, root = $('labRunner'), idx = Labs.list.indexOf(lab.variantOf ? Labs.byId[lab.variantOf] : lab), nxt = Labs.list[idx + 1];
     root.innerHTML =
-      '<div class="lr-bar"><a class="lr-back" href="#labs">← Labs</a><div class="lr-title"><span class="ilab-num">' + lab.num + '</span> ' + esc(lab.title) + (KL.daily && KL.daily.today().id === lab.id ? ' <span class="tag tag-yellow">📅 Daily</span>' : '') + '</div>' +
+      '<div class="lr-bar"><a class="lr-back" href="#labs">← Labs</a><div class="lr-title"><span class="ilab-num">' + lab.num + '</span> ' + esc(lab.title) + (KL.daily && KL.daily.today().id === (lab.variantOf || lab.id) ? ' <span class="tag tag-yellow">📅 Daily</span>' : '') + '</div>' +
       '<div class="lr-mode" role="group" aria-label="Lab mode">' + [['learn', '📖 Learn', 'Hints, solution and debrief available'], ['exam', '⏱ Exam', 'No hints or solution, countdown timer, scored'], ['real', '🧪 Real', 'Exam environment: no checker or cluster panel, several contexts, submit to score']].map(function (m) { return '<button id="lrMode_' + m[0] + '" class="' + (r.mode === m[0] ? 'on' : '') + '" aria-pressed="' + (r.mode === m[0]) + '" title="' + m[2] + '">' + m[1] + '</button>'; }).join('') + '</div>' +
       '<span class="lr-timer" id="lrTimer" aria-label="Elapsed time">00:00</span>' +
       '<button class="btn-secondary" id="lrDocsBtn" title="Docs peek: related commands and kubernetes.io pages">📖 Docs</button>' +
       '<button class="btn-secondary" id="lrReset" title="Rebuild the broken environment">↺ Reset lab</button>' +
       '<button class="btn-primary" id="lrCheck">' + (r.mode === 'real' ? '✔ Submit' : '✓ Check my work') + '</button></div>' +
       '<div class="lr-split"><aside class="lr-left" aria-label="Instructions">' +
-      '<div class="lr-story">' + md(lab.story) + '</div>' + (r.mode === 'real' ? '<div class="lr-ctx">🔧 Run first: <code>kubectl config use-context ' + labCtx(lab) + '</code> <span>current: <b id="lrCtxNow">' + esc(r.ctxName || CTXS[0]) + '</b></span></div>' : '') + '<div id="lrPredict"></div>' + '<div class="lr-chips"><span class="lab-diff ' + diffCls(lab.diff) + '">' + lab.diff + '</span>' + lab.track.map(function (t) { return '<span class="tag tag-blue">' + t + '</span>'; }).join('') + '<span class="tag tag-green">⏱ ' + lab.time + '</span><span class="tag tag-yellow">ns: ' + lab.ns + '</span></div>' +
+      '<div class="lr-story">' + md(lab.story) + '</div><div id="lrDesign"></div>' + (r.mode === 'real' ? '<div class="lr-ctx">🔧 Run first: <code>kubectl config use-context ' + labCtx(lab) + '</code> <span>current: <b id="lrCtxNow">' + esc(r.ctxName || CTXS[0]) + '</b></span></div>' : '') + '<div id="lrPredict"></div>' + '<div class="lr-chips"><span class="lab-diff ' + diffCls(lab.diff) + '">' + lab.diff + '</span>' + lab.track.map(function (t) { return '<span class="tag tag-blue">' + t + '</span>'; }).join('') + '<span class="tag tag-green">⏱ ' + lab.time + '</span><span class="tag tag-yellow">ns: ' + lab.ns + '</span></div>' +
       '<ol class="lr-tasks" id="lrTasks"></ol><div class="lr-feedback" id="lrFeedback" aria-live="polite"></div>' +
       (isEx(r) ? '<div class="lr-exam-note">' + (r.mode === 'real' ? '🧪 <b>Real exam environment</b> — no checker, no cluster panel, no hints. Switch context per task, then press Submit. ' : '⏱ <b>Exam mode</b> — no hints, no solution. Failing checks show only your score. ') + Math.round(limitSecs(lab) / 60) + ' min.</div>' : '<details class="lr-sol"><summary id="lrSolSum">💡 Show solution</summary><div id="lrSol"></div></details>') +
       (lab.simOnly ? '<div class="lr-pack">🧪 Simulator-only lab: it models node, ssh, webhook and certificate failures that a kind pack cannot reproduce faithfully.</div>' : '<div class="lr-pack">Prefer a real cluster? <a href="lab-packs/' + lab.id + '/README.md" target="_blank" rel="noopener">kind lab pack →</a> (<code>setup.sh</code> / <code>check.sh</code>)</div>') +
       (nxt ? '<a class="lr-next" id="lrNext" href="#lab/' + nxt.id + '" hidden>Next lab: ' + esc(nxt.title) + ' →</a>' : '') +
-      '</aside><section class="lr-right"><div class="lr-term" id="lrTerm" role="log" aria-label="Terminal" tabindex="-1"><div id="lrOut"></div><div class="lr-line"><span class="lr-prompt" id="lrPrompt"></span><input id="lrIn" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Terminal input"></div></div>' +
+      '</aside><section class="lr-right"><div class="lr-term" id="lrTerm" role="log" aria-label="Terminal" tabindex="-1"><div id="lrOut"></div><div class="lr-line"><span class="lr-prompt" id="lrPrompt"></span><input id="lrIn" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send" inputmode="text" aria-label="Terminal input"></div></div>' +
       '<div class="lr-state"><div class="lr-state-h"><b>Cluster</b><div class="lr-tabs" role="tablist"><button id="lrTabDia" role="tab">🗺 Diagram</button><button id="lrTabTxt" role="tab">⌨ Text</button></div><span class="lr-sim">live · simulated ' + KL.Sim.VERSION + '</span><button class="btn-secondary" id="lrWait" title="Advance simulated time">⏩ wait</button></div><div class="lr-dia" id="lrDia" aria-label="Live cluster diagram"></div><pre id="lrState"></pre></div></section></div>' +
       '<div class="lr-editor" id="lrEditor" hidden><div class="lr-ed-box"><div class="lr-ed-h"><b id="lrEdName"></b><span>Ctrl+S save · Esc cancel</span></div><textarea id="lrEdText" spellcheck="false" aria-label="Editor"></textarea><div class="lr-ed-b"><button class="btn-secondary" id="lrEdCancel">Cancel</button><button class="btn-primary" id="lrEdSave">Save</button></div></div></div>';
     $('lrCheck').onclick = function () { if (r.mode === 'real') { if (confirm('Submit your work and see the score?')) doCheck(true); } else doCheck(); }; $('lrReset').onclick = function () { if (confirm('Reset this lab to its broken starting state? Your changes are lost.')) { getRun(lab.id, true).then(function (nr) { cur = nr; renderRunner(); }); } };
@@ -168,36 +168,42 @@
   }
   function renderTasks() {
     var r = cur, lab = r.lab;
-    $('lrTasks').innerHTML = lab.tasks.map(function (t) {
-      var ok = r.tasksOk[t.id], hi = r.hintIdx[t.id] || 0;
-      return '<li class="lr-task' + (ok ? ' ok' : '') + '" data-id="' + t.id + '"><div class="lr-task-h"><span class="lr-tick" aria-hidden="true">' + (ok ? '✓' : '○') + '</span><b>' + md(t.title) + '</b></div>' + (t.desc ? '<div class="lr-task-d">' + md(t.desc) + '</div>' : '') +
-        (isEx(r) ? '' : '<div class="lr-hints">' + t.hints.slice(0, hi).map(function (h, i) { return '<div class="lr-hint"><i>Hint ' + (i + 1) + '</i> ' + md(h) + '</div>'; }).join('') + (hi < t.hints.length ? '<button class="lr-hint-btn" data-id="' + t.id + '">💡 ' + (hi ? 'Next hint' : 'Need a hint?') + ' (' + (t.hints.length - hi) + ' left)</button>' : '') + '</div>') + '</li>';
+    $('lrTasks').innerHTML = Labs.allTasks(r.sim, lab).map(function (t) {
+      var ok = r.tasksOk[t.id], hi = r.hintIdx[t.id] || 0, s2 = lab.stage2 && lab.stage2.tasks.indexOf(t) >= 0;
+      return '<li class="lr-task' + (ok ? ' ok' : '') + (s2 ? ' stage2' : '') + '" data-id="' + t.id + '"><div class="lr-task-h"><span class="lr-tick" aria-hidden="true">' + (ok ? '✓' : '○') + '</span><b>' + md(t.title) + '</b></div>' + (t.desc ? '<div class="lr-task-d">' + md(t.desc) + '</div>' : '') +
+        (isEx(r) ? '' : '<div class="lr-hints">' + t.hints.slice(0, hi).map(function (h, i) { return '<div class="lr-hint"><i>Hint ' + (i + 1) + '</i> ' + md(h) + '</div>'; }).join('') + (hi < t.hints.length ? '<button class="lr-hint-btn" data-id="' + t.id + '" title="Using a hint marks this task as assisted (it shows in your weak-spot list)">💡 ' + (hi ? 'Next hint' : 'Need a hint?') + ' (' + (t.hints.length - hi) + ' left · marks task assisted)</button>' : '') + '</div>') + '</li>';
     }).join('');
-    $('lrTasks').querySelectorAll('.lr-hint-btn').forEach(function (b) { b.onclick = function () { r.hintIdx[b.dataset.id] = (r.hintIdx[b.dataset.id] || 0) + 1; store.useHint(r.lab.id); renderTasks(); saveRun(r); }; });
+    $('lrTasks').querySelectorAll('.lr-hint-btn').forEach(function (b) { b.onclick = function () { r.hintIdx[b.dataset.id] = (r.hintIdx[b.dataset.id] || 0) + 1; store.useHint(r.lab.id); try { window.dispatchEvent(new CustomEvent('kl:hint', { detail: { run: r, task: b.dataset.id } })); } catch (e) {} renderTasks(); saveRun(r); }; });
   }
   function doCheck(auto) {
-    var r = cur, res = Labs.check(r.sim, r.lab), fb = [], exam = isEx(r);
-    r.checks++; res.tasks.forEach(function (t) { r.tasksOk[t.id] = t.ok; t.results.forEach(function (x) { if (!x.ok) fb.push('<li>' + esc(x.msg) + '</li>'); }); });
+    var r = cur, res = Labs.check(r.sim, r.lab), fb = [], exam = isEx(r), s2note = '';
+    if (res.ok && r.lab.stage2 && !Labs.stage2Active(r.sim, r.lab) && !exam) { Labs.applyStage2(r.sim, r.lab); res = Labs.check(r.sim, r.lab); s2note = '<div class="lr-stage2">🔔 <b>Not done yet.</b> ' + esc(r.lab.stage2.reveal) + ' A new task has been added.</div>'; r.stage2At = Date.now(); }
+    r.checks++; res.tasks.forEach(function (t) { r.tasksOk[t.id] = t.ok; t.results.forEach(function (x) { if (!x.ok) fb.push('<li>' + esc(x.msg) + (!exam && KL.whyCmd ? KL.whyCmd(x, r.lab) : '') + '</li>'); }); });
     store.setLabTasks(r.lab.id, r.tasksOk); renderTasks(); refreshState(); r.last = res;
     if (res.ok || (exam && auto === true)) { r.over = true; r.endAt = Date.now(); }
     saveRun(r, true);
+    var cb = res.constraint && !res.constraint.ok ? '<div class="lr-fail lr-cons">🔒 <b>Constraint broken:</b> ' + esc(res.constraint.text) + '<br><small>' + res.constraint.msgs.map(esc).join('<br>') + '</small></div>' : '';
+    try { window.dispatchEvent(new CustomEvent('kl:check', { detail: { run: r, res: res } })); } catch (e) {}
     if (r.over) { showResult(); }
-    else $('lrFeedback').innerHTML = exam ? '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Keep going — details are hidden in exam mode.</div>' : '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Still failing:<ul>' + fb.slice(0, 6).join('') + '</ul></div>';
-    if (res.ok && KL.daily) KL.daily.record(r.lab.id, Math.floor((Date.now() - r.start) / 1000));
-    if (res.ok) { store.markLab(r.lab.id, true); try { window.dispatchEvent(new CustomEvent('kl:labdone', { detail: { lab: r.lab, mode: r.mode } })); } catch (e) {} if (KL.fx) KL.fx.confetti(); var n = $('lrNext'); if (n) n.hidden = false; toast('Lab ' + r.lab.num + ' complete ✓'); }
+    else if (s2note) $('lrFeedback').innerHTML = s2note;
+    else $('lrFeedback').innerHTML = cb + (exam ? '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Keep going — details are hidden in exam mode.</div>' : '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Still failing:<ul>' + fb.slice(0, 6).join('') + '</ul></div>');
+    if (res.ok && KL.daily) KL.daily.record(r.lab.variantOf || r.lab.id, Math.floor((Date.now() - r.start) / 1000));
+    if (res.ok) { store.markLab(r.lab.variantOf || r.lab.id, true); if (r.lab.variantOf) store.markLab(r.lab.id, true); try { window.dispatchEvent(new CustomEvent('kl:labdone', { detail: { lab: r.lab, mode: r.mode } })); } catch (e) {} if (KL.fx) KL.fx.confetti(); var n = $('lrNext'); if (n) n.hidden = false; toast('Lab ' + r.lab.num + ' complete ✓'); }
     else if (r.over) toast('Time is up — ' + res.passed + ' / ' + res.total + ' tasks');
   }
   // result + debrief card (shown when the lab is finished, or the exam timer ran out)
   function showResult() {
     var r = cur, lab = r.lab, res = r.last || Labs.check(r.sim, lab), exam = isEx(r), fb = $('lrFeedback'); if (!fb) return;
     var secs = Math.floor(((r.endAt || Date.now()) - r.start) / 1000), hints = Object.keys(r.hintIdx).reduce(function (a, k) { return a + (r.hintIdx[k] || 0); }, 0);
-    var pct = Math.round(res.passed / res.total * 100), db = (KL.debrief || {})[lab.id];
+    var pct = Math.round(res.passed / res.total * 100), db = (KL.debrief || {})[lab.variantOf || lab.id];
     var head = res.ok ? '<div class="lr-pass">🎉 All ' + res.total + ' tasks pass. Lab complete' + (r.solShown ? ' (solution was viewed)' : '') + '!</div>' : '<div class="lr-fail"><b>⏱ Time is up.</b> ' + res.passed + ' / ' + res.total + ' tasks done.</div>';
     var stats = '<div class="lr-stats">' + (exam ? '<div><b>' + pct + '%</b><span>score</span></div>' : '') + '<div><b>' + mmss(secs) + '</b><span>' + (exam ? 'of ' + mmss(limitSecs(lab)) : 'time') + '</span></div><div><b>' + r.checks + '</b><span>checks</span></div><div><b>' + r.hist.length + '</b><span>commands</span></div>' + (exam ? '' : '<div><b>' + hints + '</b><span>hints</span></div>') + '</div>';
     var card = db ? '<div class="lr-debrief"><h4>🎓 Debrief</h4><dl><dt>Root cause</dt><dd>' + md(db[0]) + '</dd><dt>The fix</dt><dd>' + md(db[1]) + '</dd><dt>Spot it in production</dt><dd>' + md(db[2]) + '</dd><dt class="pat">Remember</dt><dd class="pat"><code>' + esc(db[3]) + '</code></dd></dl></div>' : '';
     var pl = ''; if (r.pred && !r.pred.skip) { if (!r.pred.counted) { r.pred.counted = true; predBump(r.pred.ok); saveRun(r, true); } var ps = predStats(); pl = '<div class="lr-predres ' + (r.pred.ok ? 'ok' : 'no') + '">🔮 Your prediction: ' + (r.pred.ok ? '<b>correct</b> ✓' : '<b>missed</b> — you guessed “' + esc(r.pred.pick) + '”') + ' <span>(overall ' + ps.r + '/' + ps.t + ')</span></div>'; }
     var again = '<div class="lr-after"><button class="btn-secondary" id="lrAgain">↺ Try again' + (exam ? '' : ' in Exam mode') + '</button></div>';
-    fb.innerHTML = head + stats + pl + card + again;
+    var ex = KL.design && res.ok ? KL.design.resultExtras(r, res) : '';
+    fb.innerHTML = head + stats + pl + ex + card + again;
+    if (KL.design) KL.design.bindResult(r);
     $('lrAgain').onclick = function () { setMode('exam'); getRun(lab.id, true).then(function (nr) { nr.mode = 'exam'; nr.start = Date.now(); cur = nr; renderRunner(); }); };
   }
   function switchMode(m) {

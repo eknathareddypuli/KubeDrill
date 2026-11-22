@@ -28,6 +28,8 @@
     ['PersistentVolumeClaim', 'persistentvolumeclaims', 'persistentvolumeclaim', ['pvc'], '', 'v1', 1],
     ['StorageClass', 'storageclasses', 'storageclass', ['sc'], 'storage.k8s.io', 'storage.k8s.io/v1', 0],
     ['PriorityClass', 'priorityclasses', 'priorityclass', ['pc'], 'scheduling.k8s.io', 'scheduling.k8s.io/v1', 0],
+    ['RuntimeClass', 'runtimeclasses', 'runtimeclass', [], 'node.k8s.io', 'node.k8s.io/v1', 0],
+    ['CertificateSigningRequest', 'certificatesigningrequests', 'certificatesigningrequest', ['csr'], 'certificates.k8s.io', 'certificates.k8s.io/v1', 0],
     ['ValidatingWebhookConfiguration', 'validatingwebhookconfigurations', 'validatingwebhookconfiguration', [], 'admissionregistration.k8s.io', 'admissionregistration.k8s.io/v1', 0],
     ['NetworkPolicy', 'networkpolicies', 'networkpolicy', ['netpol'], 'networking.k8s.io', 'networking.k8s.io/v1', 1],
     ['Ingress', 'ingresses', 'ingress', ['ing'], 'networking.k8s.io', 'networking.k8s.io/v1', 1],
@@ -45,7 +47,8 @@
     ['CustomResourceDefinition', 'customresourcedefinitions', 'customresourcedefinition', ['crd', 'crds'], 'apiextensions.k8s.io', 'apiextensions.k8s.io/v1', 0],
     ['GatewayClass', 'gatewayclasses', 'gatewayclass', ['gc'], 'gateway.networking.k8s.io', 'gateway.networking.k8s.io/v1', 0],
     ['Gateway', 'gateways', 'gateway', ['gtw'], 'gateway.networking.k8s.io', 'gateway.networking.k8s.io/v1', 1],
-    ['HTTPRoute', 'httproutes', 'httproute', [], 'gateway.networking.k8s.io', 'gateway.networking.k8s.io/v1', 1]
+    ['HTTPRoute', 'httproutes', 'httproute', [], 'gateway.networking.k8s.io', 'gateway.networking.k8s.io/v1', 1],
+    ['ReferenceGrant', 'referencegrants', 'referencegrant', ['refgrant'], 'gateway.networking.k8s.io', 'gateway.networking.k8s.io/v1beta1', 1]
   ].map(function (d) { return { kind: d[0], plural: d[1], singular: d[2], shorts: d[3], group: d[4], api: d[5], ns: !!d[6] }; });
 
   function KErr(msg, code) { this.message = msg; this.code = code || 1; this.name = 'KErr'; }
@@ -257,6 +260,7 @@
     if (!m.name && m.generateName) m.name = m.generateName + alnum(5, this.rnd());
     if (d.ns && !m.namespace) m.namespace = this.ctxNs;
     if (!d.ns) delete m.namespace;
+    if (o.kind === 'Namespace') { m.labels = m.labels || {}; m.labels['kubernetes.io/metadata.name'] = m.name; } // set automatically since Kubernetes 1.21
     if (m.name.length > 253 || !/^[a-z0-9]([-a-z0-9.]*[a-z0-9])?$/.test(m.name) && o.kind !== 'ClusterRole' && o.kind !== 'Role' && o.kind !== 'RoleBinding' && o.kind !== 'ClusterRoleBinding')
       throw new KErr('The ' + d.singular + ' "' + m.name + '" is invalid: metadata.name: Invalid value: "' + m.name + '": a lowercase RFC 1123 subdomain must consist of lower case alphanumeric characters, \'-\' or \'.\', and must start and end with an alphanumeric character');
     o.apiVersion = d.api;
@@ -940,6 +944,8 @@
     var self = this, pod = r.pods.filter(function (p) { return self.netpolAllows(fromPod, p, r.port) && self.egressAllows(fromPod, p, r.port); })[0];
     if (!pod) return { code: 1, out: 'wget: download timed out', curl: 'curl: (28) Connection timed out after 2001 milliseconds' };
     var repo = imageRepo(pod.spec.containers[0].image);
+    // nginx and httpd really listen on 80 only: a Service whose targetPort points anywhere else is refused
+    if (/^(nginx|httpd)$/.test(repo) && r.port && Number(r.port) !== 80 && !/unprivileged/.test(pod.spec.containers[0].image)) return { code: 1, out: 'wget: can\'t connect to remote host: Connection refused', curl: 'curl: (7) Failed to connect to ' + host + ' port ' + (port || 80) + ' after 1 ms: Couldn\'t connect to server' };
     var body = /nginx/.test(repo) ? '<!DOCTYPE html>\n<html>\n<head>\n<title>Welcome to nginx!</title>' : /httpd/.test(repo) ? '<html><body><h1>It works!</h1></body></html>' : 'OK from ' + pod.metadata.name;
     return { code: 0, out: body, curl: body, pod: pod };
   };
@@ -953,7 +959,7 @@
     function subMatch(sj) {
       var m;
       if (subject.indexOf('system:serviceaccount:') === 0) { m = subject.split(':'); return (sj.kind === 'ServiceAccount' && sj.name === m[3] && (sj.namespace || '') === m[2]) || (sj.kind === 'Group' && (sj.name === 'system:serviceaccounts' || sj.name === 'system:serviceaccounts:' + m[2] || sj.name === 'system:authenticated')); }
-      return (sj.kind === 'User' && sj.name === subject) || (sj.kind === 'Group' && sj.name === 'system:authenticated' && subject !== 'system:anonymous');
+      return (sj.kind === 'User' && sj.name === subject) || (sj.kind === 'Group' && sj.name === 'system:authenticated' && subject !== 'system:anonymous') || (sj.kind === 'Group' && !!self.flags && !!self.flags.userGroups && (self.flags.userGroups[subject] || []).indexOf(sj.name) >= 0);
     }
     if (!subject || subject === 'kubernetes-admin') return true;
     var ok = false;
