@@ -12,7 +12,7 @@ metadata:
 
 KUBEDRILL_EOF
 
-cat > 'old-cron.yaml' <<'KUBEDRILL_EOF'
+cat > "$HOME/old-cron.yaml" <<'KUBEDRILL_EOF'
 apiVersion: batch/v1beta1
 kind: CronJob
 metadata:

@@ -9,8 +9,8 @@ chk() { # $1=task title, rest = condition
 }
 sleep 1
 echo 'Task 1: Manifest uses the current apiVersion'
-chk 'Manifest uses the current apiVersion' '[ -f "$HOME/old-cron.yaml" ] && grep -q -- '\''apiVersion: batch/v1
-'\'' '\''old-cron.yaml'\'''
+chk 'Manifest uses the current apiVersion' '[ -f "$HOME/old-cron.yaml" ] && grep -q -F -- '\''apiVersion: batch/v1
+'\'' "$HOME/old-cron.yaml"'
 echo 'Task 2: CronJob `nightly` applied'
 chk 'CronJob `nightly` applied' 'kubectl get cronjob/nightly -n legacy2 >/dev/null 2>&1 && [ "$(kubectl get cronjob/nightly -n legacy2 -o jsonpath='\''{.spec.schedule}'\'' 2>/dev/null)" = '\''0 2 * * *'\'' ]'
 echo; echo "Result: $pass passed, $fail failed"; [ "$fail" -eq 0 ] && echo "🎉 Lab complete!"; exit $fail
