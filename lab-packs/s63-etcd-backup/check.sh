@@ -11,5 +11,5 @@ sleep 1
 echo 'Task 1: Snapshot saved'
 chk 'Snapshot saved' '[ -f "$HOME/etcd-backup.db" ]'
 echo 'Task 2: Snapshot verified'
-chk 'Snapshot verified' '[ -f "$HOME/etcd-backup.db" ] && grep -q -- '\''etcd'\'' '\''etcd-backup.db'\'''
+chk 'Snapshot verified' '[ -f "$HOME/etcd-backup.db" ] && grep -q -F -- '\''etcd'\'' "$HOME/etcd-backup.db"'
 echo; echo "Result: $pass passed, $fail failed"; [ "$fail" -eq 0 ] && echo "🎉 Lab complete!"; exit $fail
