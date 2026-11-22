@@ -9,7 +9,7 @@ chk() { # $1=task title, rest = condition
 }
 sleep 1
 echo 'Task 1: pods.txt has NAME and NODE columns'
-chk 'pods.txt has NAME and NODE columns' '[ -f "$HOME/pods.txt" ] && grep -q -- '\''NODE'\'' '\''pods.txt'\'''
+chk 'pods.txt has NAME and NODE columns' '[ -f "$HOME/pods.txt" ] && grep -q -F -- '\''NODE'\'' "$HOME/pods.txt"'
 echo 'Task 2: sorted.txt sorted by creation time'
-chk 'sorted.txt sorted by creation time' '[ -f "$HOME/sorted.txt" ] && grep -q -- '\''pod/'\'' '\''sorted.txt'\'''
+chk 'sorted.txt sorted by creation time' '[ -f "$HOME/sorted.txt" ] && grep -q -F -- '\''pod/'\'' "$HOME/sorted.txt"'
 echo; echo "Result: $pass passed, $fail failed"; [ "$fail" -eq 0 ] && echo "🎉 Lab complete!"; exit $fail
