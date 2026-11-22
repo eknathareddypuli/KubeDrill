@@ -17,7 +17,7 @@ Notes
 - Check scripts assert the same end state as the in-browser Check button. Real clusters converge slower: re-run `check.sh` after a few seconds.
 - These packs are generated, and have been syntax-checked (`bash -n`) but **not every lab has been run end-to-end against a real cluster** — please open an issue if one misbehaves.
 
-## Labs (99)
+## Labs (129)
 
 | Lab | Level | Tracks | Time |
 |---|---|---|---|
@@ -120,3 +120,33 @@ Notes
 | [S112 Read the audit log: who touched the secret?](s112-audit-hunt/README.md) | Advanced | CKS | 14 min |
 | [S113 Hardening: an over-broad binding and the default ServiceAccount](s113-open-binding/README.md) | Advanced | CKS | 14 min |
 | [S114 Pod Security: warn and audit before you enforce](s114-psa-rollout/README.md) | Advanced | CKS | 12 min |
+| [S117 DNS is up but Service names do not resolve: the Corefile](s117-corefile/README.md) | Intermediate | CKA | 12 min |
+| [S118 StatefulSet scale-down: what happens to the volumes?](s118-sts-scale-down/README.md) | Intermediate | CKA | 12 min |
+| [S119 Quota and LimitRange: who spent the CPU?](s119-quota-limitrange/README.md) | Intermediate | CKA | 12 min |
+| [S120 Ambassador pattern: talk to localhost, let a proxy do the rest](s120-ambassador/README.md) | Intermediate | CKAD | 12 min |
+| [S121 Change config without a restart: volume vs env](s121-config-reload/README.md) | Intermediate | CKAD | 12 min |
+| [S122 A failing Job: stop the retries, fix, and tidy up](s122-job-backoff/README.md) | Intermediate | CKAD | 10 min |
+| [S128 Review a manifest: fix six production anti-patterns](s128-manifest-review/README.md) | Intermediate | CKAD | 15 min |
+| [S129 Zero-downtime rollout: surge, readiness, preStop, PDB](s129-zero-downtime/README.md) | Advanced | CKA, CKAD | 15 min |
+| [S130 Onboard a developer: client certificate, RBAC, kubeconfig](s130-cert-user/README.md) | Advanced | CKA, CKS | 20 min |
+| [S131 Pending CSRs: approve one, deny the dangerous one](s131-review-csrs/README.md) | Advanced | CKS | 12 min |
+| [S132 A developer laptop was stolen: remove what the certificate can do](s132-leaked-cert/README.md) | Advanced | CKS | 15 min |
+| [S135 Auditors cannot read pods: bind the group the certificate carries](s135-cert-group-rbac/README.md) | Advanced | CKS | 12 min |
+| [S136 INCIDENT: checkout is down (four faults, one symptom)](s136-incident-checkout/README.md) | Advanced | CKA, CKAD | 20 min |
+| [S137 INCIDENT: render workers will not run (leave the sick node alone)](s137-incident-render/README.md) | Advanced | CKA | 20 min |
+| [S138 INCIDENT: release 42 broke `api` and `worker`](s138-incident-release/README.md) | Advanced | CKAD | 20 min |
+| [S139 INCIDENT: frontend cannot reach backend (three layers)](s139-incident-backend/README.md) | Advanced | CKA, CKS | 20 min |
+| [S140 Worked example: ImagePullBackOff (watch, then do)](s140-worked-imagepull/README.md) | Beginner | CKA, CKAD | 10 min |
+| [S141 Worked example: Service with no endpoints (watch, then do)](s141-worked-selector/README.md) | Beginner | CKA, CKAD | 10 min |
+| [S142 Worked example: missing ConfigMap (watch, then do)](s142-worked-configmap/README.md) | Beginner | CKAD | 10 min |
+| [S143 YAML repair: the tab character](s143-yaml-tab/README.md) | Beginner | CKA, CKAD | 10 min |
+| [S144 YAML repair: wrong indentation](s144-yaml-indent/README.md) | Beginner | CKA, CKAD | 10 min |
+| [S145 YAML repair: removed apiVersion](s145-yaml-apiversion/README.md) | Beginner | CKA, CKAD | 10 min |
+| [S146 YAML repair: selector that matches nothing](s146-yaml-selector/README.md) | Intermediate | CKA, CKAD | 10 min |
+| [S147 Gateway API: header routing and a 90/10 split](s147-gateway-canary/README.md) | Intermediate | CKA | 12 min |
+| [S148 Gateway API: cross-namespace backend needs a ReferenceGrant](s148-gateway-referencegrant/README.md) | Intermediate | CKA | 12 min |
+| [S149 CRD: the custom resource is rejected by its schema](s149-crd-schema/README.md) | Intermediate | CKA, CKAD | 12 min |
+| [S152 AppArmor: write a profile and attach it with the current field](s152-apparmor/README.md) | Advanced | CKS | 15 min |
+| [S153 Falco: fix a noisy, uninformative shell rule](s153-falco-rule/README.md) | Advanced | CKS | 12 min |
+| [S154 Read a Trivy report: what must be fixed first](s154-trivy-report/README.md) | Intermediate | CKS | 10 min |
+| [S155 Version skew: which components are out of policy?](s155-version-skew/README.md) | Intermediate | CKA | 10 min |

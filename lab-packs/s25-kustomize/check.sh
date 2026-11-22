@@ -9,7 +9,7 @@ chk() { # $1=task title, rest = condition
 }
 sleep 1
 echo 'Task 1: Create overlays/prod/kustomization.yaml'
-chk 'Create overlays/prod/kustomization.yaml' '[ -f "$HOME/overlays/prod/kustomization.yaml" ] && grep -q -- '\''namePrefix'\'' '\''overlays/prod/kustomization.yaml'\'''
+chk 'Create overlays/prod/kustomization.yaml' '[ -f "$HOME/overlays/prod/kustomization.yaml" ] && grep -q -F -- '\''namePrefix'\'' "$HOME/overlays/prod/kustomization.yaml"'
 echo 'Task 2: Apply the overlay: prod-web with 3 Ready replicas'
 chk 'Apply the overlay: prod-web with 3 Ready replicas' '[ "$(kubectl get deploy/prod-web -n shop -o jsonpath='\''{.spec.replicas}'\'' 2>/dev/null)" = '\''3'\'' ] && [ "$(kubectl get pods -n shop -l app=web -o jsonpath='\''{range .items[*]}{.status.phase}{" "}{.status.containerStatuses[0].ready}{"\n"}{end}'\'' 2>/dev/null | grep -c "Running true")" -ge 3 ]'
 echo; echo "Result: $pass passed, $fail failed"; [ "$fail" -eq 0 ] && echo "🎉 Lab complete!"; exit $fail

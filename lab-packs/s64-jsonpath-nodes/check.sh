@@ -9,7 +9,7 @@ chk() { # $1=task title, rest = condition
 }
 sleep 1
 echo 'Task 1: nodes.txt contains the node names'
-chk 'nodes.txt contains the node names' '[ -f "$HOME/nodes.txt" ] && grep -q -- '\''worker1'\'' '\''nodes.txt'\'''
+chk 'nodes.txt contains the node names' '[ -f "$HOME/nodes.txt" ] && grep -q -F -- '\''worker1'\'' "$HOME/nodes.txt"'
 echo 'Task 2: images.txt contains the pod images'
-chk 'images.txt contains the pod images' '[ -f "$HOME/images.txt" ] && grep -q -- '\''nginx:1.25'\'' '\''images.txt'\'''
+chk 'images.txt contains the pod images' '[ -f "$HOME/images.txt" ] && grep -q -F -- '\''nginx:1.25'\'' "$HOME/images.txt"'
 echo; echo "Result: $pass passed, $fail failed"; [ "$fail" -eq 0 ] && echo "🎉 Lab complete!"; exit $fail
