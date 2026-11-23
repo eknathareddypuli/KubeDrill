@@ -17,7 +17,7 @@ Notes
 - Check scripts assert the same end state as the in-browser Check button. Real clusters converge slower: re-run `check.sh` after a few seconds.
 - These packs are generated, and have been syntax-checked (`bash -n`) but **not every lab has been run end-to-end against a real cluster** — please open an issue if one misbehaves.
 
-## Labs (129)
+## Labs (145)
 
 | Lab | Level | Tracks | Time |
 |---|---|---|---|
@@ -150,3 +150,19 @@ Notes
 | [S153 Falco: fix a noisy, uninformative shell rule](s153-falco-rule/README.md) | Advanced | CKS | 12 min |
 | [S154 Read a Trivy report: what must be fixed first](s154-trivy-report/README.md) | Intermediate | CKS | 10 min |
 | [S155 Version skew: which components are out of policy?](s155-version-skew/README.md) | Intermediate | CKA | 10 min |
+| [S156 Debug a shell-less pod with an ephemeral container](s156-ephemeral-debug/README.md) | Intermediate | CKA, CKAD | 8 min |
+| [S158 An admission policy that does nothing: add the binding](s158-vap-binding/README.md) | Advanced | CKA, CKS | 12 min |
+| [S159 Your deployment is rejected by an admission policy](s159-vap-rejected/README.md) | Intermediate | CKAD | 10 min |
+| [S160 Grow a bound PVC without losing data](s160-pvc-expand/README.md) | Intermediate | CKA | 10 min |
+| [S161 Change the setting in an immutable ConfigMap](s161-immutable-config/README.md) | Intermediate | CKAD | 10 min |
+| [S162 One directory from a ConfigMap, a Secret and the Downward API](s162-projected-volume/README.md) | Intermediate | CKAD | 12 min |
+| [S163 Make the log shipper a native sidecar](s163-native-sidecar/README.md) | Intermediate | CKAD | 10 min |
+| [S164 NetworkPolicy: ipBlock and a port range](s164-netpol-iprange/README.md) | Advanced | CKS, CKA | 15 min |
+| [S165 Resize a running pod without restarting it](s165-inplace-resize/README.md) | Advanced | CKA, CKAD | 10 min |
+| [S166 Map root in the container to a harmless host user](s166-user-namespace/README.md) | Intermediate | CKS | 8 min |
+| [S167 Documentation lookup: find the field in kubectl explain](s167-explain-lookup/README.md) | Beginner | CKA, CKAD, CKS | 10 min |
+| [S168 Documentation lookup: what is required, and what is allowed](s168-explain-required/README.md) | Intermediate | CKA, CKAD | 12 min |
+| [S169 Documentation lookup: build the object from explain, not from memory](s169-build-from-explain/README.md) | Advanced | CKAD, CKA | 15 min |
+| [S170 CAPSTONE (CKA): the half-built platform](s170-capstone-cka/README.md) | Advanced | CKA | 45 min |
+| [S171 CAPSTONE (CKAD): ship the orders service](s171-capstone-ckad/README.md) | Advanced | CKAD | 45 min |
+| [S172 CAPSTONE (CKS): harden the payments namespace](s172-capstone-cks/README.md) | Advanced | CKS | 45 min |

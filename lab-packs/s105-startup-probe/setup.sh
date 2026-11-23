@@ -38,6 +38,36 @@ spec:
           failureThreshold: 1
 
 KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kd-noise
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: legacy-report
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: legacy-report
+  template:
+    metadata:
+      labels:
+        app: legacy-report
+    spec:
+      containers:
+      - name: report
+        image: registry.example.com/legacy/report:9.9
+
+KUBEDRILL_EOF
 
 
 kubectl config set-context --current --namespace=slow >/dev/null
