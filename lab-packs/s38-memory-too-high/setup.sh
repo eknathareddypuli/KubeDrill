@@ -28,6 +28,56 @@ spec:
             memory: 64Gi
 
 KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kd-noise
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-agent-old
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-agent-old
+  template:
+    metadata:
+      labels:
+        app: metrics-agent-old
+    spec:
+      containers:
+      - name: agent
+        image: nginx:1.25
+        command: ["sh", "-c", "echo agent v1 is retired; exit 1"]
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nightly-export
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: export
+        image: busybox:1.36
+        command: ["sh", "-c", "echo export failed: upstream timeout >&2; exit 2"]
+
+KUBEDRILL_EOF
 
 
 kubectl config set-context --current --namespace=mem >/dev/null
