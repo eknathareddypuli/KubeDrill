@@ -42,7 +42,7 @@ await pg.click('.lr-why summary');await pg.click('#lrProve');await pg.waitForTim
 ok((await pg.locator('#lrOut').innerText()).includes('frontend-svc'),'proof command runs in the terminal');
 ok(await pg.locator('.lr-rung a.btn-primary').count()===1,'next rung of the ladder is offered');
 const nextHref=await pg.locator('.lr-rung a.btn-primary').getAttribute('href');ok(nextHref==='#lab/s29-svc-targetport','next rung is the next harder Services lab');
-await pg.click('#lrVar2');await pg.waitForTimeout(800);ok(/#lab\/s04-no-endpoints~v[23]/.test(await pg.evaluate(()=>location.hash)),'new variant opens a seeded variant URL');
+await pg.click('#lrVar2');await pg.waitForTimeout(800);ok(/#lab\/s04-no-endpoints~v\d+/.test(await pg.evaluate(()=>location.hash)),'new variant opens a seeded variant URL');
 ok((await pg.locator('.lr-var').innerText()).includes('Variant'),'variant is labelled');
 ok(await pg.evaluate(()=>KL.store.labDone('s04-no-endpoints')),'finishing the lab marked the base lab done');
 

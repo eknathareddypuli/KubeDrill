@@ -4,7 +4,7 @@ const pg=await (await b.newContext({viewport:{width:1300,height:850}})).newPage(
 let bad=0;const ok=(c,m)=>{if(!c)bad++;console.log(c?'✔':'✘',m)};const T=ms=>pg.waitForTimeout(ms);
 await pg.goto(BASE);await pg.evaluate(()=>{try{localStorage.removeItem('kubedrill:reading')}catch(e){}});
 await pg.goto(BASE+'#reading');await pg.waitForSelector('.rd-card');
-ok(await pg.locator('.rd-card').count()===15,'15 reading cases listed');
+ok(await pg.locator('.rd-card').count()===40,'40 reading cases listed');
 ok(!/s01-pending|Pending CPU|imagepull/i.test(await pg.locator('.rd-list').innerText()),'case list does not give the answer away');
 // reading case 1
 await pg.locator('.rd-card').first().click();await pg.waitForSelector('.rd-ev');
@@ -24,10 +24,10 @@ await pg.locator('.rd-opt').nth(ri).locator('input').check();await pg.click('#rd
 ok(/What it was/.test(await pg.textContent('#readRoot'))&&/Reproduce it yourself/.test(await pg.textContent('#readRoot')),'right cause reveals the debrief and a link to the lab');
 ok(await pg.locator('#readRoot a[href="#lab/s01-pending-cpu"]').count()===1,'link goes to the matching lab');
 await pg.click('#rdList');await T(200);
-ok(/1 of 15 done, 0 right first time/.test(await pg.locator('.pro-note').first().innerText()),'progress counted (not first try)');
+ok(/1 of 40 done, 0 right first time/.test(await pg.locator('.pro-note').first().innerText()),'progress counted (not first try)');
 // diff tab, simulator-reproduced
 await pg.click('#readRoot .dr-tabs button[data-tab="diff"]');await T(200);
-ok(await pg.locator('.rd-card').count()===12,'12 diffs listed');
+ok(await pg.locator('.rd-card').count()===16,'16 diffs listed');
 await pg.locator('.rd-card').first().click();await pg.waitForSelector('.rd-panes');
 ok(await pg.locator('.rd-pane.broken .rd-l').count()>5,'broken manifest is shown with numbered lines');
 await pg.locator('.rd-pane.broken .rd-l',{hasText:'kind: Deployment'}).first().click();await T(150);
