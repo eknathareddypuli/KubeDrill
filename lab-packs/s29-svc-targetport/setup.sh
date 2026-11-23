@@ -54,6 +54,28 @@ spec:
     command: ["sleep", "3600"]
 
 KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kd-noise
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Service
+metadata:
+  name: reports-svc
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+spec:
+  selector:
+    app: reports-retired
+  ports:
+  - port: 80
+
+KUBEDRILL_EOF
 
 
 kubectl config set-context --current --namespace=route >/dev/null
