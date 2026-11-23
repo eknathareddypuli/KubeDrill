@@ -351,6 +351,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
         <li><a href="#cheatsheet" data-page="cheatsheet">Cheatsheet</a></li>
         <li><a href="#tools" data-page="tools">Tools</a></li>
         <li><a href="#decode" data-page="decode">Error decoder</a></li>
+        <li><a href="#reading" data-page="reading">Read &amp; diff</a></li>
         <li><a href="#errors" data-page="errors">Errors</a></li>
         <li><a href="#fidelity" data-page="fidelity">Fidelity</a></li>
         <li><a href="#coverage" data-page="coverage">Coverage</a></li>
@@ -639,6 +640,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
 <div class="page" id="page-fidelity" role="main"><div class="section-wrap" id="fidRoot"></div></div>
 <div class="page" id="page-decode" role="main"><div class="section-wrap" id="decodeRoot"></div></div>
 <div class="page" id="page-drills" role="main"><div class="section-wrap" id="drillRoot"></div></div>
+<div class="page" id="page-reading" role="main"><div class="section-wrap" id="readRoot"></div></div>
 <div class="page" id="page-break" role="main"><div class="section-wrap" id="breakRoot"></div></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
@@ -3764,11 +3766,17 @@ renderEnc();
 <script src="assets/js/data/debrief-l.js"></script>
 <script src="assets/js/data/hint-ladder.js"></script>
 <script src="assets/js/data/variants-auto.js"></script>
+<script src="assets/js/data/traps-a.js"></script>
+<script src="assets/js/data/traps-b.js"></script>
+<script src="assets/js/data/traps-c.js"></script>
+<script src="assets/js/data/traps-d.js"></script>
 <script src="assets/js/data/lab-meta.js"></script>
 <script src="assets/js/data/docs-peek.js"></script>
 <script src="assets/js/data/versions.js"></script>
 <script src="assets/js/data/decoder-data.js"></script>
 <script src="assets/js/data/drills-data.js"></script>
+<script src="assets/js/data/reading-core.js"></script>
+<script src="assets/js/data/reading-data.js"></script>
 <script src="assets/js/data/sources.js"></script>
 <script src="assets/js/data/modules-extra.js"></script>
 <script src="assets/js/data/quiz-extra.js"></script>
@@ -3799,8 +3807,10 @@ renderEnc();
 <script src="assets/js/pro-term.js"></script>
 <script src="assets/js/pro-explain.js"></script>
 <script src="assets/js/decoder.js"></script>
+<script src="assets/js/replay.js"></script>
 <script src="assets/js/version-ui.js"></script>
 <script src="assets/js/drills.js"></script>
+<script src="assets/js/reading.js"></script>
 <script>routeFromHash();</script>
 </body>
 </html>

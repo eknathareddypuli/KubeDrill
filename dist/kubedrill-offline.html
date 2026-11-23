@@ -1203,6 +1203,27 @@ table.wg-t tr.hl td,table.wg-t td.hl{background:rgba(56,189,248,.12)}
 .ex-honest{border:1px dashed var(--border2);border-radius:10px;padding:10px 14px;margin:12px 0;font-size:13px;color:var(--text2)}
 .ex-rev{width:100%;border-collapse:collapse;font-size:13px;margin:10px 0}.ex-rev th,.ex-rev td{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}.ex-rev .slow{color:#f59e0b}.ex-rev .okq{color:#22c55e}.ex-rev .badq{color:#ef4444}
 .ex-rev{display:block;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.rp-box{margin-top:14px}.rp-box summary{cursor:pointer}.rp-sum{margin:8px 0;font-weight:600}
+.rp-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}.rp-cols h5{margin:0 0 6px;font-size:.85rem;opacity:.8}
+.rp-you,.rp-ref{margin:0;padding-left:20px;font-size:.85rem}.rp-you li,.rp-ref li{margin:3px 0;overflow-wrap:anywhere}
+.rp-fail{color:var(--red,#c0392b)}.rp-repeat{opacity:.65}.rp-m{display:inline-block;width:1.3em}
+.rp-notes{margin:10px 0 4px;padding-left:18px}.rp-box code{white-space:pre-wrap;word-break:break-word}
+@media(max-width:640px){.rp-cols{grid-template-columns:1fr}}
+.rd-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:10px}
+.rd-card{display:flex;flex-direction:column;gap:4px;text-align:left;padding:12px;border:1px solid var(--border,#d8dce3);border-radius:10px;background:transparent;color:inherit;cursor:pointer;font:inherit}
+.rd-card.done{opacity:.8}.rd-card em{font-style:normal;font-size:.8rem;opacity:.75}
+.rd-ev,.rd-pane pre,.rd-out{margin:8px 0;padding:10px;border-radius:8px;background:rgba(127,127,127,.12);overflow-x:auto;font-size:.82rem;line-height:1.45;max-width:100%}
+.rd-out{white-space:pre-wrap;word-break:break-word}
+.rd-l{display:block;white-space:pre-wrap;word-break:break-word;padding:0 4px;border-radius:4px}
+.rd-ev .rd-l:not(.cmd){cursor:pointer}.rd-ev .rd-l:not(.cmd):hover,.rd-pane.broken .rd-l:hover{background:rgba(127,127,127,.22)}
+.rd-l.cmd{font-weight:700;opacity:.8}.rd-l.hit{background:rgba(46,160,67,.28);outline:1px solid rgba(46,160,67,.6)}
+.rd-l i{display:inline-block;width:2.2em;opacity:.45;font-style:normal;user-select:none}
+.rd-panes{display:grid;grid-template-columns:1fr 1fr;gap:12px}.rd-pane h5{margin:0;font-size:.85rem}.rd-pane.broken h5{color:var(--red,#c0392b)}.rd-pane.ok h5{color:var(--green,#2e7d32)}
+.rd-opts{display:flex;flex-direction:column;gap:8px;margin:8px 0}.rd-opt{display:flex;gap:8px;align-items:flex-start;padding:8px 10px;border:1px solid var(--border,#d8dce3);border-radius:8px;cursor:pointer}
+.rd-opt.wrong{opacity:.5;text-decoration:line-through}.rd-step{margin:12px 0 4px}
+@media(max-width:700px){.rd-panes{grid-template-columns:1fr}}
+.rd-panes>*,.rd-list>*,.dr-card{min-width:0}.rd-pane pre,.rd-ev,.rd-out{box-sizing:border-box}
+#readRoot code{white-space:pre-wrap;overflow-wrap:anywhere;word-break:break-word}
 </style>
 <style>/* ── Landing page: split hero, path cards, light/dark rhythm, stats, closing CTA ── */
 .hero.hero2{min-height:0;display:block;text-align:left;padding:112px 24px 72px;overflow:hidden}
@@ -1312,6 +1333,7 @@ table.wg-t tr.hl td,table.wg-t td.hl{background:rgba(56,189,248,.12)}
         <li><a href="#cheatsheet" data-page="cheatsheet">Cheatsheet</a></li>
         <li><a href="#tools" data-page="tools">Tools</a></li>
         <li><a href="#decode" data-page="decode">Error decoder</a></li>
+        <li><a href="#reading" data-page="reading">Read &amp; diff</a></li>
         <li><a href="#errors" data-page="errors">Errors</a></li>
         <li><a href="#fidelity" data-page="fidelity">Fidelity</a></li>
         <li><a href="#coverage" data-page="coverage">Coverage</a></li>
@@ -1600,6 +1622,7 @@ table.wg-t tr.hl td,table.wg-t td.hl{background:rgba(56,189,248,.12)}
 <div class="page" id="page-fidelity" role="main"><div class="section-wrap" id="fidRoot"></div></div>
 <div class="page" id="page-decode" role="main"><div class="section-wrap" id="decodeRoot"></div></div>
 <div class="page" id="page-drills" role="main"><div class="section-wrap" id="drillRoot"></div></div>
+<div class="page" id="page-reading" role="main"><div class="section-wrap" id="readRoot"></div></div>
 <div class="page" id="page-break" role="main"><div class="section-wrap" id="breakRoot"></div></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
@@ -10744,6 +10767,167 @@ js-yaml/dist/js-yaml.mjs:
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+<script>/* assets/js/data/traps-a.js */
+/* Traps and "why" notes for labs that had none (batch A). trap = the tempting wrong move; why.m = the reasoning; why.p = an optional read-only proof command.
+   Applied by lab-meta.js to any lab that does not already have its own. Checked by tests/traps.test.js. */
+(function (root) {
+  var KL = root.KL = root.KL || {}; var T = KL.trapsMore = KL.trapsMore || {};
+  Object.assign(T, {
+    's05-config-error': { trap: 'Restarting or deleting the pod changes nothing: the kubelet retries on its own and fails the same way until the ConfigMap exists. Read the Events for the exact name it wants.', why: { m: ['`CreateContainerConfigError` happens before the container starts, so there are no logs to read. The answer is in `describe` Events.', 'A missing ConfigMap is retried by the kubelet, so creating it with the right name and key is enough; no restart is needed.'] } },
+    's06-rollout-rollback': { trap: 'Scaling up before undoing the bad rollout just adds more broken pods. Undo first, then scale, then upgrade with a tag you have checked.', why: { m: ['The old ReplicaSet is still serving, so `rollout undo` restores service immediately without touching the data path.', 'Order matters: restore a known-good state, change capacity, then change the version. Each step then has one variable.'] } },
+    's07-scheduling': { trap: 'Adding only a toleration lets the pod run on the tainted node but does not attract it there. A toleration permits, a nodeSelector or affinity chooses; you need both here.', why: { m: ['A taint repels pods without a toleration; it never pulls pods in.', 'The nodeSelector needs a label that exists on the node, so label the node first, then match it in the pod template.'] } },
+    's08-probes': { trap: 'Removing the probes makes the symptom go away but hides the fault: the app is still unhealthy and the restart loop or empty endpoints come back in production.', why: { m: ['A failing liveness probe makes the kubelet kill the container, which is the restart loop. A failing readiness probe only removes the pod from Service endpoints.', 'Both probes must hit a path and port the app really serves. Check with `describe` Events: "Liveness probe failed" names the target.'] } },
+    's09-jobs': { trap: 'Using a Deployment for batch work restarts the pod forever after it finishes. Jobs run to completion, CronJobs add a schedule on top.', why: { m: ['`completions` says how many successful pods the Job needs; a Deployment has no notion of done.', 'A CronJob creates a Job on each tick, so the schedule lives on the CronJob and the pod template lives inside its `jobTemplate`.'] } },
+    's10-sidecar': { trap: 'Putting the sidecar in a second pod means it cannot see the main container\'s files. Containers in one pod share volumes, containers in different pods do not.', why: { m: ['An `emptyDir` volume lives as long as the pod and can be mounted in several containers, which is how a sidecar reads what the main container writes.', 'The volume must be declared once under `spec.volumes` and mounted in each container that needs it.'] } },
+    's14-statefulset-pvc': { trap: 'Deleting a StatefulSet pod to "reset" it does not reset its data: the replacement gets the same name and the same PVC back. Scaling down also keeps the PVCs.', why: { m: ['`volumeClaimTemplates` creates one PVC per ordinal (data-kv-0, data-kv-1, ...), and the pod with that name always re-attaches its own.', 'Stable names and stable storage are the point of a StatefulSet; a Deployment gives neither.'], p: 'kubectl get pvc' } },
+    's16-hpa': { trap: 'Creating the HPA with no CPU requests on the pods leaves the target at `<unknown>`. The percentage is of the request, so without a request there is nothing to measure against.', why: { m: ['Utilisation is current usage divided by the requested CPU, so the Deployment must set a request.', '`--min` and `--max` bound the replica count; the controller never goes outside them whatever the load.'], p: 'kubectl get hpa' } },
+    's18-secret-env': { trap: 'Typing the secret value into the pod spec as a plain env var "fixes" the error but puts the password in the manifest and in `describe`. Create the Secret and reference it.', why: { m: ['Like a missing ConfigMap, a missing Secret blocks container creation, and the kubelet retries until it exists.', 'The key you create must match the `secretKeyRef.key` in the pod, not just the Secret name.'] } },
+    's19-ingress': { trap: 'An Ingress does nothing without a controller and the right `ingressClassName`. Creating only the rules and expecting traffic is the usual miss.', why: { m: ['Host and path rules map to Services, so each backend names a Service and port that must exist.', 'Order paths from specific to general and check the `pathType`; `Prefix` and `Exact` behave differently for `/api`.'], p: 'kubectl get ingress -n shop' } },
+    's20-pdb-spread': { trap: 'A PDB alone does not spread pods: all replicas can still sit on one node, so one node failure takes them all. The PDB only limits voluntary evictions.', why: { m: ['A PodDisruptionBudget is honoured by `drain` and the eviction API, not by node crashes.', 'A `topologySpreadConstraint` on `kubernetes.io/hostname` is what puts replicas on different nodes, so you need both for availability.'] } },
+    's21-psa-restricted': { trap: 'Labelling the namespace `privileged` or `warn` makes the error disappear without fixing the pod. The label is the policy; change the workload, not the guard.', why: { m: ['The restricted profile requires non-root, dropped capabilities, no privilege escalation and a seccomp profile.', 'Admission rejects the pod at creation, so a Deployment shows no pods and the reason is in the ReplicaSet events.'] } },
+    's22-sa-token': { trap: 'Setting `automountServiceAccountToken: false` on the ServiceAccount only is not enough if the pod spec says `true`. The pod setting wins.', why: { m: ['A mounted token lets a compromised container call the API as that ServiceAccount, so removing it shrinks the blast radius.', 'A dedicated ServiceAccount stops other workloads inheriting the setting from `default`.'] } },
+    's23-gateway-api': { trap: 'Creating an HTTPRoute with no `parentRefs` (or one that names a Gateway that is not there) attaches to nothing and silently routes nothing.', why: { m: ['Gateway API splits roles: the Gateway owns listeners, the HTTPRoute owns routing rules and points to it through `parentRefs`.', 'The Gateway must reference a class and a listener whose protocol and port the route can use.'], p: 'kubectl get gateway,httproute -n gw' } },
+    's24-crd': { trap: 'Creating the custom resource before the CRD fails with "no matches for kind". The type must be registered first, and its schema decides which fields are accepted.', why: { m: ['A CRD adds a new API type to the server; `kubectl` only knows it after that.', 'The `openAPIV3Schema` validates every instance, so a missing required field is rejected at create time.'] } },
+    's25-kustomize': { trap: 'Copying the base files into the overlay and editing them works once and then drifts. The overlay should reference the base and patch only the difference.', why: { m: ['`resources: [../../base]` pulls the base in; `namePrefix`, `namespace` and replica changes are applied on top.', '`kubectl apply -k` builds and applies in one step; `kubectl kustomize` shows the result without applying.'] } },
+    's26-multitenant': { trap: 'A quota alone does not stop a pod with no limits from being created. A LimitRange supplies defaults, and a default-deny policy is what isolates the tenant on the network.', why: { m: ['ResourceQuota caps the total, LimitRange sets per-container defaults and maxima, NetworkPolicy isolates traffic. Each closes a different gap.', 'Applying all three together is the standard tenant onboarding: capacity, defaults and isolation.'] } },
+    's27-image-scan': { trap: 'Rescanning the same tag never changes the result. Moving to a newer or slimmer base image is what removes the CVEs, then you scan again to prove it.', why: { m: ['Old base images carry known CVEs in their OS packages; a minimal tag has fewer packages and therefore fewer findings.', 'Verify by scanning the new tag, not by assuming a newer tag is clean.'] } },
+    's28-incident': { trap: 'Fixing only the first fault you find and declaring victory. Three independent faults mean the Service can still have no endpoints after the pods are healthy.', why: { m: ['Work outside-in: are pods Running, does the Service have endpoints, then dependencies such as config. Each layer hides the next.', 'Re-check the user-facing symptom after every fix; it may be fixed by one change or need all three.'] } },
+    's31-init-container': { trap: 'Looking only at the main container\'s logs finds nothing: it never started. The failing step is the init container, so read its logs with `-c`.', why: { m: ['Init containers run to completion in order, and the main containers wait for all of them.', '`kubectl logs <pod> -c <init-name>` shows why it exited non-zero; fix that command and the pod proceeds.'] } },
+    's32-cm-env-missing': { trap: 'The ConfigMap exists but the key does not, so creating a second ConfigMap with the same name changes nothing. Check the key name the pod asks for, exactly.', why: { m: ['`configMapKeyRef` fails when either the ConfigMap or the key is missing, and both give the same container error.', 'Keys are case-sensitive, so `Theme` and `theme` are different keys.'] } },
+    's33-cm-volume': { trap: 'Editing a running pod to add the volume is rejected: most of a pod spec is immutable. Create the ConfigMap, then recreate the pod (or change the Deployment template).', why: { m: ['A ConfigMap mounted as a volume turns each key into a file, so the key name becomes the file name.', 'Volumes and mounts are part of the pod template, which only changes through a new pod.'] } },
+    's35-taint-toleration': { trap: 'Removing the taint from every node makes the pods schedule but breaks the isolation the taint was there to provide. Add a matching toleration instead.', why: { m: ['A toleration must match the taint\'s key, value and effect, or use `operator: Exists` for the key.', 'Tolerating a taint only allows scheduling there; it does not force it.'] } },
+    's36-node-affinity': { trap: 'Changing `required` to `preferred` makes the pod schedule anywhere and quietly defeats the placement rule. Fix the label that the rule depends on.', why: { m: ['`requiredDuringScheduling...` is a hard rule: with no matching node the pod stays Pending with an affinity message.', 'Labelling one node with the expected key and value satisfies the expression without touching the workload.'] } },
+    's37-pod-antiaffinity': { trap: 'Using `preferred` anti-affinity does not guarantee spreading: the scheduler may still stack replicas when it is convenient. Use `required` when you need a guarantee.', why: { m: ['The `topologyKey` decides what "apart" means; `kubernetes.io/hostname` means one per node.', 'The `labelSelector` must match the pods\' own labels, or the rule never sees them.'], p: 'kubectl get pods -n spread -o wide' } },
+    's39-rollout-revision': { trap: 'Plain `rollout undo` goes back only one revision, which may itself be a bad one. Read the history first and go to a named revision.', why: { m: ['Each template change creates a revision; `history` lists them and `--to-revision=N` picks the trusted one.', 'Undoing creates a new revision from the old template, so history always moves forward.'], p: 'kubectl rollout history deployment/shop -n rel' } },
+    's40-cronjob-fix': { trap: 'Fixing the schedule but leaving `suspend: true` means it still never runs. Check both fields.', why: { m: ['A suspended CronJob creates no Jobs at all, whatever the schedule says.', 'The schedule uses five cron fields; a typo there is accepted by the API but never matches the time you meant.'], p: 'kubectl get cronjob -n cron' } },
+    's41-job-bad-image': { trap: '`kubectl set image` or patch on the Job is rejected because the pod template of a Job is immutable. The only route is delete and recreate.', why: { m: ['Job pods are created from the template once; changing it later would not affect pods that already exist.', 'Recreating the Job starts fresh with the corrected image and the same completion target.'] } },
+    's42-daemonset-all-nodes': { trap: 'Scaling a DaemonSet does nothing because it has no replica count: it runs one pod per eligible node. The selector or tolerations are what limit it.', why: { m: ['A `nodeSelector` that matches no node leaves the DaemonSet with zero pods; removing it makes every node eligible.', 'Tainted nodes need a toleration in the pod template as well, or they are skipped.'] } },
+    's43-headless-service': { trap: 'A normal ClusterIP Service gives one virtual IP and no per-pod DNS names. A StatefulSet needs `clusterIP: None` and a name equal to `serviceName`.', why: { m: ['A headless Service returns the pod IPs directly and gives each pod a stable DNS name like `store-0.store-hl`.', 'The Service selector must match the pod labels, otherwise there are no endpoints to resolve.'], p: 'kubectl get endpoints store-hl -n ss' } },
+    's44-static-pv': { trap: 'Requesting more than the PV offers, or a different `storageClassName`, leaves the PVC Pending even though a PV exists. All of class, access mode and size must fit.', why: { m: ['A PVC binds to a PV whose class and access mode match and whose capacity is at least the request.', 'An empty `storageClassName: ""` means "no dynamic class", while an omitted field uses the default class and may not bind to your PV.'], p: 'kubectl get pvc,pv -n pvs' } }
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* assets/js/data/traps-b.js */
+/* Traps and "why" notes, batch B. See traps-a.js for the format. */
+(function (root) {
+  var KL = root.KL = root.KL || {}; var T = KL.trapsMore = KL.trapsMore || {};
+  Object.assign(T, {
+    's45-hpa-wrong-target': { trap: 'Editing the HPA to "fix" the target is rejected or ignored for some fields, and a typo in `scaleTargetRef.name` fails silently with an `<unknown>` target. Recreate it against the real Deployment and read the HPA conditions.', why: { m: ['An HPA scales whatever `scaleTargetRef` names. If that object does not exist, nothing scales and the condition says it cannot find the target.', 'Recreating with `kubectl autoscale` sets the reference, bounds and CPU target together, so you cannot leave one of them half-edited.'], p: 'kubectl get hpa -n scale' } },
+    's47-limitrange-max': { trap: 'Deleting the LimitRange lets the pod in but removes a guard that protects the whole namespace. Bring the pod\'s requests and limits under the cap instead.', why: { m: ['A LimitRange `max` is checked at admission, so the pod is refused before it exists and the error is in the ReplicaSet events.', 'Requests must also stay at or below limits, so lower both together.'] } },
+    's48-quota-pods': { trap: 'Deleting the ResourceQuota makes scaling work but removes the tenant\'s limit. Raise it deliberately, or lower the replica count, and say which.', why: { m: ['A pod-count quota is enforced at pod creation, so the Deployment shows fewer pods than desired and the ReplicaSet events say "exceeded quota".', 'Quota is the namespace owner\'s budget; changing it is a capacity decision, not a bug fix.'], p: 'kubectl get resourcequota -n qt' } },
+    's49-clusterrole-nodes': { trap: 'A Role plus RoleBinding in the namespace can never grant access to nodes: nodes belong to no namespace. You need a ClusterRole and a ClusterRoleBinding.', why: { m: ['Cluster-scoped resources (nodes, namespaces, PersistentVolumes) can only be granted by a ClusterRole bound with a ClusterRoleBinding.', 'Check the result as the account itself with `kubectl auth can-i list nodes --as=system:serviceaccount:<ns>:<sa>`.'] } },
+    's50-rolebinding-wrong-role': { trap: '`kubectl edit` on the RoleBinding\'s `roleRef` is rejected, because `roleRef` is immutable. Delete the binding and recreate it with the right Role.', why: { m: ['`roleRef` cannot change after creation, so that a binding can never be quietly swapped to a more powerful role.', 'Only the subjects of a binding can be edited in place.'] } },
+    's51-netpol-egress': { trap: 'Allowing egress to the API pod but forgetting DNS leaves name lookups blocked, so the connection fails by name while working by IP. Allow port 53 to the DNS pods too.', why: { m: ['Once egress is restricted, only what a rule allows is permitted, including DNS.', 'Policies are additive: add one allowing only the needed destination and port rather than editing the deny-all.'] } },
+    's52-netpol-namespace': { trap: 'A podSelector alone matches pods in the policy\'s own namespace only. To allow another namespace you need a `namespaceSelector`, and that namespace must actually carry the label.', why: { m: ['`namespaceSelector` matches namespace labels, so check `kubectl get ns --show-labels` first.', 'Putting `namespaceSelector` and `podSelector` in the same list item ANDs them; in separate items they OR, which is a common over-allow.'] } },
+    's53-psa-baseline': { trap: 'Relaxing the namespace label to `privileged` makes the pod run but turns off the policy for every workload there. Remove `privileged: true` from the pod instead.', why: { m: ['The baseline standard blocks known privilege escalations, and a privileged container is the clearest one.', 'Admission refuses the pod at creation, so the evidence is in the ReplicaSet events, not in pod logs.'] } },
+    's54-hostpath-baseline': { trap: 'Switching the namespace to a weaker level to keep the hostPath is the shortcut that defeats the policy. Use an `emptyDir` or a PVC.', why: { m: ['A hostPath mounts the node\'s filesystem into the pod, which can expose other workloads\' data and the kubelet.', 'An `emptyDir` gives scratch space; a PVC gives durable storage, and neither touches the host.'] } },
+    's55-image-pull-secret': { trap: 'Creating the registry Secret is not enough: the pod must reference it with `imagePullSecrets`, and the Secret must be in the same namespace as the pod.', why: { m: ['`ImagePullBackOff` with "unauthorized" means the registry rejected the credentials, not that the image is missing.', 'A docker-registry Secret holds the login; `imagePullSecrets` (or the ServiceAccount) tells the kubelet to use it.'] } },
+    's56-rollout-restart-secret': { trap: 'Updating the Secret does not change environment variables in running pods. The pods keep the old value until they restart.', why: { m: ['Environment variables are read once at container start; only mounted Secret volumes are refreshed over time.', '`kubectl rollout restart` replaces pods one by one so the service stays up while they pick up the new value.'] } },
+    's57-ingress-tls': { trap: 'Adding the `tls` block without the Secret, or with a Secret of the wrong type, makes the controller serve its default certificate. The Secret must be type `kubernetes.io/tls` and in the Ingress\'s namespace.', why: { m: ['`spec.tls[].hosts` must include the host the client uses, and `secretName` must name a TLS Secret.', 'TLS terminates at the Ingress controller, so the backend Service can stay plain HTTP.'] } },
+    's58-nodeport-fixed': { trap: 'Picking a port outside 30000-32767 is rejected. Leaving `nodePort` unset works but gives a random port, which is not what a fixed requirement asks for.', why: { m: ['A NodePort opens the same port on every node and forwards to the Service\'s ClusterIP.', 'Patching `type` alone is not enough here; the port list must carry the `nodePort` you need.'], p: 'kubectl get svc site -n np' } },
+    's59-externalname': { trap: 'Pointing an ExternalName at an IP address does not work: it returns a CNAME, so the value must be a DNS name. Changing the type of an existing Service in place is also awkward, so recreate it.', why: { m: ['An ExternalName Service has no selector, no endpoints and no proxying; the cluster DNS simply answers with the outside name.', 'Callers use the in-cluster name, so the real hostname can change without touching the apps.'] } },
+    's60-canary-weights': { trap: 'There is no weight setting on a plain Service. The split comes from how many pods back each Deployment, so 20% needs a 4:1 replica ratio, not a number on the Service.', why: { m: ['A Service load-balances across all ready endpoints with matching labels, so more pods means more traffic.', 'This gives a rough split only; exact percentages need an Ingress controller or mesh that supports weights.'] } },
+    's61-blue-green': { trap: 'Scaling blue to zero before you have switched the selector causes an outage. Switch traffic first, check it, then scale the old side down.', why: { m: ['The Service selector decides which pods are live, so one patch moves all traffic at once.', 'Keeping blue running until green is proven gives you an instant rollback: patch the selector back.'] } },
+    's62-kustomize-images': { trap: 'Editing the image in the base changes it for every environment. The overlay\'s `images:` entry changes only that overlay.', why: { m: ['`images` matches by the image name in the manifests and replaces the tag (or name) at build time.', '`kubectl kustomize overlays/prod` prints the result so you can see the new tag before applying.'] } },
+    's63-etcd-backup': { trap: 'Running `etcdctl snapshot save` without the endpoint and certificate flags fails with a connection or auth error, and a snapshot you never verified is not a backup. Run `snapshot status` on the file.', why: { m: ['etcd holds all cluster state, so the snapshot is the only way back from losing it.', '`snapshot status` reads the file and shows its hash and size, which proves it is a valid snapshot.'] } },
+    's64-jsonpath-nodes': { trap: 'Using `-o json` and cutting the output by eye is slow and error-prone. JSONPath returns exactly the fields, and the file you redirect to is what gets checked.', why: { m: ['`.items[*].metadata.name` walks every list element; `*` is a wildcard over the array.', 'Quote the whole expression in single quotes so the shell does not touch the braces.'] } },
+    's65-custom-columns': { trap: 'Sorting the table output with `sort` on a column breaks on spacing. `--sort-by` takes a JSONPath and sorts the objects before printing.', why: { m: ['`custom-columns` takes `HEADER:jsonpath` pairs, so you choose what each column shows.', '`--sort-by=.metadata.creationTimestamp` orders oldest first, which is often exactly what a task asks for.'] } },
+    's66-imperative-speedrun': { trap: 'Writing YAML for simple objects costs minutes. `run`, `create` and `expose` build them in one line; use YAML only when a field has no flag.', why: { m: ['On a timed exam the fastest correct path wins, and imperative commands create most common objects directly.', 'Add `--dry-run=client -o yaml` when you need to edit the result before creating it.'] } },
+    's67-find-restarts': { trap: 'Reading the RESTARTS column by eye in a long list misses the worst offender. Sort by `restartCount` and take the last row.', why: { m: ['`.status.containerStatuses[0].restartCount` is the counter the column shows.', 'Then `describe` the top pod and read the last state and exit code to see why it restarts.'] } },
+    's68-multi-ns-cleanup': { trap: 'Deleting by label without listing first can remove namespaces you meant to keep. Run the same selector with `get` before `delete`.', why: { m: ['A label selector acts on everything that matches at that moment.', 'Deleting a namespace removes everything inside it, so the check is not optional.'] } },
+    's69-stuck-terminating': { trap: 'Force-deleting the namespace through the API raw endpoint hides the real problem and can leave objects behind. Find the object whose finalizer is blocking, and clear that.', why: { m: ['`status.conditions` on the namespace names what is still blocking deletion.', 'A finalizer is a promise that a controller will clean up; if that controller is gone, removing the finalizer from the leftover object is the manual way out.'] } },
+    's71-kubelet-swap': { trap: 'Restarting kubelet again and again does not help: it refuses to start while swap is on. Turn swap off, make it stay off across reboots, then restart.', why: { m: ['The journal line for the kubelet names swap as the reason it exits.', '`swapoff -a` turns it off now; the swap line in `/etc/fstab` must be removed or it returns at the next reboot.'] } },
+    's72-dead-webhook': { trap: 'Deleting the webhook configuration brings pods back but removes the policy it enforced. Restore the backend so the policy works again.', why: { m: ['With `failurePolicy: Fail` the API server rejects every request the webhook cannot answer.', 'A webhook must not guard its own namespace, or it blocks its own recovery. Check the Service endpoints first.'], p: 'kubectl get endpoints -n policy' } },
+    's73-expired-certs': { trap: 'Renewing the certificates is not the end: the control-plane static pods keep using the old ones until they restart. Check expiry, renew, then restart them.', why: { m: ['`kubeadm certs check-expiration` lists every certificate and how long it has left.', 'The admin kubeconfig is also renewed, so copy the new one or kubectl will still fail.'] } },
+    's74-privileged-hunt': { trap: 'Fixing only the container flagged by the first scan leaves `hostPID` or the runtime socket mount open. Check privileged mode, host namespaces and hostPath volumes on every workload.', why: { m: ['Each of the three lets a container reach the host: privileged mode, a shared PID namespace and the container runtime socket.', 'Remove the volume and its mount together, or the pod spec is invalid.'] } },
+    's75-rbac-least-privilege': { trap: 'Deleting the RoleBinding stops the over-privilege but also stops the CI deploying. Keep the binding and replace the Role\'s rules with only what deploying needs.', why: { m: ['A Role grants verbs on resources; a RoleBinding attaches it to a subject. The excess is in the Role.', 'Prove the result with `kubectl auth can-i` for an allowed and a denied action as the service account.'] } },
+    's76-image-hygiene': { trap: 'Changing `latest` to another floating tag is not a fix. Pin an exact version, ideally a digest, and from an approved registry.', why: { m: ['A mutable tag can point to different content tomorrow, so two pods of the same Deployment can run different code.', 'A digest cannot change, which makes rollbacks and audits reliable.'] } },
+    's77-hardened-pod': { trap: 'Setting `readOnlyRootFilesystem` alone can break an app that writes to its own filesystem. Give it an `emptyDir` for the paths it writes, and keep the other hardening fields.', why: { m: ['Each setting closes a different door: non-root, no escalation, dropped capabilities, read-only root and a seccomp profile.', 'Check that the pod is still Ready afterwards; hardening that leaves the pod crashing is not a result.'] } }
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* assets/js/data/traps-c.js */
+/* Traps and "why" notes, batch C. See traps-a.js for the format. */
+(function (root) {
+  var KL = root.KL = root.KL || {}; var T = KL.trapsMore = KL.trapsMore || {};
+  Object.assign(T, {
+    's78-default-sa-admin': { trap: 'Deleting the binding fixes the exposure but breaks the dashboard that relied on it. Give the dashboard its own ServiceAccount with a read-only Role, then remove the binding.', why: { m: ['Every pod that does not name a ServiceAccount runs as `default`, so a cluster-admin binding on it makes every pod in the namespace an admin.', 'Least privilege means a named account per workload with only the verbs it needs.'] } },
+    's79-kubeadm-upgrade': { trap: 'Upgrading the workers first, or skipping a minor version, breaks the version-skew rules. Go control plane first, one minor at a time, and drain each node before its kubelet upgrade.', why: { m: ['The API server may be newer than kubelets but never older, so the control plane always leads.', 'Draining first moves workloads off the node while its kubelet is replaced, and uncordon brings it back.'] } },
+    's80-node-replace': { trap: 'Running `kubeadm join` on a node that still has the old state fails or half-joins. Drain, delete the node object, reset the host, then join with a fresh token.', why: { m: ['Deleting the Node object removes the stale record, and `kubeadm reset` wipes the old certificates and static pod files.', 'Join tokens expire, so create a new one on the control plane for the rejoin.'] } },
+    's81-disk-pressure': { trap: 'Deleting files under the container runtime or kubelet directories to free space can corrupt running pods. Vacuum the journal and prune unused images instead.', why: { m: ['When free disk drops below the eviction threshold the kubelet sets DiskPressure, taints the node and evicts pods.', 'Journals and unused images are safe to trim; container layers and kubelet state are not.'] } },
+    's82-coredns-down': { trap: 'Restarting application pods does nothing when no name resolves. The break is in cluster DNS, which shows as the `kube-dns` Service having no endpoints.', why: { m: ['Pods resolve names through the `kube-dns` Service, which fronts the CoreDNS pods.', 'Zero replicas means zero endpoints, so every lookup times out even though the apps are healthy.'], p: 'kubectl get endpoints kube-dns -n kube-system' } },
+    's83-lb-pending': { trap: 'Waiting longer does not help: with no cloud or MetalLB controller nothing will ever assign an address. Use a NodePort or an Ingress or Gateway for outside access here.', why: { m: ['A `LoadBalancer` Service is fulfilled by a controller that talks to a cloud or a load-balancer add-on.', 'On a cluster without one, NodePort exposes the same Service on each node\'s IP.'] } },
+    's84-service-ladder': { trap: 'Stopping after the first fix. The selector, the targetPort and the NetworkPolicy are three separate layers, and each one hides the next. Re-test after every change.', why: { m: ['Check in order: does the Service have endpoints, does `targetPort` match the container port, does a policy allow the traffic.', 'A narrow allow policy restores access without removing the default deny.'], p: 'kubectl get endpoints -n store' } },
+    's86-qos-eviction': { trap: 'Adding memory to the node hides the problem. The pod with no limits is the cause, and the important workload needs requests equal to limits so it is Guaranteed.', why: { m: ['Under memory pressure the kubelet evicts BestEffort first, then Burstable, and Guaranteed last.', 'Capping the hog stops the pressure; making the API Guaranteed protects it from the next one.'] } },
+    's87-rightsizing': { trap: 'Setting requests to the recommender\'s lowest number risks throttling and OOM kills. Choose between its target and upper bound, keep a memory limit and leave the CPU limit off.', why: { m: ['Requests are what the scheduler reserves, so requests far above real use waste capacity and block scheduling.', 'A CPU limit throttles a pod even on an idle node, while a memory limit protects the node from a leak.'] } },
+    's88-hpa-vs-quota': { trap: 'Lowering the HPA maximum to match the quota makes the warning go away but caps the service. The quota is the owner\'s decision; raise it with approval.', why: { m: ['The HPA asks for replicas, and the quota refuses pods beyond the namespace limit, so the HPA shows desired above current.', 'The evidence is in the ReplicaSet events: "exceeded quota".'], p: 'kubectl get hpa -n team' } },
+    's89-context-namespace': { trap: 'Typing `-n` on every command invites a mistake on the one command you forget. Pin a namespace to each context and check which one you are in.', why: { m: ['A context is a cluster, a user and a default namespace together.', '`kubectl config set-context --current --namespace=x` changes the default for the context you are in.'] } },
+    's90-wrong-context': { trap: 'Running the delete first and checking afterwards is the classic outage. Read `current-context` before any destructive command, or pass `--context` explicitly.', why: { m: ['`--context` applies to that one command and leaves your shell\'s context alone, so a slip cannot hit production.', 'On an exam each task names its context; switching to it first is the first step, not an afterthought.'] } },
+    's91-black-friday': { trap: 'Raising the quota first and moving on. Three layered faults mean the page can stay down after each single fix, so verify end to end at the end.', why: { m: ['A bad image keeps pods from starting, a quota blocks replicas from being created, and a wrong selector hides healthy pods from the Service.', 'Raise a quota deliberately and say why, because it is a capacity decision.'] } },
+    's92-silent-database': { trap: 'Fixing the Secret and stopping. The claim still points at a StorageClass that does not exist, and a restrictive policy still blocks the clients. Walk storage, configuration and network.', why: { m: ['A PVC\'s class cannot be edited after creation, so recreate it with an existing class.', 'A single narrow allow rule opens exactly the client-to-database path and nothing more.'] } },
+    's93-release-gone-wrong': { trap: 'Rolling back hides the two faults and they return on the next release. Add the missing ConfigMap key and fix the probe path, then let the rollout complete.', why: { m: ['A readiness probe that never passes stops the rollout from progressing, and the old pods stay in service.', 'A missing key blocks container start for the new pods, so they never even reach the probe.'], p: 'kubectl rollout status deploy/portal -n rel --timeout=5s' } },
+    's94-capacity-crunch': { trap: 'Uncordoning first and expecting pods to appear. The pods need the PriorityClass to exist and requests that fit, and uncordon only after the node is known healthy.', why: { m: ['A pod that names a missing PriorityClass is rejected, so there is nothing to schedule.', 'A cordoned node accepts no new pods, which is easy to forget after maintenance.'] } },
+    's95-pi-day-replay': { trap: 'Clearing the finalizer first leaves the cluster unable to create anything. Fix the root of the chain: certificates, then the webhook backend, then the stuck namespace.', why: { m: ['Expired certificates break API access, a dead webhook rejects creates, and a finalizer blocks deletion. Each fault makes the next hard to see.', 'After renewing, restart the control-plane components so they load the new certificates.'] } },
+    's96-two-nodes-down': { trap: 'Fixing one node and assuming the other is the same fault. One failed on swap, the other on disk pressure, and the fixes are different.', why: { m: ['The kubelet journal names the reason for each failure; read it on each node before acting.', 'After repair, check that pods reschedule and the nodes report Ready.'] } },
+    's97-pv-retain': { trap: 'Raising the PVC size first is rejected until the StorageClass allows expansion. And a PV left on `Delete` loses the data when the claim goes.', why: { m: ['`persistentVolumeReclaimPolicy: Retain` keeps the volume and its data when the PVC is deleted.', '`allowVolumeExpansion` is a StorageClass setting; only then can a claim\'s request be raised.'], p: 'kubectl get pv pv-reports' } },
+    's98-drain-bare-pod': { trap: 'Adding `--force` without checking what the bare pod is deletes it for good, because nothing recreates it. Confirm it is disposable first.', why: { m: ['A pod without a controller is not recreated after eviction, so `drain` refuses unless you force it.', '`--ignore-daemonsets` and `--delete-emptydir-data` cover the other two common blockers.'] } },
+    's99-noexecute-eviction': { trap: 'Tainting the node before adding the toleration evicts the critical pod at once. Put the toleration in place first, then taint.', why: { m: ['`NoExecute` evicts running pods that do not tolerate the taint.', '`tolerationSeconds` lets a pod stay for a bounded time, which gives it room to finish or drain.'] } },
+    's100-hpa-unknown': { trap: 'Editing the HPA does nothing: the fault is on the Deployment. A CPU percentage needs a CPU request to be a percentage of.', why: { m: ['Utilisation is current CPU divided by the pod\'s request, so with no request the metric cannot be computed.', 'The HPA conditions say "missing request for cpu", which is the clue.'], p: 'kubectl get hpa -n scale' } },
+    's101-clusterrole-reuse': { trap: 'A ClusterRoleBinding gives the permissions in every namespace. To limit them, bind the ClusterRole with a RoleBinding in each namespace you allow.', why: { m: ['A ClusterRole defines permissions once; the kind of binding decides where they apply.', 'A RoleBinding that references a ClusterRole grants it only inside that RoleBinding\'s namespace.'] } },
+    's102-httproute-fix': { trap: 'Recreating the route with the same `parentRefs` repeats the fault. The Gateway name must exist, and the backend port must be one the Service exposes.', why: { m: ['`parentRefs` attaches a route to a Gateway; a name that matches nothing attaches to nothing.', 'The route\'s `backendRefs` port is the Service port, not the container port.'], p: 'kubectl get httproute -n gw2' } },
+    's103-job-parallel': { trap: 'Editing `completions` on an existing Job is rejected. Delete and recreate it, and set `restartPolicy` to `Never` or `OnFailure`, since `Always` is invalid for a Job.', why: { m: ['`completions` is the number of successes needed, `parallelism` is how many run at once, and `backoffLimit` caps retries.', '`activeDeadlineSeconds` stops the whole Job after that time, whatever its state.'], p: 'kubectl get job import -n jobs2' } },
+    's104-cronjob-policy': { trap: 'Leaving `concurrencyPolicy` at the default lets a slow run overlap the next one and pile up. `Forbid` skips a tick while one is running.', why: { m: ['History limits decide how many finished Jobs are kept, which keeps the namespace tidy.', '`startingDeadlineSeconds` says how late a run may start before it counts as missed.'], p: 'kubectl get cronjob cleanup -n cron' } },
+    's105-startup-probe': { trap: 'Raising the liveness probe\'s timeout makes it lenient for the whole life of the pod. A startup probe gives the slow start its own allowance and leaves liveness strict.', why: { m: ['Liveness and readiness probes are paused until the startup probe succeeds.', 'The total allowance is `failureThreshold` times `periodSeconds`; size it for the slowest normal start.'] } },
+    's106-config-injection': { trap: 'Copying values into the Deployment as literals bakes configuration into the spec and leaks secrets into `describe`. Use `envFrom` for the ConfigMap and a read-only Secret volume.', why: { m: ['`envFrom` loads every key of a ConfigMap as an environment variable, so adding a key needs no manifest change.', 'A Secret mounted as a volume is refreshed over time and is not visible in the pod\'s environment.'] } },
+    's107-rolling-strategy': { trap: 'Setting `maxUnavailable: 0` without `maxSurge` of at least 1 deadlocks the rollout, since no pod may go away and none may be added.', why: { m: ['The default 25%/25% can briefly drop below the desired count.', 'With a readiness probe, `maxUnavailable: 0` guarantees a new pod is ready before an old one is removed.'] } },
+    's108-old-apiversion': { trap: 'Guessing a newer version and applying it fails with a field error. Look up the served version with `api-resources` and check the fields with `explain`.', why: { m: ['Removed API versions are rejected by the server, so the manifest must move to the current group and version.', 'The schema can differ between versions, so confirm the field names after changing the version.'] } },
+    's109-seccomp-default': { trap: 'Making the root filesystem read-only without an `emptyDir` for the paths the app writes makes the pod crash. Harden and keep it running.', why: { m: ['`seccompProfile: RuntimeDefault` blocks a set of risky syscalls without breaking normal apps.', 'Combine it with no privilege escalation and dropped capabilities for layered hardening.'] } }
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* assets/js/data/traps-d.js */
+/* Traps and "why" notes, batch D. See traps-a.js for the format. */
+(function (root) {
+  var KL = root.KL = root.KL || {}; var T = KL.trapsMore = KL.trapsMore || {};
+  Object.assign(T, {
+    's110-default-deny': { trap: 'A default-deny policy with nothing after it breaks everything, including DNS and health checks. Add narrow allow rules for the traffic you need, and DNS egress where egress is denied.', why: { m: ['`podSelector: {}` selects every pod in the namespace, and listing a policy type with no rules denies all of that type.', 'Policies are additive: each allow rule opens one path, and nothing can subtract from an allow.'], p: 'kubectl get networkpolicy -n zt' } },
+    's112-audit-hunt': { trap: 'Searching only for the 403 (denied) events finds the attempts that failed. The successful read is the one that shows who actually saw the secret.', why: { m: ['Filter by the resource name first, then by status code, then pull the user field.', 'A denied request is a failed attempt; a 200 on a read is a disclosure.'] } },
+    's113-open-binding': { trap: 'Deleting the binding but leaving the default ServiceAccount token auto-mounted keeps a credential in every pod. Both the grant and the token exposure need closing.', why: { m: ['A binding to the `system:authenticated` group gives that role to every logged-in identity, which is far too broad.', 'Turning off `automountServiceAccountToken` on the ServiceAccount stops new pods getting a token they do not need.'] } },
+    's114-psa-rollout': { trap: 'Enforcing `restricted` straight away rejects existing workloads. Enforce a level you already meet, use warn and audit at the stricter level to find the gaps, fix them, and then tighten.', why: { m: ['The three modes (enforce, audit, warn) can use different levels in the same namespace.', 'Warn messages appear on apply, and audit entries go to the audit log, so you see problems before they block anything.'], p: 'kubectl get ns rollout-ns --show-labels' } },
+    's115-etcd-restore': { trap: 'Restoring the newest snapshot because it is newest. The 11:00 snapshot was taken after the namespace was deleted, so it cannot bring it back. Check what each snapshot contains.', why: { m: ['A restore returns the cluster to the moment of the snapshot, so choose the one taken before the loss.', 'Restore into a new data directory and point the etcd static pod\'s `hostPath` at it; restoring over the live directory is unsafe.'] } },
+    's116-static-pod': { trap: 'Running `kubectl delete pod` or `kubectl edit` on a static pod does not stick: the kubelet recreates it from the file. Edit or remove the manifest file on the node.', why: { m: ['A static pod is owned by the kubelet and defined by a file in the manifests directory; the API object is a read-only mirror.', 'Deleting the file removes the pod, and saving a change to it makes the kubelet recreate the pod.'] } },
+    's117-corefile': { trap: 'Restarting CoreDNS does not fix a wrong name in its configuration. Read the Corefile in the ConfigMap and look at the cluster domain on the `kubernetes` line.', why: { m: ['The `kubernetes` plugin answers only for the zone it is told about, so a misspelled domain means no Service name matches.', 'The `reload` plugin applies ConfigMap changes without a restart after a short delay.'] } },
+    's120-ambassador': { trap: 'Changing the app to talk to the remote database through a new address works once but couples it to that address. The ambassador lets the app keep using `localhost`.', why: { m: ['Containers in a pod share the network namespace, so `localhost:<port>` reaches the sidecar.', 'The proxy owns the upstream address and any retries or TLS, and can change without changing the app.'] } },
+    's121-config-reload': { trap: 'Editing the ConfigMap and expecting an env var to change does nothing in running pods. Environment variables are read once at start; only a mounted volume refreshes.', why: { m: ['A ConfigMap volume is updated in place after a delay, so the app only needs to re-read the file.', 'Mounting with `subPath` stops the updates, so mount the directory.'] } },
+    's122-job-backoff': { trap: 'Waiting for the Job to succeed when the command always exits 1 only fills the namespace with failed pods. Fix the command, bound the retries and set a TTL so the cleanup is automatic.', why: { m: ['`backoffLimit` bounds the retries, `activeDeadlineSeconds` bounds the total time, and `ttlSecondsAfterFinished` removes the finished Job.', 'A Job\'s template cannot be edited, so delete and recreate it.'] } },
+    's123-helm-rollback': { trap: 'Running `helm upgrade` without `--reuse-values` resets every value you set earlier to the chart default. Roll back first, then upgrade with the old values and only the change.', why: { m: ['Helm stores every revision, so `helm rollback` restores the last good release in one step.', '`helm history` lists the revisions and their status, so pick the one that worked.'] } },
+    's124-runtimeclass': { trap: 'Naming a RuntimeClass that does not exist rejects the pod at admission. The class must exist and its `handler` must match a runtime configured on the node.', why: { m: ['A RuntimeClass maps a name to a handler such as a sandboxed runtime, and pods choose it with `runtimeClassName`.', 'The evidence is the admission error, which names the missing class.'] } },
+    's125-encryption-at-rest': { trap: 'Putting `identity` first in the provider list leaves Secrets unencrypted, because the first provider is used to write. List `aescbc` first, `identity` last so old data can still be read.', why: { m: ['The API server needs the flag, a volume and a mount for the config file, so all three must be in the static pod manifest.', 'Existing Secrets stay in plaintext until they are rewritten, so rewrite them after enabling it.'] } },
+    's126-runtime-alert': { trap: 'Deleting the pod at once destroys the evidence. Record the pod and the finding first, then remove it and make the workload read-only to stop it recurring.', why: { m: ['Only one alert line names a shell inside a container; the others are noise or related activity.', 'A read-only root filesystem makes it much harder for an intruder to drop tools even if they get a shell.'] } },
+    's128-manifest-review': { trap: 'Fixing the one anti-pattern you notice first. This manifest has six: a floating tag, no resources, no probe, root, a plaintext password and one replica. Go through them all.', why: { m: ['Each one works in a demo and fails in production: floating tags drift, missing limits starve neighbours, no probe sends traffic to broken pods.', 'A Secret keeps the password out of the manifest, and two replicas survive one pod dying.'] } },
+    's129-zero-downtime': { trap: 'Setting only the rolling-update numbers still drops requests, because a terminating pod keeps getting traffic for a moment after it is told to stop. A `preStop` sleep covers that gap.', why: { m: ['`maxUnavailable: 0` keeps full capacity, and a readiness probe holds traffic back until the new pod can serve.', 'The grace period must be longer than the `preStop` sleep, and a PDB protects against node drains.'] } },
+    's133-priorityclass-policy': { trap: 'Editing the existing class to add `preemptionPolicy: Never` is rejected, since `value` and `preemptionPolicy` cannot change. Create or recreate the class instead.', why: { m: ['A pod that names a missing PriorityClass is rejected at admission.', '`preemptionPolicy: Never` lets a batch pod wait in the queue without evicting running pods of lower priority.'] } },
+    's140-worked-imagepull': { trap: 'Deleting the pod just makes a new pod with the same bad image. Read the Events to see the pull error, then change only the image.', why: { m: ['The Deployment owns the pod template, so the fix goes there and the rollout replaces the pods.', 'Change one thing at a time, so that if it works you know why.'] } },
+    's141-worked-selector': { trap: 'Recreating the Service gives the same empty endpoints. Compare the Service selector with the pod labels and patch whichever is wrong.', why: { m: ['A Service sends traffic only to pods whose labels match its selector.', '`kubectl get endpoints` shows the result immediately: empty means no match.'] } },
+    's142-worked-configmap': { trap: 'Editing the Deployment to drop the ConfigMap reference makes the error go away and removes the setting the app needs. Create the ConfigMap the pod already expects.', why: { m: ['The pod names the ConfigMap and key it wants, so match both exactly.', 'The kubelet retries on its own, so no restart is needed once it exists.'] } },
+    's143-yaml-tab': { trap: 'Converting each tab to a single space breaks the nesting. Replace tabs with the same number of spaces as the level needs, and keep sibling items aligned.', why: { m: ['YAML forbids tab characters for indentation, so the parser stops at the first one.', '`cat -A file` shows tabs as `^I`, which is the quickest way to find them.'] } },
+    's144-yaml-indent': { trap: 'The file is valid YAML, so a syntax check passes and still the apply fails. The field is under the wrong parent; the schema, not the syntax, is the problem.', why: { m: ['`image` belongs to a container, not to the pod spec, so it must sit under the container\'s name.', '`kubectl explain pod.spec.containers` shows the fields a container accepts.'] } },
+    's145-yaml-apiversion': { trap: 'Changing only `apiVersion` can leave other fields that `apps/v1` requires, such as `spec.selector`. Check the apply error after changing it.', why: { m: ['Removed API versions are no longer served, so the server cannot match the kind.', '`apps/v1` requires an explicit selector that matches the template labels.'] } },
+    's148-gateway-referencegrant': { trap: 'Setting the backend namespace alone is refused: the route is crossing a namespace boundary. The target namespace must opt in with a ReferenceGrant naming the source and the one Service.', why: { m: ['A ReferenceGrant lives in the target namespace and states who may reference what, so access is granted by the owner of the target.', 'Keep it narrow: name the exact route kind and namespace as the source and the one Service as the target.'] } },
+    's150-helm-values': { trap: 'Upgrading with only `--set` resets every other value to the chart default. Use `--reuse-values` and set only what changes.', why: { m: ['Install stores the values in the release, and an upgrade starts from the chart defaults unless told otherwise.', '`helm get values <release>` shows what the release currently uses.'] } },
+    's151-audit-policy': { trap: 'Putting a catch-all rule first makes it match everything, so the specific rules below it never fire. Rules are checked top-down and the first match wins.', why: { m: ['Secrets must be logged at `Metadata`, never `RequestResponse`, or the secret values end up in the log.', 'The policy file must be mounted into the apiserver pod and named by its flag, or it has no effect.'] } },
+    's153-falco-rule': { trap: 'Matching any process named `bash` anywhere floods the alerts. A good rule limits itself to spawned processes in containers and prints the container id and command line.', why: { m: ['The `spawned_process` and `container` macros restrict the rule to real events inside containers.', 'Useful output names the user, the container and the full command, so the responder can act without searching.'] } },
+    's154-trivy-report': { trap: 'Fixing everything in the order it is printed wastes time. Triage by severity first, then split what has a fixed version (upgrade now) from what does not (accept or mitigate).', why: { m: ['CRITICAL findings come first, but the response differs: a fixed version means upgrade, no fix means mitigation.', 'The shell pipeline `grep | awk | sort | wc` is the fast way to summarise the report on the exam.'] } },
+    's155-version-skew': { trap: 'Looking at patch versions. The policy is about minor versions only, and the direction matters: kubelets may be older than the apiserver within the limit but never newer.', why: { m: ['Compare each component\'s minor with the apiserver\'s using the supported-skew table.', 'A kubelet newer than the apiserver is out of policy even though it looks like a harmless upgrade.'] } },
+    's167-explain-lookup': { trap: 'Opening a browser for the field name wastes minutes and is not always allowed. `kubectl explain` gives the path, type and values in the terminal.', why: { m: ['Walk down with dots, for example `deployment.spec.strategy.rollingUpdate`, and read the description at each level.', '`--recursive` prints the whole tree so you can find a field without knowing its parent.'] } },
+    's168-explain-required': { trap: 'Guessing which fields are mandatory. `explain` marks them `-required-`, and the marking applies inside that object only.', why: { m: ['Enum values and field names for rarely-used objects are exactly what nobody remembers, so look them up.', 'A required field inside an optional object is only required when you set the object.'] } }
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
 <script>/* assets/js/data/lab-meta.js */
 /* Lab design layer, kept separate from the lab specs so the 114 originals stay untouched:
    - constraint: a rule the fix must respect (checked when an assert is given)
@@ -10845,6 +11029,8 @@ js-yaml/dist/js-yaml.mjs:
 
   Labs.meta = META; Labs.ladders = LADDERS; Labs.variantIds = {};
   Object.keys(META).forEach(function (id) { var l = Labs.byId[id], m = META[id]; if (!l) return; if (m.constraint) l.constraint = m.constraint; if (m.trap) l.trap = m.trap; if (m.why) l.why = m.why; if (m.stage2) l.stage2 = m.stage2; });
+  // traps and why-notes authored later (data/traps-*.js) fill in only where a lab has none of its own
+  Object.keys((root.KL && root.KL.trapsMore) || {}).forEach(function (id) { var l = Labs.byId[id], m = root.KL.trapsMore[id]; if (!l) return; if (!l.trap && !l.why) { if (m.trap) l.trap = m.trap; if (m.why) l.why = m.why; } });
   // derive variants (registered in byId only, so they never inflate the lab count)
   // hand-written variants (META) win; every other lab gets the generated ones from variants-auto.js (tools/gen-variants.cjs, each one test-validated)
   var AUTO = (root.KL && root.KL.autoVariants) || {}, VIDS = Object.keys(META).concat(Object.keys(AUTO).filter(function (k) { return !META[k] || !META[k].variants; }));
@@ -11148,6 +11334,127 @@ js-yaml/dist/js-yaml.mjs:
   ].map(function (q, i) { return { id: 'r' + (i + 1), q: q[0], path: q[1], accept: q[2] }; });
   KL.drills = { DRILLS: D, RACES: Q, NS: NS, CATS: ['Create', 'Change', 'Security', 'Query', 'Debug'] };
   if (typeof module !== 'undefined' && module.exports) module.exports = KL.drills;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* assets/js/data/reading-core.js */
+/* Reading labs: builds the "evidence" a learner reads, by running real commands in the simulator against a lab's broken state.
+   Pure and shared by the page and the tests. build(item, Sim, Labs) -> { text, lines[{t, hit}], right, wrong[] } */
+(function (root) {
+  var KL = root.KL = root.KL || {};
+  var KEEP = /^(Name|Namespace|Node|Status|Image|Reason|Exit Code|Ready|Restart Count|Limits|Requests|cpu|memory|State|Last State|Port|Host Port|Liveness|Readiness|Startup|Selector|Type|IP|Endpoints|Events|Labels|Annotations|Taints|Unschedulable|Conditions|Allocated resources|Controlled By|Mounts|Environment|QoS Class|Node-Selectors|Tolerations)\b/;
+  /** keep the diagnostic parts of the first object of a describe, and its Events block */
+  function trimDescribe(out) {
+    var blocks = String(out).split(/\n(?=Name:\s)/), b = blocks[0].split('\n'), keep = [], inEv = false, evN = 0;
+    b.forEach(function (l) {
+      if (/^Events:/.test(l)) inEv = true;
+      if (inEv) { if (evN++ < 7) keep.push(l); return; }
+      if (KEEP.test(l.replace(/^\s+/, '')) || /^\s+(Type|Status|cpu|memory)\b/.test(l)) keep.push(l);
+    });
+    return keep.join('\n') + (blocks.length > 1 ? '\n(' + (blocks.length - 1) + ' more object' + (blocks.length > 2 ? 's' : '') + ' not shown)' : '');
+  }
+  function build(item, Sim, Labs) {
+    var lab = Labs.byId[item.lab], s = new Sim(); Labs.setup(s, lab); s.settle(30);
+    var ns = lab.ns, parts = [];
+    item.cmds.forEach(function (c) {
+      var cmd = c.replace(/\{ns\}/g, ns), o = s.exec(cmd), t = (o.stdout + o.stderr).replace(/\s+$/, '');
+      if (/^kubectl describe\b/.test(cmd) || /^k describe\b/.test(cmd)) t = trimDescribe(t);
+      parts.push('$ ' + cmd + '\n' + t);
+    });
+    var re = new RegExp(item.ev, 'i'), text = parts.join('\n\n'), lines = text.split('\n').map(function (t) { return { t: t, hit: !/^\$ /.test(t) && re.test(t) }; });
+    var D = KL.debrief || {};
+    return { text: text, lines: lines, right: (D[item.lab] || [])[0], wrong: (item.wrong || []).map(function (w) { return (D[w] || [])[0]; }).filter(Boolean), lab: item.lab };
+  }
+  /** 1-based line numbers of b that break it: the first line whose trimmed text equals each entry of d.bad */
+  function badLines(d) {
+    var ls = d.b.replace(/\n$/, '').split('\n'), out = [];
+    (d.bad || []).forEach(function (s) { for (var i = 0; i < ls.length; i++) if (ls[i].trim() === s) { out.push(i + 1); return; } });
+    return out;
+  }
+  /** apply one version in a fresh simulator and return what the learner would see */
+  function runDiff(d, which, Sim) {
+    if (!d.sim) return null;
+    var s = new Sim(); (d.sim.setup || []).forEach(function (c) { s.exec(c); });
+    var o = s.exec("kubectl apply -f - <<'EOF'\n" + d[which].replace(/\n$/, '') + "\nEOF"); s.settle(30);
+    var parts = ['$ kubectl apply -f ' + which + '.yaml\n' + (o.stdout + o.stderr).replace(/\s+$/, '')];
+    (d.sim.show || []).forEach(function (c) { var r = s.exec(c); parts.push('$ ' + c + '\n' + (r.stdout + r.stderr).replace(/\s+$/, '')); });
+    return parts.join('\n\n');
+  }
+  KL.readingCore = { build: build, trimDescribe: trimDescribe, badLines: badLines, runDiff: runDiff };
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* assets/js/data/reading-data.js */
+/* Data for the "Read & diff" page.
+   ITEMS: reading labs. The evidence is produced by running `cmds` in the simulator on the lab's broken state, so it is real simulator output.
+          `ev` marks the lines that give the cause away. The right answer is that lab's debrief root cause; `wrong` are other labs' causes.
+   DIFFS: explain-the-diff. `a` works, `b` does not. `bad` lists the exact (trimmed) lines of `b` that break it. `sim` says how to see it in
+          the simulator; when `sim` is null the fault is one a real API server rejects but the simulator accepts, and `symptom` says what you would see. */
+(function (root) {
+  var KL = root.KL = root.KL || {};
+  var ITEMS = [
+    { id: 'r-pending-cpu', lab: 's01-pending-cpu', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}'], ev: 'FailedScheduling|Insufficient cpu', wrong: ['s35-taint-toleration', 's02-imagepull', 's48-quota-pods'] },
+    { id: 'r-imagepull', lab: 's02-imagepull', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}'], ev: 'Failed to pull image|manifest', wrong: ['s55-image-pull-secret', 's05-config-error', 's01-pending-cpu'] },
+    { id: 'r-oom', lab: 's03-oomkilled', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}'], ev: 'OOMKilled|Exit Code', wrong: ['s08-probes', 's01-pending-cpu', 's31-init-container'] },
+    { id: 'r-selector', lab: 's04-no-endpoints', cmds: ['kubectl get endpoints -n {ns}', 'kubectl get svc frontend-svc -n {ns} -o jsonpath={.spec.selector}', 'kubectl get pods -n {ns} --show-labels'], ev: '^frontend-svc +<none>|front-end|app=frontend,', wrong: ['s29-svc-targetport', 's82-coredns-down', 's83-lb-pending'] },
+    { id: 'r-configmap', lab: 's05-config-error', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}'], ev: 'configmap .* not found|CreateContainerConfigError', wrong: ['s18-secret-env', 's02-imagepull', 's31-init-container'] },
+    { id: 'r-pvc', lab: 's13-pvc-pending', cmds: ['kubectl get pvc -n {ns}', 'kubectl describe pvc -n {ns}'], ev: 'ProvisioningFailed|storageclass.*not found', wrong: ['s44-static-pv', 's97-pv-retain', 's01-pending-cpu'] },
+    { id: 'r-taint', lab: 's35-taint-toleration', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}'], ev: 'untolerated taint \\{team', wrong: ['s34-nodeselector', 's01-pending-cpu', 's36-node-affinity'] },
+    { id: 'r-init', lab: 's31-init-container', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}', 'kubectl logs deploy/app -n {ns} -c prep'], ev: 'Init:CrashLoopBackOff|Exit Code|Back-off restarting failed container prep', wrong: ['s05-config-error', 's03-oomkilled', 's08-probes'] },
+    { id: 'r-quota', lab: 's48-quota-pods', cmds: ['kubectl get deploy -n {ns}', 'kubectl describe quota -n {ns}', 'kubectl describe rs -n {ns}'], ev: 'exceeded quota|3/5', wrong: ['s47-limitrange-max', 's01-pending-cpu', 's88-hpa-vs-quota'] },
+    { id: 'r-coredns', lab: 's82-coredns-down', cmds: ['kubectl get deploy -n kube-system', 'kubectl get endpoints kube-dns -n kube-system'], ev: '^coredns +0/0|^kube-dns +<none>', wrong: ['s04-no-endpoints', 's117-corefile', 's83-lb-pending'] },
+    { id: 'r-lb', lab: 's83-lb-pending', cmds: ['kubectl get svc -n {ns}'], ev: '<pending>', wrong: ['s58-nodeport-fixed', 's04-no-endpoints', 's19-ingress'] },
+    { id: 'r-limitrange', lab: 's47-limitrange-max', cmds: ['kubectl get deploy -n {ns}', 'kubectl describe rs -n {ns}'], ev: 'maximum cpu usage', wrong: ['s48-quota-pods', 's01-pending-cpu', 's87-rightsizing'] },
+    { id: 'r-pullsecret', lab: 's55-image-pull-secret', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}'], ev: 'pull access denied|no basic auth', wrong: ['s02-imagepull', 's05-config-error', 's18-secret-env'] },
+    { id: 'r-diskpressure', lab: 's81-disk-pressure', cmds: ['kubectl get nodes', 'kubectl describe node worker1'], ev: 'disk-pressure', wrong: ['s71-kubelet-swap', 's86-qos-eviction', 's73-expired-certs'] },
+    { id: 'r-nodeselector', lab: 's34-nodeselector', cmds: ['kubectl get pods -n {ns}', 'kubectl describe pods -n {ns}'], ev: "didn't match Pod's node affinity", wrong: ['s35-taint-toleration', 's01-pending-cpu', 's38-memory-too-high'] }
+  ];
+
+  function dep(podSpec, o) {
+    o = o || {};
+    return 'apiVersion: ' + (o.api || 'apps/v1') + '\nkind: Deployment\nmetadata:\n  name: web\n  namespace: demo\nspec:\n  replicas: 2\n' + (o.strategy || '') + '  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: ' + (o.label || 'web') + '\n    spec:\n' + podSpec;
+  }
+  var C = '      containers:\n      - name: web\n        image: nginx:1.25\n';
+  var NS = ['kubectl create namespace demo'];
+  var DIFFS = [
+    { id: 'd-selector', title: 'Deployment will not apply', a: dep(C), b: dep(C, { label: 'web-app' }), bad: ['app: web-app'],
+      why: { right: 'The Deployment selector is `app: web`, but the pod template carries the label `app: web-app`, so the selector can never match its own pods and the API rejects it.', wrong: ['The container image tag does not exist in the registry.', 'The Deployment needs a Service before the API will accept it.', 'The replica count must be at least 3 for a Deployment.'] },
+      sim: { setup: NS, show: [], okA: 'created', okB: 'selector. does not match template' }, lab: 's28-incident' },
+    { id: 'd-cmkey', title: 'Pods stay in CreateContainerConfigError', a: dep('      containers:\n      - name: web\n        image: nginx:1.25\n        env:\n        - name: MODE\n          valueFrom:\n            configMapKeyRef:\n              name: site\n              key: mode\n'), b: dep('      containers:\n      - name: web\n        image: nginx:1.25\n        env:\n        - name: MODE\n          valueFrom:\n            configMapKeyRef:\n              name: site\n              key: Mode\n'), bad: ['key: Mode'],
+      why: { right: 'ConfigMap keys are case-sensitive. The ConfigMap has `mode`, and the pod asks for `Mode`, so the container cannot be created.', wrong: ['The ConfigMap must be in the kube-system namespace.', 'An environment variable name cannot match a ConfigMap key name.', 'The image must be pulled again before a ConfigMap is read.'] },
+      sim: { setup: NS.concat(['kubectl create configmap site -n demo --from-literal=mode=live']), show: ['kubectl get pods -n demo'], okA: 'Running', okB: 'CreateContainerConfigError' }, lab: 's32-cm-env-missing' },
+    { id: 'd-probe', title: 'Pods Running but never Ready', a: dep('      containers:\n      - name: web\n        image: nginx:1.25\n        readinessProbe:\n          httpGet:\n            path: /\n            port: 80\n'), b: dep('      containers:\n      - name: web\n        image: nginx:1.25\n        readinessProbe:\n          httpGet:\n            path: /\n            port: 8080\n'), bad: ['port: 8080'],
+      why: { right: 'The readiness probe checks port 8080, but nginx listens on 80. The probe is refused, so the pod is never Ready and gets no traffic.', wrong: ['A readiness probe must use the same port as the Service nodePort.', 'The probe path must not be `/`.', 'Readiness probes are only allowed on StatefulSets.'] },
+      sim: { setup: NS, show: ['kubectl get pods -n demo'], okA: '1/1 +Running', okB: '0/1 +Running' }, lab: 's08-probes' },
+    { id: 'd-pvc', title: 'PVC stays Pending', a: 'apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: data\n  namespace: demo\nspec:\n  storageClassName: fast\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 1Gi\n', b: 'apiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: data\n  namespace: demo\nspec:\n  storageClassName: fastt\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 1Gi\n', bad: ['storageClassName: fastt'],
+      why: { right: 'The claim names a StorageClass that does not exist (`fastt`), so nothing can provision a volume and the claim stays Pending.', wrong: ['A claim must request at least 5Gi to be provisioned.', 'ReadWriteOnce volumes cannot be created in a namespace other than default.', 'The PVC needs a Pod that uses it before it can bind.'] },
+      sim: { setup: NS.concat(['kubectl apply -f - <<EOF\napiVersion: storage.k8s.io/v1\nkind: StorageClass\nmetadata:\n  name: fast\nprovisioner: example.com/fast\nEOF']), show: ['kubectl get pvc -n demo'], okA: 'Bound', okB: 'Pending' }, lab: 's13-pvc-pending' },
+    { id: 'd-rolebinding', title: 'The service account still cannot read pods', a: 'apiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: rb\n  namespace: demo\nsubjects:\n- kind: ServiceAccount\n  name: bot\n  namespace: demo\nroleRef:\n  kind: Role\n  name: reader\n  apiGroup: rbac.authorization.k8s.io\n', b: 'apiVersion: rbac.authorization.k8s.io/v1\nkind: RoleBinding\nmetadata:\n  name: rb\n  namespace: demo\nsubjects:\n- kind: User\n  name: bot\nroleRef:\n  kind: Role\n  name: reader\n  apiGroup: rbac.authorization.k8s.io\n', bad: ['- kind: User'],
+      why: { right: 'The subject is a User named `bot`, not the ServiceAccount `bot`. A ServiceAccount is a different kind of subject and needs its namespace.', wrong: ['A RoleBinding cannot refer to a Role in its own namespace.', 'The roleRef apiGroup must be `apps`.', 'Subjects of a RoleBinding must always be Groups.'] },
+      sim: { setup: NS.concat(['kubectl create serviceaccount bot -n demo', 'kubectl create role reader -n demo --verb=get,list --resource=pods']), show: ['kubectl auth can-i get pods -n demo --as=system:serviceaccount:demo:bot'], okA: '^yes', okB: '^no' }, lab: 's11-rbac-sa' },
+    { id: 'd-nodeselector', title: 'Pods stay Pending', a: dep('      nodeSelector:\n        disk: ssd\n' + C), b: dep('      nodeSelector:\n        disk: ssdd\n' + C), bad: ['disk: ssdd'],
+      why: { right: 'The nodeSelector asks for a label value (`ssdd`) that no node has, so the scheduler finds no node that matches.', wrong: ['A nodeSelector may only be used together with a toleration.', 'The nodes are cordoned by the nodeSelector itself.', 'nodeSelector values must be numbers.'] },
+      sim: { setup: NS.concat(['kubectl label node worker1 disk=ssd']), show: ['kubectl get pods -n demo'], okA: '1/1 +Running', okB: 'Pending' }, lab: 's34-nodeselector' },
+    { id: 'd-apiversion', title: 'The manifest is rejected', a: dep(C), b: dep(C, { api: 'apps/v1beta1' }), bad: ['apiVersion: apps/v1beta1'],
+      why: { right: '`apps/v1beta1` was removed from the API server, so the kind cannot be matched. Use `apps/v1`, which also requires an explicit selector.', wrong: ['Deployments must always be created in the default namespace.', 'The `apps` group does not contain Deployments.', 'apiVersion is optional and ignored for Deployments.'] },
+      sim: { setup: NS, show: [], okA: 'created', okB: 'no matches for kind|not found|no kind' }, lab: 's145-yaml-apiversion' },
+    { id: 'd-indent', title: 'Unknown field when applying', a: 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: web\n  namespace: demo\nspec:\n  containers:\n  - name: web\n    image: nginx:1.25\n', b: 'apiVersion: v1\nkind: Pod\nmetadata:\n  name: web\n  namespace: demo\nspec:\n  image: nginx:1.25\n  containers:\n  - name: web\n', bad: ['image: nginx:1.25'],
+      why: { right: 'The file is valid YAML but `image` sits under the pod spec, where the schema has no such field. It belongs under the container.', wrong: ['A pod spec cannot have a containers list.', 'The pod needs a `kind: Deployment` to accept an image.', 'YAML list items must not start with a dash.'] },
+      sim: { setup: NS, show: [], okA: 'created', okB: 'unknown field|invalid|image' }, lab: 's144-yaml-indent' },
+    { id: 'd-requests', title: 'Rejected by the API server', a: dep('      containers:\n      - name: web\n        image: nginx:1.25\n        resources:\n          requests:\n            cpu: 100m\n          limits:\n            cpu: 500m\n'), b: dep('      containers:\n      - name: web\n        image: nginx:1.25\n        resources:\n          requests:\n            cpu: 500m\n          limits:\n            cpu: 100m\n'), bad: ['cpu: 500m', 'cpu: 100m'],
+      why: { right: 'The request (500m) is larger than the limit (100m). A request must be less than or equal to the limit, so a real API server refuses the object.', wrong: ['CPU values must be written as whole numbers.', 'A limit can only be set when there is no request.', 'The unit `m` is not valid for CPU.'] },
+      sim: null, symptom: 'The apply fails with: `spec.template.spec.containers[0].resources.requests: Invalid value: "500m": must be less than or equal to cpu limit`.', lab: 's87-rightsizing' },
+    { id: 'd-job-restart', title: 'Job is invalid', a: 'apiVersion: batch/v1\nkind: Job\nmetadata:\n  name: once\n  namespace: demo\nspec:\n  template:\n    spec:\n      restartPolicy: Never\n      containers:\n      - name: c\n        image: busybox:1.36\n        command: [echo, hi]\n', b: 'apiVersion: batch/v1\nkind: Job\nmetadata:\n  name: once\n  namespace: demo\nspec:\n  template:\n    spec:\n      restartPolicy: Always\n      containers:\n      - name: c\n        image: busybox:1.36\n        command: [echo, hi]\n', bad: ['restartPolicy: Always'],
+      why: { right: 'A Job\'s pods must not restart forever. `restartPolicy` has to be `Never` or `OnFailure`; `Always` is for long-running workloads.', wrong: ['restartPolicy must be set on the Job, not on the pod template.', 'A Job needs a replicas field.', '`Never` is only valid for CronJobs.'] },
+      sim: null, symptom: 'The apply fails with: `Unsupported value: "Always": supported values: "OnFailure", "Never"`.', lab: 's103-job-parallel' },
+    { id: 'd-surge', title: 'Rolling update settings rejected', a: dep(C, { strategy: '  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxSurge: 1\n      maxUnavailable: 0\n' }), b: dep(C, { strategy: '  strategy:\n    type: RollingUpdate\n    rollingUpdate:\n      maxSurge: 0\n      maxUnavailable: 0\n' }), bad: ['maxSurge: 0'],
+      why: { right: 'With both set to 0 a rollout could never make progress: no pod may be removed and none may be added. The API refuses it.', wrong: ['maxSurge cannot be an integer.', 'maxUnavailable must be a percentage.', 'RollingUpdate cannot be combined with replicas.'] },
+      sim: null, symptom: 'The apply fails with: `maxUnavailable: Invalid value: 0: may not be 0 when maxSurge is 0`.', lab: 's107-rolling-strategy' },
+    { id: 'd-pathtype', title: 'Ingress is invalid', a: 'apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: shop\n  namespace: demo\nspec:\n  rules:\n  - host: shop.local\n    http:\n      paths:\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: web\n            port:\n              number: 80\n', b: 'apiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: shop\n  namespace: demo\nspec:\n  rules:\n  - host: shop.local\n    http:\n      paths:\n      - path: /\n        backend:\n          service:\n            name: web\n            port:\n              number: 80\n', bad: ['- path: /'],
+      why: { right: 'In `networking.k8s.io/v1` every path must say its `pathType` (`Prefix`, `Exact` or `ImplementationSpecific`). Without it the Ingress is refused.', wrong: ['The host must be an IP address.', 'A backend service needs a nodePort.', 'An Ingress path may not start with a slash.'] },
+      sim: null, symptom: 'The apply fails with: `spec.rules[0].http.paths[0].pathType: Required value: pathType must be specified`.', lab: 's19-ingress' }
+  ];
+  KL.reading = { ITEMS: ITEMS, DIFFS: DIFFS };
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
@@ -14433,8 +14740,8 @@ js-yaml/dist/js-yaml.mjs:
     ['Node and control-plane tasks', 'script', 'ssh, systemctl, journalctl, crictl, kubeadm, etcdctl and certificate checks follow scripted flows for the lab scenarios. openssl keys, CSRs and certificates, CertificateSigningRequest approval and certificate-based users are scripted (fake PEM files that carry the subject), not real cryptography.'],
     ['Security tooling', 'script', 'Image scanner output is canned. Settings such as seccomp or AppArmor are accepted as spec fields but not enforced.'],
     ['Checking', 'exact', 'Checks look at the resulting state, not the commands you typed, so any valid route passes. Passing states are re-tested for durability (pods deleted, Deployment restarted), removing protective objects is flagged as over-fix, and capstones give partial credit with a pass mark of 66.'],
-    ['Not modelled', 'no', 'Lease, EndpointSlices, interactive kubectl debug (non-interactive copies and ephemeral containers are modelled), vi/vim editing (a stub), kubectl explain beyond about 25 kinds, ValidatingAdmissionPolicy beyond a CEL subset and the Deny action (Warn and Audit are not shown), a real Falco, audit policy files, a real sandbox runtime (RuntimeClass exists as an object only), a real etcd restore, real admission webhooks, real container runtime and real time.']
-    ['Practice tools', 'model', 'The full mock uses lab-sized tasks, so it is tighter on time than the real exam. Pass marks (CKA 66, CKAD 66, CKS 67) should be checked against the current handbook. Auto variants rename objects only. The error decoder has a fixed set of rules and cannot see your cluster. Version flags come from release notes and KEPs, and the exam version is whatever you set.'],
+    ['Not modelled', 'no', 'Lease, EndpointSlices, interactive kubectl debug (non-interactive copies and ephemeral containers are modelled), vi/vim editing (a stub), kubectl explain beyond about 25 kinds, ValidatingAdmissionPolicy beyond a CEL subset and the Deny action (Warn and Audit are not shown), a real Falco, audit policy files, a real sandbox runtime (RuntimeClass exists as an object only), a real etcd restore, real admission webhooks, real container runtime and real time.'],
+    ['Practice tools', 'model', 'The full mock uses lab-sized tasks, so it is tighter on time than the real exam. Pass marks (CKA 66, CKAD 66, CKS 67) should be checked against the current handbook. Auto variants rename objects only. The error decoder has a fixed set of rules and cannot see your cluster. Version flags come from release notes and KEPs, and the exam version is whatever you set. In Read & diff, four of the twelve diffs are faults a real API server rejects but the simulator accepts; they are labelled.'],
   ];
   var filt = { tier: 'all', q: '' };
   function render() {
@@ -15402,6 +15709,102 @@ js-yaml/dist/js-yaml.mjs:
 })();
 
 </script>
+<script>/* assets/js/replay.js */
+/* Mistake replay: after a lab is solved, show the learner's own command trail next to the reference path, with each step marked
+   (looked, changed, failed, repeated) and a short note on how the attempt went. Everything is computed locally from the commands
+   the runner already sees. analyse() is pure so it can be tested without a browser. */
+(function (root) {
+  var KL = root.KL = root.KL || {};
+  var READ = /^(get|describe|logs|explain|api-resources|api-versions|top|events|version|cluster-info|diff|wait)$/;
+  function words(line) { return String(line || '').trim().replace(/^(sudo\s+)/, '').split(/\s+/); }
+  function norm(line) { return String(line || '').replace(/\s+/g, ' ').trim(); }
+  /** 'look' for a read-only command, 'change' for anything that can alter state. A line with several commands is a change if any part is. */
+  function kind(line) {
+    var parts = String(line || '').split(/\s*(?:&&|\|\||;|\n)\s*/).filter(function (p) { return p.trim(); }), anyChange = false;
+    if (!parts.length) return 'look';
+    parts.forEach(function (p) {
+      var w = words(p), c = w[0], rest = w.slice(1);
+      if (/>{1,2}\s*[^&\s]/.test(p.replace(/\d?>\s*\/dev\/null/g, '').replace(/\d?>&\d/g, ''))) { anyChange = true; return; } /* a redirect writes a file */
+      if (c === 'ssh') { var inner = norm(p).replace(/^ssh\s+\S+\s+/, '').replace(/^['"]|['"]$/g, ''); if (kind(inner) === 'change') anyChange = true; return; }
+      if (c === 'k' || c === 'kubectl') {
+        var v = norm(p).replace(/^(k|kubectl)\s+/, '').replace(/(^|\s)(-n|--namespace|--context|--kubeconfig)(=\S+|\s+\S+)/g, ' ').split(/\s+/).filter(function (x) { return x && x.charAt(0) !== '-'; })[0] || '';
+        if (READ.test(v)) return;
+        if (v === 'auth' && /can-i|whoami/.test(p)) return;
+        if (v === 'config' && /view|get-contexts|current-context|get-/.test(p)) return;
+        if (v === 'rollout' && /\s(status|history)\b/.test(p)) return;
+        if (/--dry-run(=client|=server)?\b/.test(p) && !/\|\s*kubectl\s+(apply|create)/.test(p) && !/>\s*\S+/.test(p)) return;
+        anyChange = true; return;
+      }
+      if (/^(ls|cat|grep|head|tail|awk|sed|sort|wc|df|du|echo|printf|pwd|which|find|journalctl|crictl|trivy|ps|free|uname|id|whoami|openssl|ss|ip)$/.test(c)) {
+        if (/^(sed)$/.test(c) && /\s-i\b/.test(p)) anyChange = true;
+        if (/(^|\s)>{1,2}\s*\S+/.test(p) && !/>\s*\/dev\/null/.test(p)) anyChange = true; /* redirects write files */
+        if (c === 'crictl' && /\s(rm|rmi|stop|prune)\b/.test(p)) anyChange = true;
+        if (c === 'journalctl' && /--vacuum/.test(p)) anyChange = true;
+        return;
+      }
+      if (c === 'helm' && /^(history|list|status|get|show|search|template|lint|repo)$/.test(rest[0] || '')) return;
+      if (c === 'systemctl' && /^(status|is-active|is-enabled|list-units|cat)$/.test(rest[0] || '')) return;
+      if (c === 'etcdctl' && /snapshot\s+status/.test(p)) return;
+      if (c === 'kubeadm' && /check-expiration|upgrade\s+plan/.test(p)) return;
+      anyChange = true;
+    });
+    return anyChange ? 'change' : 'look';
+  }
+  /** trail: [{line, code, t}], solution: [string]. Returns the marked steps and the summary numbers. */
+  function analyse(trail, solution, startAt) {
+    var seen = {}, steps = [], looked = 0, changed = 0, failed = 0, repeated = 0, firstChange = -1, firstLook = -1, gapMax = 0, gapAt = -1, prev = startAt || (trail[0] && trail[0].t) || 0;
+    (trail || []).forEach(function (s, i) {
+      var k = kind(s.line), key = norm(s.line), tag = k === 'look' ? 'look' : 'change';
+      if (s.code && s.code !== 0) { tag = 'fail'; failed++; }
+      else if (seen[key]) { tag = 'repeat'; repeated++; }
+      else if (k === 'look') looked++; else changed++;
+      if (k === 'look' && firstLook < 0) firstLook = i; if (k === 'change' && firstChange < 0) firstChange = i;
+      seen[key] = 1; var gap = s.t && prev ? s.t - prev : 0; if (gap > gapMax) { gapMax = gap; gapAt = i; } if (s.t) prev = s.t;
+      steps.push({ line: s.line, tag: tag, kind: k });
+    });
+    var ref = (solution || []).map(function (c) { return String(c).split('\n')[0]; });
+    return { steps: steps, looked: looked, changed: changed, failed: failed, repeated: repeated, total: steps.length, refCount: ref.length, ref: ref,
+      actedFirst: firstChange >= 0 && (firstLook < 0 || firstChange < firstLook), gapMax: gapMax, gapAt: gapAt };
+  }
+  function notes(a) {
+    var n = [];
+    if (a.actedFirst) n.push('Your first command changed something before you had looked at the cluster. A <code>get</code> or <code>describe</code> first would have told you what to change.');
+    if (a.failed) n.push(a.failed + ' command' + (a.failed === 1 ? '' : 's') + ' failed. Read the error text: it usually names the exact object or field that is wrong.');
+    if (a.repeated) n.push('You repeated ' + a.repeated + ' command' + (a.repeated === 1 ? '' : 's') + ' unchanged. If the output did not change your mind, the next move is a different command, not the same one again.');
+    if (a.total > a.refCount * 3 && a.total > 8) n.push('The reference path is ' + a.refCount + ' commands and yours was ' + a.total + '. Most of the extra were ' + (a.looked > a.changed ? 'looks, which is fine while learning but costs time in an exam' : 'changes, so try to find the cause before changing anything') + '.');
+    if (!n.length) n.push('A tidy attempt: you looked, you changed what mattered, and you did not repeat yourself.');
+    return n;
+  }
+  KL.replay = { kind: kind, analyse: analyse, notes: notes };
+
+  if (typeof window === 'undefined') return;
+  function $(id) { return document.getElementById(id); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  window.addEventListener('kl:cmd', function (e) {
+    var d = e.detail || {}, r = d.run, res = d.res; if (!r || !res) return; var line = String(d.line || '').trim(); if (!line || line === 'clear') return;
+    (r.trail = r.trail || []).push({ line: line.slice(0, 200), code: res.code || 0, t: Date.now() }); if (r.trail.length > 300) r.trail.shift();
+  });
+  var MARK = { look: ['👁', 'looked'], change: ['✎', 'changed'], fail: ['✗', 'failed'], repeat: ['↻', 'repeated'] };
+  function html(r) {
+    var a = KL.replay.analyse(r.trail || [], (r.lab && r.lab.solution) || [], r.start); if (!a.total) return '';
+    var shown = a.steps.slice(0, 40);
+    var you = shown.map(function (s) { return '<li class="rp-' + s.tag + '"><span class="rp-m" title="' + MARK[s.tag][1] + '">' + MARK[s.tag][0] + '</span> <code>' + esc(s.line.length > 110 ? s.line.slice(0, 107) + '...' : s.line) + '</code></li>'; }).join('') + (a.steps.length > 40 ? '<li class="rp-more">... and ' + (a.steps.length - 40) + ' more</li>' : '');
+    var ref = a.ref.slice(0, 20).map(function (c) { return '<li><code>' + esc(c.length > 110 ? c.slice(0, 107) + '...' : c) + '</code></li>'; }).join('');
+    var sum = a.total + ' command' + (a.total === 1 ? '' : 's') + ': ' + a.looked + ' looked, ' + a.changed + ' changed, ' + a.failed + ' failed, ' + a.repeated + ' repeated. Reference path: ' + a.refCount + '.';
+    var gap = a.gapMax > 45000 && a.gapAt >= 0 ? '<p class="pro-note">Longest pause: ' + Math.round(a.gapMax / 1000) + ' s before <code>' + esc(a.steps[a.gapAt].line.slice(0, 60)) + '</code>.</p>' : '';
+    return '<details class="lr-debrief rp-box" open><summary><b>🔁 Replay: your path and the reference path</b></summary><p class="rp-sum">' + esc(sum) + '</p>' +
+      '<div class="rp-cols"><div><h5>Your commands</h5><ol class="rp-you">' + you + '</ol></div><div><h5>Reference path</h5><ol class="rp-ref">' + ref + '</ol></div></div>' +
+      '<ul class="rp-notes">' + KL.replay.notes(a).map(function (n) { return '<li>' + n + '</li>'; }).join('') + '</ul>' + gap +
+      '<p class="pro-note">The reference path is one valid way. Any fix that passes the checks counts, and yours may be better.</p></details>';
+  }
+  KL.replay.html = html;
+  window.addEventListener('kl:result', function (e) {
+    var d = e.detail || {}, r = d.run, res = d.res, fb = $('lrFeedback'); if (!r || !res || !res.ok || !fb || fb.querySelector('.rp-box')) return;
+    var h = html(r); if (h) fb.insertAdjacentHTML('beforeend', h);
+  });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
 <script>/* assets/js/version-ui.js */
 /* Version-aware labs: a "my cluster / exam version" selector (stored on this device only), version chips in the lab header,
    and a warning when a lab leans on a feature newer than the version you set. The exam version is never assumed: the Linux
@@ -15597,6 +16000,121 @@ js-yaml/dist/js-yaml.mjs:
   window.addEventListener('hashchange', function () { if (!/^#drills/.test(location.hash) && S.run) { stopTimer(); S.run = null; } });
   KL.route('drills', function () { if (!S.run) draw(); else draw(); });
   KL.drillsApi = { state: S, verdict: verdict, mkSim: mkSim };
+})();
+
+</script>
+<script>/* assets/js/reading.js */
+/* Read & diff page (#reading). No terminal: you read real evidence, or two manifests, and say what is wrong.
+   Reading cases show simulator output from a broken lab; diffs show a working and a broken manifest.
+   Progress is stored on this device only (localStorage kubedrill:reading). Content lives in data/reading-data.js. */
+(function () {
+  'use strict';
+  var KL = window.KL, Labs = KL.Labs, RC = KL.readingCore, RD = KL.reading, $ = function (id) { return document.getElementById(id); };
+  var KEY = 'kubedrill:reading', S = { tab: 'read', open: null, st: null };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function md(s) { return esc(s).replace(/`([^`]+)`/g, '<code>$1</code>'); }
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { /* ignore */ } }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function mark(id, firstTry) { var d = load(), o = d[id] || {}; o.done = true; if (firstTry) o.clean = true; o.n = (o.n || 0) + 1; d[id] = o; save(d); }
+  function head() {
+    return '<div class="section-header"><div class="section-tag">No terminal</div><h2 class="section-title">Read &amp; diff</h2><p class="section-desc">Two skills the exam rewards and a terminal cannot teach: reading evidence quickly, and spotting the one line that differs. Each case is built from real simulator output or a manifest pair that was applied in the simulator, so the clue is really there.</p></div>' +
+      '<div class="dr-tabs" role="tablist"><button type="button" role="tab" data-tab="read" class="' + (S.tab === 'read' ? 'on' : '') + '" aria-selected="' + (S.tab === 'read') + '">📄 Reading cases (' + RD.ITEMS.length + ')</button><button type="button" role="tab" data-tab="diff" class="' + (S.tab === 'diff' ? 'on' : '') + '" aria-selected="' + (S.tab === 'diff') + '">🔀 Explain the diff (' + RD.DIFFS.length + ')</button></div>';
+  }
+  function bindTabs() { document.querySelectorAll('#readRoot .dr-tabs button').forEach(function (b) { b.onclick = function () { S.tab = b.dataset.tab; S.open = null; S.st = null; draw(); }; }); }
+  function listHtml() {
+    var d = load(), items = S.tab === 'read' ? RD.ITEMS : RD.DIFFS, done = items.filter(function (x) { return d[x.id] && d[x.id].done; }).length, clean = items.filter(function (x) { return d[x.id] && d[x.id].clean; }).length;
+    return '<p class="pro-note">' + done + ' of ' + items.length + ' done, ' + clean + ' right first time. Saved on this device only.</p><div class="rd-list">' + items.map(function (x, i) {
+      var o = d[x.id] || {}, st = o.clean ? '✓ first try' : o.done ? '● done' : '○ new';
+      return '<button type="button" class="rd-card' + (o.done ? ' done' : '') + '" data-id="' + x.id + '"><b>' + (S.tab === 'read' ? 'Case ' : 'Diff ') + (i + 1) + '</b><span>' + (S.tab === 'diff' ? esc(x.title) : 'Real output from a broken cluster') + '</span><em>' + st + '</em></button>';
+    }).join('') + '</div>';
+  }
+  function draw() {
+    var root = $('readRoot'); if (!root) return;
+    if (!S.open) { root.innerHTML = head() + listHtml(); bindTabs(); root.querySelectorAll('.rd-card').forEach(function (b) { b.onclick = function () { S.open = b.dataset.id; S.st = null; S.tab === 'read' ? openRead() : openDiff(); }; }); return; }
+    S.tab === 'read' ? drawRead() : drawDiff();
+  }
+  function back() { return '<p><button type="button" class="lr-linkbtn" id="rdBack">← All cases</button></p>'; }
+  function opts(right, wrong) { return shuffle([{ t: right, ok: true }].concat(wrong.map(function (w) { return { t: w, ok: false }; }))); }
+  function optHtml(os) { return '<div class="rd-opts" role="radiogroup">' + os.map(function (o, i) { return '<label class="rd-opt"><input type="radio" name="rdOpt" value="' + i + '"> <span>' + md(o.t) + '</span></label>'; }).join('') + '</div>'; }
+  function labLink(id) { var l = Labs.byId[id]; return l ? '<p><a class="btn-secondary" href="#lab/' + l.id + '">Reproduce it yourself: lab ' + esc(l.num) + ' · ' + esc(l.title) + '</a></p>' : ''; }
+  function nextHtml() {
+    var items = S.tab === 'read' ? RD.ITEMS : RD.DIFFS, i = items.map(function (x) { return x.id; }).indexOf(S.open), n = items[i + 1];
+    return '<p>' + (n ? '<button type="button" class="btn-primary" id="rdNext">Next case →</button> ' : '') + '<button type="button" class="btn-secondary" id="rdList">Back to the list</button></p>';
+  }
+  function wireNav() {
+    var b = $('rdBack'), l = $('rdList'), n = $('rdNext'); var items = S.tab === 'read' ? RD.ITEMS : RD.DIFFS;
+    if (b) b.onclick = function () { S.open = null; draw(); }; if (l) l.onclick = function () { S.open = null; draw(); };
+    if (n) n.onclick = function () { var i = items.map(function (x) { return x.id; }).indexOf(S.open); S.open = items[i + 1].id; S.st = null; S.tab === 'read' ? openRead() : openDiff(); };
+  }
+
+  // ── reading cases ──
+  function openRead() {
+    var it = RD.ITEMS.filter(function (x) { return x.id === S.open; })[0], b = RC.build(it, KL.Sim, Labs);
+    S.st = { it: it, b: b, misses: 0, clean: true, found: false, done: false, os: opts(b.right, b.wrong), picked: {} }; draw();
+  }
+  function drawRead() {
+    var st = S.st, b = st.b, root = $('readRoot');
+    var ev = '<pre class="rd-ev" id="rdEv" aria-label="Command output">' + b.lines.map(function (l, i) {
+      var cls = 'rd-l' + (/^\$ /.test(l.t) ? ' cmd' : '') + (st.found && l.hit ? ' hit' : '');
+      return '<span class="' + cls + '" data-i="' + i + '" tabindex="' + (/^\$ /.test(l.t) || st.found ? '-1' : '0') + '">' + esc(l.t || ' ') + '</span>';
+    }).join('\n') + '</pre>';
+    var h = head() + back() + '<div class="dr-card"><h3>Read the evidence</h3><p class="pro-note">These commands were run on a broken cluster. Do not fix anything: find the cause.</p>' + ev +
+      '<p class="rd-step"><b>1. Click the line that gives the cause away.</b></p><div class="dr-msg" id="rdMsg" aria-live="polite">' + (st.found ? '✓ That is the clue (marked in green).' : st.misses ? 'Not that one. ' + (3 - st.misses) + ' tries left.' : '') + '</div>';
+    if (st.found || st.misses >= 3) {
+      h += '<p class="rd-step"><b>2. What is the root cause?</b></p>' + optHtml(st.os) + '<p><button type="button" class="btn-primary" id="rdCheck"' + (st.done ? ' disabled' : '') + '>Check</button></p><div class="dr-msg" id="rdMsg2" aria-live="polite"></div>';
+    }
+    if (st.done) {
+      var D = KL.debrief[st.it.lab] || [], l = Labs.byId[st.it.lab];
+      h += '<div class="lr-debrief"><h4>What it was</h4><p>' + md(D[0] || '') + '</p><h4>The fix</h4><p>' + md(D[1] || '') + '</p><h4>How to spot it</h4><p>' + md(D[2] || '') + '</p>' + (l && l.trap ? '<p><b>The trap:</b> ' + md(l.trap) + '</p>' : '') + '</div>' + labLink(st.it.lab) + nextHtml();
+    }
+    h += '</div>'; root.innerHTML = h; bindTabs(); wireNav();
+    root.querySelectorAll('.rd-l').forEach(function (el) {
+      var i = +el.dataset.i, line = b.lines[i]; if (/^\$ /.test(line.t) || st.found || st.misses >= 3) return;
+      var go = function () {
+        if (!line.t.trim()) return; if (line.hit) { st.found = true; if (st.misses) st.clean = false; draw(); return; }
+        st.misses++; st.clean = false; if (st.misses >= 3) { st.found = true; } draw();
+      };
+      el.onclick = go; el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+    });
+    var chk = $('rdCheck'); if (chk) chk.onclick = function () {
+      var r = root.querySelector('input[name=rdOpt]:checked'); if (!r) { $('rdMsg2').textContent = 'Pick one answer first.'; return; }
+      var o = st.os[+r.value]; if (o.ok) { st.done = true; mark(st.it.id, st.clean); draw(); } else { st.clean = false; st.picked[+r.value] = 1; $('rdMsg2').textContent = 'Not quite. Re-read the evidence: which statement does it actually support?'; r.parentNode.classList.add('wrong'); r.disabled = true; }
+    };
+  }
+
+  // ── explain the diff ──
+  function openDiff() {
+    var d = RD.DIFFS.filter(function (x) { return x.id === S.open; })[0];
+    S.st = { d: d, bad: RC.badLines(d), misses: 0, clean: true, found: false, done: false, os: opts(d.why.right, d.why.wrong), out: null }; draw();
+  }
+  function pane(txt, title, cls, st, clickable) {
+    var ls = txt.replace(/\n$/, '').split('\n');
+    return '<div class="rd-pane ' + cls + '"><h5>' + title + '</h5><pre>' + ls.map(function (l, i) {
+      var n = i + 1, isBad = clickable && (st.found || st.misses >= 3) && st.bad.indexOf(n) >= 0;
+      return '<span class="rd-l' + (isBad ? ' hit' : '') + '" data-n="' + n + '"' + (clickable && !st.found && st.misses < 3 ? ' tabindex="0"' : '') + '><i>' + n + '</i>' + esc(l || ' ') + '</span>';
+    }).join('\n') + '</pre></div>';
+  }
+  function drawDiff() {
+    var st = S.st, d = st.d, root = $('readRoot'), live = !st.found && st.misses < 3;
+    var h = head() + back() + '<div class="dr-card"><h3>' + esc(d.title) + '</h3><div class="rd-panes">' + pane(d.a, 'A · works', 'ok', st, false) + pane(d.b, 'B · broken', 'broken', st, true) + '</div>' +
+      '<p class="rd-step"><b>1. Click the line in B that breaks it.</b></p><div class="dr-msg" id="rdMsg" aria-live="polite">' + (st.found ? (st.misses < 3 ? '✓ Found it.' : 'The breaking line is marked.') : st.misses ? 'Not that line, it is the same in A or harmless. ' + (3 - st.misses) + ' tries left.' : '') + '</div>';
+    if (!live) h += '<p class="rd-step"><b>2. Why does it break?</b></p>' + optHtml(st.os) + '<p><button type="button" class="btn-primary" id="rdCheck"' + (st.done ? ' disabled' : '') + '>Check</button></p><div class="dr-msg" id="rdMsg2" aria-live="polite"></div>';
+    if (st.done) {
+      var A = RC.runDiff(d, 'a', KL.Sim), B = RC.runDiff(d, 'b', KL.Sim);
+      h += '<div class="lr-debrief"><h4>Why</h4><p>' + md(d.why.right) + '</p><h4>What you would see</h4>' + (B ? '<pre class="rd-out">' + esc(B) + '</pre><p class="pro-note">Run in the simulator. The working version gives:</p><pre class="rd-out">' + esc(A) + '</pre>' : '<p>' + md(d.symptom) + '</p><p class="pro-note">A real API server rejects this. The simulator is more forgiving here, so this case is not reproduced in it.</p>') + '</div>' + labLink(d.lab) + nextHtml();
+    }
+    h += '</div>'; root.innerHTML = h; bindTabs(); wireNav();
+    if (live) root.querySelectorAll('.rd-pane.broken .rd-l').forEach(function (el) {
+      var go = function () { var n = +el.dataset.n; if (st.bad.indexOf(n) >= 0) { st.found = true; if (st.misses) st.clean = false; } else { st.misses++; st.clean = false; } draw(); };
+      el.onclick = go; el.onkeydown = function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } };
+    });
+    var chk = $('rdCheck'); if (chk) chk.onclick = function () {
+      var r = root.querySelector('input[name=rdOpt]:checked'); if (!r) { $('rdMsg2').textContent = 'Pick one answer first.'; return; }
+      var o = st.os[+r.value]; if (o.ok) { st.done = true; mark(st.d.id, st.clean); draw(); } else { st.clean = false; $('rdMsg2').textContent = 'Not quite. Compare the two sides again: what does the broken line promise that the system cannot deliver?'; r.parentNode.classList.add('wrong'); r.disabled = true; }
+    };
+  }
+  KL.route('reading', function () { S.open = null; draw(); });
 })();
 
 </script>

@@ -167,4 +167,10 @@ KubeDrill is independent: it is not affiliated with, endorsed by or sponsored by
 - **Teach-back** on the result card: write the root cause in your own words before the answer is shown.
 - **Version-aware labs**: set the Kubernetes version you are practising for; labs using newer features are flagged. Feature stages come from release notes and KEPs, so check the version your exam actually uses.
 - **Variants**: 308 auto-generated variants rename the namespace and objects only; hand-written variants change the scenario.
-- Quality gates: `node tools/teach-lint.cjs --strict` (trap/why coverage is a ratchet, 124 labs still lack one), `tools/mutation.cjs --strict`, `tests/*.test.js`.
+- Quality gates: `node tools/teach-lint.cjs --strict` (every lab now has a trap or a "why"; the ratchet is at 0 so it cannot slip back), `tools/mutation.cjs --strict`, `tests/*.test.js`.
+
+## Added after that: traps, replay, Read & diff
+- **Traps and "why"**: all 172 labs now name the tempting wrong move and the reasoning behind the fix. They live in `assets/js/data/traps-*.js`; `tests/traps.test.js` checks each note and runs every "prove it" command after the lab's solution.
+- **Mistake replay**: the result card shows your command trail next to the reference path, marking each step as looked, changed, failed or repeated. It is computed locally from the commands you typed.
+- **Read & diff** (`#reading`): 15 reading cases built from real simulator output (find the clue line, then name the cause) and 12 manifest diffs (find the breaking line, then say why). Eight diffs were applied in the simulator in both versions; four are faults a real API server rejects but the simulator accepts, and the page says so.
+- Tests: `tests/traps.test.js`, `tests/replay.test.js`, `tests/reading.test.js`, and browser tests `tests/replay-ui.cjs`, `tests/reading-ui.cjs`.

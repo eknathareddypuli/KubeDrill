@@ -98,6 +98,8 @@
 
   Labs.meta = META; Labs.ladders = LADDERS; Labs.variantIds = {};
   Object.keys(META).forEach(function (id) { var l = Labs.byId[id], m = META[id]; if (!l) return; if (m.constraint) l.constraint = m.constraint; if (m.trap) l.trap = m.trap; if (m.why) l.why = m.why; if (m.stage2) l.stage2 = m.stage2; });
+  // traps and why-notes authored later (data/traps-*.js) fill in only where a lab has none of its own
+  Object.keys((root.KL && root.KL.trapsMore) || {}).forEach(function (id) { var l = Labs.byId[id], m = root.KL.trapsMore[id]; if (!l) return; if (!l.trap && !l.why) { if (m.trap) l.trap = m.trap; if (m.why) l.why = m.why; } });
   // derive variants (registered in byId only, so they never inflate the lab count)
   // hand-written variants (META) win; every other lab gets the generated ones from variants-auto.js (tools/gen-variants.cjs, each one test-validated)
   var AUTO = (root.KL && root.KL.autoVariants) || {}, VIDS = Object.keys(META).concat(Object.keys(AUTO).filter(function (k) { return !META[k] || !META[k].variants; }));
