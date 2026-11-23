@@ -31,6 +31,26 @@ spec:
               key: LOG_LEVEL
 
 KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kd-noise
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+data:
+  LOG_LEVEL: "verbose"
+  FEATURE_X: "off"
+
+KUBEDRILL_EOF
 
 
 kubectl config set-context --current --namespace=inventory >/dev/null
