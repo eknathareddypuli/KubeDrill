@@ -102,12 +102,16 @@
   Object.keys((root.KL && root.KL.trapsMore) || {}).forEach(function (id) { var l = Labs.byId[id], m = root.KL.trapsMore[id]; if (!l) return; if (!l.trap && !l.why) { if (m.trap) l.trap = m.trap; if (m.why) l.why = m.why; } });
   // derive variants (registered in byId only, so they never inflate the lab count)
   // hand-written variants (META) win; every other lab gets the generated ones from variants-auto.js (tools/gen-variants.cjs, each one test-validated)
-  var AUTO = (root.KL && root.KL.autoVariants) || {}, VIDS = Object.keys(META).concat(Object.keys(AUTO).filter(function (k) { return !META[k] || !META[k].variants; }));
+  if (typeof module !== 'undefined' && typeof require === 'function') { try { require('./variants-fault2.js'); } catch (e) { /* browser build loads it with a script tag */ } }
+  var AUTO = (root.KL && root.KL.autoVariants) || {}, FAULT2 = (root.KL && root.KL.fault2) || {}, VIDS = Object.keys(META).concat(Object.keys(AUTO).filter(function (k) { return !META[k] || !META[k].variants; }));
+  Object.keys(FAULT2).forEach(function (k) { if (VIDS.indexOf(k) < 0) VIDS.push(k); });
   VIDS.forEach(function (id) {
-    var base = Labs.byId[id], m = META[id] || {}, vlist = m.variants || AUTO[id]; if (!base || !vlist) return; Labs.variantIds[id] = [id];
+    var base = Labs.byId[id], m = META[id] || {}, vlist = (m.variants || AUTO[id] || []).concat(FAULT2[id] || []); if (!base || !vlist.length) return; Labs.variantIds[id] = [id];
     vlist.forEach(function (v, i) {
-      var copy = walk({ story: base.story, setup: base.setup, setupCmds: base.setupCmds, setupNs: base.setupNs, files: base.files, flags: base.flags, tasks: base.tasks, solution: base.solution, ns: base.ns, constraint: base.constraint, stage2: base.stage2 }, function (s) { return subst(s, v.sub); });
-      var d = Object.assign({}, base, copy, { id: id + '~v' + (i + 2), num: base.num + '·v' + (i + 2), variantOf: id, why: base.why, trap: base.trap });
+      var copy = walk({ story: base.story, setup: base.setup, setupCmds: base.setupCmds, setupNs: base.setupNs, files: base.files, flags: base.flags, tasks: base.tasks, solution: base.solution, ns: base.ns, constraint: base.constraint, stage2: base.stage2 }, function (s) { return subst(s, v.sub || []); });
+      if (v.edit) v.edit(copy);
+      var d = Object.assign({}, base, copy, { id: id + '~v' + (i + 2), num: base.num + '·v' + (i + 2), variantOf: id, why: v.why || base.why, trap: v.trap || base.trap });
+      if (v.label) d.secondFault = v.label;
       d.tasks.forEach(function (t, k) { t.id = base.tasks[k].id; });
       Labs.byId[d.id] = d; Labs.variantIds[id].push(d.id);
     });

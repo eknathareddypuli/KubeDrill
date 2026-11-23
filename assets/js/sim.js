@@ -122,7 +122,7 @@
   };
 
   function imageRepo(img) { return String(img).replace(/^(docker\.io\/|library\/)/, '').replace(/:[^:\/]*$/, '').replace(/@.*$/, ''); }
-  function imageTag(img) { var m = String(img).match(/:([^:\/@]+)$/); return m ? m[1] : 'latest'; }
+  function imageTag(img) { if (/@sha256:/.test(img)) return ''; var m = String(img).match(/:([^:\/@]+)$/); return m ? m[1] : 'latest'; }
   function imageProblem(img, pullSecrets) {
     if (!img) return 'image not set';
     var repo = imageRepo(img), tag = imageTag(img);
@@ -131,7 +131,7 @@
     }
     if (/nonexist|doesnotexist|notfound|does-not-exist/.test(repo)) return 'repository does not exist or may require authorization';
     var re = KNOWN_TAGS[repo];
-    if (re && !re.test(tag)) return 'manifest for ' + repo + ':' + tag + ' not found: manifest unknown';
+    if (re && tag && !re.test(tag)) return 'manifest for ' + repo + ':' + tag + ' not found: manifest unknown';
     if (/nonexist|doesnotexist|notfound|broken|badtag|typo/.test(tag)) return 'manifest for ' + repo + ':' + tag + ' not found: manifest unknown';
     return null;
   }
@@ -197,7 +197,8 @@
     Object.keys(this.objs).forEach(function (k) {
       var o = self.objs[k]; if (!o) return;
       var or = (o.metadata.ownerReferences || []).some(function (r) { return r.uid === uid; });
-      if (or) { if (o.kind === 'Pod' && o.spec.nodeName) { o.metadata.deletionTimestamp = self.t; self.changed(); } else self.remove(o); }
+      if (or && self._orphan) { o.metadata.ownerReferences = (o.metadata.ownerReferences || []).filter(function (r) { return r.uid !== uid; }); self.changed(); }
+      else if (or) { if (o.kind === 'Pod' && o.spec.nodeName) { o.metadata.deletionTimestamp = self.t; self.changed(); } else self.remove(o); }
     });
   };
   P.cascadeNs = function (ns) {
@@ -411,6 +412,7 @@
   P.settle = function (n) { for (var i = 0; i < (n || 20); i++) { this.t++; this.reconcile(); } };
   P.reconcile = function () {
     var self = this;
+    if (this.cpDown && this.flags && this.flags.cp && this.cpDown('kube-controller-manager')) { this.lc('Pod', function (p) { self.stepPod(p); }); this.evictTaints(); return; }
     this.lc('Deployment', function (d) { self.recDeployment(d); });
     this.lc('ReplicaSet', function (r) { self.recReplicaSet(r); });
     this.lc('StatefulSet', function (s) { self.recStatefulSet(s); });
@@ -506,23 +508,38 @@
   P.podReady = function (p) { return !p.metadata.deletionTimestamp && (p.status.conditions || []).some(function (c) { return c.type === 'Ready' && c.status === 'True'; }); };
   P.recStatefulSet = function (s) {
     var ns = s.metadata.namespace, want = s.spec.replicas, self = this, ps = this.podsOf(s);
+    var us = s.spec.updateStrategy || {}, part = us.type === 'OnDelete' ? null : ((us.rollingUpdate || {}).partition || 0);
+    var rev = s.metadata.name + '-' + hash(JSON.stringify(s.spec.template)).toString(36);
+    s._revs = s._revs || {}; if (!s._revs[rev]) s._revs[rev] = clone(s.spec.template);
+    if (!s._cur || !s._revs[s._cur]) s._cur = rev;
     for (var i = 0; i < want; i++) {
       var name = s.metadata.name + '-' + i, p = this.objs[this.key('Pod', ns, name)];
-      if (p) { if (!this.podReady(p)) break; else continue; }
-      var tpl = clone(s.spec.template);
+      if (p && !(p.metadata.ownerReferences || []).length && Sim.util.matchSel((s.spec.selector || {}).matchLabels, p.metadata.labels)) p.metadata.ownerReferences = ownerRef(s);
+      if (p) { if (!this.podReady(p) && s.spec.podManagementPolicy !== 'Parallel') break; else continue; }
+      var tr = (part !== null && i < part) ? s._cur : rev, tpl = clone(s._revs[tr]);
       (s.spec.volumeClaimTemplates || []).forEach(function (vct) {
         var cn = vct.metadata.name + '-' + name;
         if (!self.objs[self.key('PersistentVolumeClaim', ns, cn)]) self.createRaw({ apiVersion: 'v1', kind: 'PersistentVolumeClaim', metadata: { name: cn, namespace: ns, labels: (tpl.metadata || {}).labels || {} }, spec: clone(vct.spec) });
         tpl.spec.volumes = (tpl.spec.volumes || []).concat([{ name: vct.metadata.name, persistentVolumeClaim: { claimName: cn } }]);
       });
-      var pod = { apiVersion: 'v1', kind: 'Pod', metadata: { name: name, namespace: ns, labels: Object.assign({}, (tpl.metadata || {}).labels, { 'statefulset.kubernetes.io/pod-name': name }), ownerReferences: ownerRef(s) }, spec: tpl.spec };
+      var pod = { apiVersion: 'v1', kind: 'Pod', metadata: { name: name, namespace: ns, labels: Object.assign({}, (tpl.metadata || {}).labels, { 'statefulset.kubernetes.io/pod-name': name, 'controller-revision-hash': tr }), ownerReferences: ownerRef(s) }, spec: tpl.spec };
       pod.spec.hostname = name; pod.spec.subdomain = s.spec.serviceName;
       try { this.createRaw(pod); this.ev(s, 'Normal', 'SuccessfulCreate', 'create Pod ' + name + ' in StatefulSet ' + s.metadata.name + ' successful'); } catch (e) { this.ev(s, 'Warning', 'FailedCreate', String(e.message)); }
-      break;
+      if (s.spec.podManagementPolicy !== 'Parallel') break; else continue;
     }
+    ps = this.podsOf(s);
     ps.forEach(function (p) { var idx = parseInt(p.metadata.name.split('-').pop(), 10); if (idx >= want && !p.metadata.deletionTimestamp) { p.metadata.deletionTimestamp = self.t; } });
+    // rolling update: highest ordinal first, one pod at a time, only while every pod is Ready; pods below the partition keep their revision
+    if (part !== null && ps.length && ps.every(function (p) { return self.podReady(p); })) {
+      var old = ps.filter(function (p) { var idx = parseInt(p.metadata.name.split('-').pop(), 10); return idx >= part && idx < want && (p.metadata.labels || {})['controller-revision-hash'] !== rev; })
+        .sort(function (a, b) { return parseInt(b.metadata.name.split('-').pop(), 10) - parseInt(a.metadata.name.split('-').pop(), 10); });
+      if (old.length) { old[0].metadata.deletionTimestamp = this.t; this.ev(s, 'Normal', 'SuccessfulDelete', 'delete Pod ' + old[0].metadata.name + ' in StatefulSet ' + s.metadata.name + ' successful'); this.changed(); }
+    }
+    ps = this.podsOf(s).filter(function (p) { return !p.metadata.deletionTimestamp; });
+    var upd = ps.filter(function (p) { return (p.metadata.labels || {})['controller-revision-hash'] === rev; }).length;
+    if (upd === want && ps.length === want) s._cur = rev;
     var ready = this.podsOf(s).filter(function (p) { return self.podReady(p); }).length;
-    s.status = { replicas: this.podsOf(s).length, readyReplicas: ready, availableReplicas: ready, currentReplicas: this.podsOf(s).length };
+    s.status = { replicas: this.podsOf(s).length, readyReplicas: ready, availableReplicas: ready, currentReplicas: ps.filter(function (p) { return (p.metadata.labels || {})['controller-revision-hash'] === s._cur; }).length, updatedReplicas: upd, currentRevision: s._cur, updateRevision: rev, observedGeneration: s.metadata.generation };
   };
   P.recDaemonSet = function (s) {
     var self = this, ns = s.metadata.namespace, ps = this.podsOf(s), nodes = this.list('Node');
@@ -662,6 +679,14 @@
       if (reqMem + used.mem > parseMem(al.memory)) { why('Insufficient memory'); return; }
       var paa = s.affinity && s.affinity.podAntiAffinity && s.affinity.podAntiAffinity.requiredDuringSchedulingIgnoredDuringExecution;
       if (paa && paa.some(function (term) { return self.list('Pod', pod.metadata.namespace).some(function (o) { return o !== pod && o.spec.nodeName === nm && matchSel(term.labelSelector, o.metadata.labels); }); })) { why("node(s) didn't match pod anti-affinity rules"); return; }
+      var hp = []; s.containers.forEach(function (c) { (c.ports || []).forEach(function (q) { if (q.hostPort) hp.push(q.hostPort + '/' + (q.protocol || 'TCP')); }); });
+      if (hp.length && self.list('Pod').some(function (o) { return o !== pod && o.spec.nodeName === nm && !/^(Succeeded|Failed)$/.test((o.status || {}).phase) && !o.metadata.deletionTimestamp && (o.spec.containers || []).some(function (c) { return (c.ports || []).some(function (q) { return q.hostPort && hp.indexOf(q.hostPort + '/' + (q.protocol || 'TCP')) >= 0; }); }); })) { why("node(s) didn't have free ports for the requested pod ports"); return; }
+      var pvBad = (s.volumes || []).some(function (v) {
+        if (!v.persistentVolumeClaim) return false; var c = self.get('PersistentVolumeClaim', pod.metadata.namespace, v.persistentVolumeClaim.claimName), pv = c && c.spec.volumeName && self.get('PersistentVolume', '', c.spec.volumeName), req = pv && pv.spec.nodeAffinity && pv.spec.nodeAffinity.required;
+        if (!req) return false; var lab = Object.assign({ 'kubernetes.io/hostname': nm }, nd.metadata.labels || {});
+        return !(req.nodeSelectorTerms || []).some(function (t) { return (t.matchExpressions || []).every(function (e) { var val = lab[e.key]; return e.operator === 'In' ? (e.values || []).indexOf(val) >= 0 : e.operator === 'NotIn' ? (e.values || []).indexOf(val) < 0 : e.operator === 'Exists' ? val !== undefined : true; }); });
+      });
+      if (pvBad) { why('node(s) had volume node affinity conflict'); return; }
       var tsc = (s.topologySpreadConstraints || [])[0];
       if (tsc && tsc.whenUnsatisfiable === 'DoNotSchedule') {
         var counts = {}; nodes.forEach(function (x) { counts[x.metadata.name] = 0; }); self.list('Pod', pod.metadata.namespace).forEach(function (o) { if (o !== pod && o.spec.nodeName && matchSel(tsc.labelSelector, o.metadata.labels)) counts[o.spec.nodeName] = (counts[o.spec.nodeName] || 0) + 1; });
@@ -760,6 +785,7 @@
     if (m.deletionTimestamp) { if (this.t - m.deletionTimestamp >= 1) this.remove(pod, true); return; }
     if (st.phase === 'Succeeded' || st.phase === 'Failed') return;
     if (!s.nodeName) {
+      if (this.cpDown && this.flags && this.flags.cp && this.cpDown('kube-scheduler')) return;
       var r = this.schedule(pod);
       if (r.node) { s.nodeName = r.node; st.hostIP = this.get('Node', '', r.node).status.addresses[0].address; this.ev(pod, 'Normal', 'Scheduled', 'Successfully assigned ' + m.namespace + '/' + m.name + ' to ' + r.node); setCond(pod, 'PodScheduled', 'True'); pi.scheduledAt = this.t; this.changed(); }
       else { setCond(pod, 'PodScheduled', 'False', 'Unschedulable'); st.unsched = r.fail; this.ev(pod, 'Warning', 'FailedScheduling', r.fail); return; }
@@ -841,7 +867,7 @@
       else if (x.st === 'term') { o.state = { terminated: { exitCode: x.exit.code, reason: x.exit.reason, finishedAt: x.at } }; }
       else if (x.st === 'backoff') { o.state = { waiting: { reason: 'CrashLoopBackOff', message: 'back-off ' + Math.min(Math.pow(2, x.rc), 300) * 10 + 's restarting failed container=' + c.name + ' pod=' + pod.metadata.name } }; }
       else if (x.st === 'pullerr') o.state = { waiting: { reason: (self.t - x.since) < 1 ? 'ErrImagePull' : 'ImagePullBackOff', message: x.msg } };
-      else if (x.st === 'cfgerr') o.state = { waiting: { reason: 'CreateContainerConfigError', message: x.msg } };
+      else if (x.st === 'cfgerr') o.state = { waiting: { reason: /^(ErrImageNeverPull|InvalidImageName)$/.test(x.msg) ? x.msg : 'CreateContainerConfigError', message: x.msg } };
       else o.state = { waiting: { reason: 'ContainerCreating' } };
       if (x.last) o.lastState = { terminated: { exitCode: x.last.exitCode, reason: x.last.reason } };
       if (c.resources) { o.resources = clone((pod._alloc && pod._alloc[c.name]) || c.resources); o.allocatedResources = clone(((pod._alloc && pod._alloc[c.name]) || c.resources).requests || {}); }
@@ -971,7 +997,7 @@
     if (ns || (d && !d.ns)) this.list('RoleBinding', ns).forEach(function (b) {
       if (!(b.subjects || []).some(function (sj) { return subMatch(Object.assign({ namespace: b.metadata.namespace }, sj)); })) return;
       var role = b.roleRef.kind === 'ClusterRole' ? self.get('ClusterRole', '', b.roleRef.name) : self.get('Role', b.metadata.namespace, b.roleRef.name);
-      if (role && (role.rules || []).some(ruleOk) && (d ? d.ns : true)) ok = true;
+      if (role && (role.rules || []).some(ruleOk) && (d ? (d.ns || self._bindNs) : true)) ok = true;
     });
     return ok;
   };
@@ -984,7 +1010,7 @@
 
   // ─── state export (for labs/UI) ───
   // full serialisable state (for session persistence); load() is its inverse
-  var STATE_KEYS = ['t', 'seed', 'objs', 'pi', 'events', 'fs', 'cwd', 'env', 'ctxNs', 'uidN', 'ipN', 'cipN', 'npN', 'crds', 'dirty', 'loadgen', 'history', 'pvN', 'kinds', 'failedCreate', 'flags'];
+  var STATE_KEYS = ['t', 'seed', 'objs', 'pi', 'events', 'fs', 'cwd', 'env', 'ctxNs', 'uidN', 'ipN', 'cipN', 'npN', 'crds', 'dirty', 'loadgen', 'history', 'pvN', 'kinds', 'failedCreate', 'flags', '_kpSnap', '_dsHash'];
   P.dump = function () { var o = { v: 1 }, self = this; STATE_KEYS.forEach(function (k) { if (self[k] !== undefined) o[k] = self[k]; }); return JSON.parse(JSON.stringify(o)); };
   P.load = function (st) { var self = this; if (!st || st.v !== 1) throw new Error('bad simulator state'); this.reset(); STATE_KEYS.forEach(function (k) { if (st[k] !== undefined) self[k] = clone(st[k]); }); if (!this.failedCreate) this.failedCreate = {}; return this; };
   P.snapshot = function () { return { objs: clone(this.objs), t: this.t, fs: clone(this.fs), ctxNs: this.ctxNs, kinds: clone(this.kinds), uidN: this.uidN, seed: this.seed }; };

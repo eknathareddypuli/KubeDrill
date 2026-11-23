@@ -12,11 +12,13 @@
   Labs.setup = function (sim, lab) {
     var ns = lab.ns;
     (lab.setupNs || [ns]).forEach(function (n) { if (!sim.get('Namespace', '', n)) sim.createRaw({ apiVersion: 'v1', kind: 'Namespace', metadata: { name: n } }); });
-    var prev = sim.ctxNs;
+    var prev = sim.ctxNs, cp = !!(lab.flags && lab.flags.cp);
+    // control-plane labs: the fault is live while the objects are created (pods stay Pending, no ReplicaSet appears), but setup itself is not refused by it
+    if (cp) { sim.flags = JSON.parse(JSON.stringify(lab.flags)); (lab.files || []).forEach(function (f) { sim.writeFile(f.path, f.content); }); sim._cpSetup = true; }
     (lab.setup || []).forEach(function (txt) { var r = sim.exec('kubectl apply -f - <<EOF\n' + txt + '\nEOF'); if (r.code) throw new Error('lab ' + lab.id + ' setup failed: ' + r.stderr); });
     (lab.setupCmds || []).forEach(function (c) { var r = sim.exec(c); if (r.code) throw new Error('lab ' + lab.id + ' setup cmd failed: ' + c + ' → ' + r.stderr); });
-    (lab.files || []).forEach(function (f) { sim.writeFile(f.path, f.content); });
-    if (lab.flags) { sim.flags = JSON.parse(JSON.stringify(lab.flags)); }
+    if (cp) sim._cpSetup = false; else (lab.files || []).forEach(function (f) { sim.writeFile(f.path, f.content); });
+    if (lab.flags && !cp) { sim.flags = JSON.parse(JSON.stringify(lab.flags)); }
     sim.ctxNs = lab.keepCtx ? prev : ns;
     if (sim.flags && sim.flags.contexts && sim.flags.current) { var c0 = sim.flags.contexts.filter(function (c) { return c.name === sim.flags.current; })[0]; if (c0 && c0.ns && c0.ns !== 'default') sim.ctxNs = c0.ns; } // a lab that starts on a named context starts in that context's namespace
     sim.settle(lab.settle || 8);
@@ -82,6 +84,7 @@
       case 'nodeCordoned': o = sim.get('Node', '', a.node); return { ok: !!o && !!o.spec.unschedulable === (a.v !== false), msg: 'node ' + a.node + (a.v === false ? ' should be schedulable' : ' should be cordoned') };
       case 'podsOffNode': n = sim.list('Pod', a.ns).filter(function (p) { return p.spec.nodeName === a.node && !p.metadata.deletionTimestamp && (p.metadata.ownerReferences || []).length; }).length; return { ok: n === 0, msg: 'no ' + a.ns + ' pods should run on ' + a.node + ' (' + n + ' left)' };
       case 'jpRe': { o = ref(sim, a); if (!o) return { ok: false, msg: a.ref + ' not found in ' + a.ns }; v = pathVal(sim, o, a.path); return { ok: new RegExp(a.re).test(v), msg: a.msg || (a.ref + ' ' + a.path + ' should match /' + a.re + '/ (is "' + v + '")') }; }
+      case 'fmode': { var fm = sim.fileMeta ? sim.fileMeta(a.path) : { mode: '644', owner: 'root:root' }; var okm = (parseInt(fm.mode, 8) & ~parseInt(a.max || '777', 8)) === 0 && (!a.owner || fm.owner === a.owner) && (sim.readFile(a.path) !== null || sim.isDir(a.path)); return { ok: okm, msg: a.msg || (a.path + ' should be mode ' + (a.max || 'any') + ' or stricter' + (a.owner ? ' and owned by ' + a.owner : '') + ' (now ' + fm.mode + ' ' + fm.owner + ')') }; }
       case 'fileNo': { var fn = sim.readFile(a.path); return { ok: fn !== null && !new RegExp(a.re, a.flags || '').test(fn), msg: a.msg || ('file ' + a.path + ' should not match /' + a.re + '/') }; }
       case 'fileRe': { var fc = sim.readFile(a.path); return { ok: fc !== null && new RegExp(a.re, a.flags || '').test(fc), msg: a.msg || ('file ' + a.path + (fc === null ? ' should exist' : ' should match /' + a.re + '/')) }; }
       case 'file': { var c = sim.readFile(a.path); return { ok: c !== null && (a.has === undefined || c.indexOf(a.has) >= 0), msg: 'file ' + a.path + ' should exist' + (a.has ? ' and contain "' + a.has + '"' : '') }; }
@@ -182,6 +185,7 @@
       case 'ctx': if (a.name) return 'kubectl config get-contexts -o name | grep -qx ' + q(a.name) + (a.ns !== undefined ? ' && [ "$(kubectl config view -o jsonpath=' + q('{.contexts[?(@.name=="' + a.name + '")].context.namespace}') + ')" = ' + q(a.ns) + ' ]' : '') + (a.user !== undefined ? ' && [ "$(kubectl config view -o jsonpath=' + q('{.contexts[?(@.name=="' + a.name + '")].context.user}') + ')" = ' + q(a.user) + ' ]' : ''); return '[ "$(kubectl config current-context)" = ' + q(a.current) + ' ]';
       case 'kuser': return 'kubectl config get-users | grep -qx ' + q(a.name);
       case 'fval': return 'true # (simulator-only check)'
+      case 'fmode': return 'true # (simulator-only check)'
       case 'flag': return 'true # (simulator-only check)'
       case 'nodeCordoned': return '[ "$(kubectl get node ' + a.node + ' -o jsonpath=' + q('{.spec.unschedulable}') + ' 2>/dev/null)" ' + (a.v === false ? '!=' : '=') + ' "true" ]';
       case 'podsOffNode': return '[ "$(kubectl get pods' + ns + ' --field-selector spec.nodeName=' + a.node + ' --no-headers 2>/dev/null | wc -l)" -eq 0 ]';

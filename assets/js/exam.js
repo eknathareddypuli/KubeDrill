@@ -57,26 +57,45 @@
       out.push({ id: tr.toLowerCase() + '-curr', name: tr + ' Curriculum-weighted', track: tr, ids: ids, mins: Math.max(60, Math.min(120, Math.round(sum * 0.8 / 5) * 5)), curr: true });
     });
     ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { out.push({ id: tr.toLowerCase() + '-full', name: tr + ' Full mock', track: tr, ids: new Array(16), mins: 120, full: true }); });
+    // numbered full mocks: the same 16 tasks and the same variant names every time, no task shared with an earlier numbered mock
+    ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { for (var k = 1; k <= FIXED_N[tr]; k++) out.push({ id: tr.toLowerCase() + '-full-' + k, name: tr + ' Full mock ' + k, track: tr, ids: new Array(16), mins: 120, full: true, fixed: k }); });
+    ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { out.push({ id: tr.toLowerCase() + '-full-hard', name: tr + ' Full mock (hard)', track: tr, ids: new Array(16), mins: 120, full: true, fixed: 0, hard: true }); });
     return out;
   };
   // Full mock: 16 tasks, 120 minutes, picked by official domain weights from tasks that can be done in about ten minutes,
   // each as a randomly chosen variant (different names every attempt). Honours the Kubernetes version you set (version-aware labs).
-  function fullIds(track, seed) {
-    var V = KL.versions, tv = V ? V.getTarget() : '';
+  var FIXED_N = { CKA: 3, CKAD: 3, CKS: 2 };
+  function rng(str) { var h = 2166136261; for (var i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); } return function () { h |= 0; h = h + 0x6D2B79F5 | 0; var t = Math.imul(h ^ h >>> 15, 1 | h); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+  function shuf(arr, rnd) { var a = arr.slice(), i, j, t; for (i = a.length - 1; i > 0; i--) { j = Math.floor(rnd() * (i + 1)); t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  // opts.fixed = n (1..): deterministic mock number n; opts.hard: prefer Advanced tasks
+  function fullIds(track, seed, opts) {
+    opts = opts || {};
+    var V = KL.versions, tv = V ? V.getTarget() : '', det = opts.fixed !== undefined;
     function usable(l, max) { return l.track.indexOf(track) >= 0 && !l.capstone && !/incident/i.test(l.domain || '') && (parseInt(l.time, 10) || 10) <= max && (!V || V.status(l, tv).ok); }
-    var pool = Labs.list.filter(function (l) { return usable(l, 12); }); if (pool.length < 16) pool = Labs.list.filter(function (l) { return usable(l, 15); }); if (pool.length < 16) pool = Labs.list.filter(function (l) { return usable(l, 99); });
-    var by = {}, ids = []; pool.forEach(function (l) { (by[bucket(track, l)] = by[bucket(track, l)] || []).push(l); });
-    Object.keys(by).forEach(function (k) { by[k].sort(function () { return Math.random() - 0.5; }); });
-    CURR[track].forEach(function (d) { var want = Math.max(1, Math.round(d[1] / 100 * 16)), arr = by[d[0]] || []; for (var i = 0; i < want && arr.length; i++) ids.push(arr.shift().id); });
-    var rest = Object.keys(by).reduce(function (a, k) { return a.concat(by[k]); }, []).sort(function () { return Math.random() - 0.5; });
-    while (ids.length < 16 && rest.length) ids.push(rest.shift().id);
-    ids = ids.slice(0, 16).sort(function () { return Math.random() - 0.5; });
+    var pool = Labs.list.filter(function (l) { return usable(l, 12); }); if (pool.length < 16 * (det ? FIXED_N[track] : 1)) pool = Labs.list.filter(function (l) { return usable(l, 15); }); if (pool.length < 16) pool = Labs.list.filter(function (l) { return usable(l, 99); });
+    if (opts.hard) { var adv = pool.filter(function (l) { return l.diff === 'Advanced' || l.diff === 'Intermediate'; }); if (adv.length >= 16) pool = adv; }
+    function pick(excl, rnd) {
+      var cand = pool.filter(function (l) { return excl.indexOf(l.id) < 0; }); if (cand.length < 16) cand = pool;
+      var by = {}, ids = []; cand.forEach(function (l) { (by[bucket(track, l)] = by[bucket(track, l)] || []).push(l); });
+      Object.keys(by).forEach(function (k) { by[k] = opts.hard ? shuf(by[k], rnd).sort(function (x, y) { return (y.diff === 'Advanced') - (x.diff === 'Advanced'); }) : shuf(by[k], rnd); });
+      CURR[track].forEach(function (d) { var want = Math.max(1, Math.round(d[1] / 100 * 16)), arr = by[d[0]] || []; for (var i = 0; i < want && arr.length; i++) ids.push(arr.shift().id); });
+      var rest = shuf(Object.keys(by).reduce(function (a, k) { return a.concat(by[k]); }, []), rnd);
+      while (ids.length < 16 && rest.length) { var x = rest.shift(); if (ids.indexOf(x.id) < 0) ids.push(x.id); }
+      return shuf(ids.slice(0, 16), rnd);
+    }
+    var ids;
+    if (det) {
+      var used = [], n = Math.max(1, opts.fixed || 1), k, rnd;
+      for (k = 1; k <= n; k++) { rnd = rng('kubedrill:' + track + ':' + (opts.hard ? 'hard' : k)); ids = pick(opts.hard ? [] : used, rnd); used = used.concat(ids); }
+      return ids.map(function (id) { return Labs.variantFor ? Labs.variantFor(id, 'fixed' + (opts.hard ? 'h' : n) + id) : id; });
+    }
+    ids = pick([], Math.random);
     return ids.map(function (id) { return Labs.variantFor ? Labs.variantFor(id, seed + id) : id; });
   }
   S.fullIds = fullIds;
   S.startBundle = function (bid, env) {
     var b = S.bundles().filter(function (x) { return x.id === bid; })[0]; if (!b) return;
-    var seed = String(Date.now()); if (b.full) b.ids = fullIds(b.track, seed);
+    var seed = String(Date.now()); if (b.full) b.ids = fullIds(b.track, seed, b.fixed !== undefined ? { fixed: b.fixed, hard: !!b.hard } : null);
     Promise.all(b.ids.map(function (id) { return KL.labRun(id, true); })).then(function () {
       S.result = null; S.active = { track: b.track, ids: b.ids, start: Date.now(), end: Date.now() + b.mins * 60000, mins: b.mins, flags: {}, w: weightsFor(b.ids), env: !!env, name: b.name, curr: !!b.curr, full: !!b.full, tt: {}, cur: null }; saveActive();
       if (location.hash === '#exam') render(); else location.hash = 'exam';
@@ -148,7 +167,7 @@
       h += '<div class="ex-bar"><div class="ex-time" id="exTime">--:--</div><div class="ex-sub">time remaining · ' + a.ids.length + ' tasks · ' + a.track + '</div><button class="btn-primary" id="exFinish">Finish &amp; score</button></div><div class="ex-list">' +
         a.ids.map(function (id, i) { var l = Labs.byId[id]; return '<a class="ex-q' + (a.flags[id] ? ' flag' : '') + '" href="#lab/' + id + '"><span class="ex-n">' + (i + 1) + '</span><span class="ex-t">' + esc(l.title) + '</span><span class="ex-w">' + (a.w && a.w[id] ? a.w[id] + '% · ' : '') + l.tasks.length + ' tasks · ' + l.time + '</span><span class="lab-diff diff-' + (l.diff === 'Beginner' ? 'beginner' : l.diff === 'Intermediate' ? 'intermediate' : 'advanced') + '">' + l.diff + '</span></a>'; }).join('') + '</div><p class="ex-note">Tip: do easy tasks first; use ⚑ Flag to mark tasks for review.' + (a.env ? ' <b>Real environment:</b> each task starts in the wrong context — run the <code>use-context</code> command it shows.' : ' The context is already set to each task\'s namespace.') + ' Leaving this page does not pause the clock.</p>';
       root.innerHTML = h; $('exFinish').onclick = function () { if (confirm('Finish the exam and see your score?')) S.finish(); };
-      var tick = function () { var rem = (a.end - Date.now()) / 1000, el = $('exTime'); if (el) { el.textContent = fmt(rem); el.classList.toggle('low', rem < 300); } if (rem <= 0) { clearInterval(timer); S.finish(); } };
+      var tick = function () { var rem = (a.end - Date.now()) / 1000, el = $('exTime'); if (el) { el.textContent = fmt(rem); el.classList.toggle('low', rem < 300); el.classList.toggle('warn', rem >= 300 && rem < 1200); } if (rem <= 0) { clearInterval(timer); S.finish(); } };
       tick(); timer = setInterval(tick, 1000); return;
     }
     if (S.result) {
@@ -159,7 +178,7 @@
     }
     var hist = store.data().exams.slice(-8).reverse();
     h += '<div class="ex-setup"><label>Track<select id="exTrack"><option value="CKA">CKA — Administrator</option><option value="CKAD">CKAD — Developer</option><option value="CKS">CKS — Security</option><option value="ALL">Mixed</option></select></label><label>Length<select id="exLen">' + Object.keys(PRESETS).map(function (k) { return '<option value="' + k + '">' + PRESETS[k].label + '</option>'; }).join('') + '</select></label><button class="btn-primary" id="exGo">▶ Start exam</button></div>' +
-      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. The <b>Full mock</b> is 16 tasks in 120 minutes, drawn by official domain weights, and different variants every attempt. Pass marks used: CKA 66%, CKAD 66%, CKS 67% (check the current handbook).</p>' + HONEST + '<div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
+      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. The <b>Full mock</b> is 16 tasks in 120 minutes, drawn by official domain weights, and different variants every attempt. <b>Full mock 1, 2, 3</b> are fixed sets (the same 16 tasks every time, none shared between them) so you can retake one and compare; the <b>hard</b> set favours Advanced tasks. Pass marks used: CKA 66%, CKAD 66%, CKS 67% (check the current handbook).</p>' + HONEST + '<div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
       '<div class="ex-hist"><h3>Your attempts</h3>' + (hist.length ? '<table><tr><th>Date</th><th>Track</th><th>Score</th><th>Time</th></tr>' + hist.map(function (e) { return '<tr><td>' + new Date(e.date).toLocaleDateString() + '</td><td>' + e.track + '</td><td class="' + (e.pct >= 66 ? 'p' : 'f') + '">' + e.pct + '%</td><td>' + fmt(e.secs) + '</td></tr>'; }).join('') + '</table>' : '<p class="ex-note">No attempts yet.</p>') + '</div>' +
       '<p class="ex-note">Disclaimer: the simulator is a teaching model of Kubernetes behaviour, not the real exam environment. Practise on a real cluster with the kind lab packs as well.</p>';
     root.innerHTML = h; $('exGo').onclick = function () { S.start($('exTrack').value, $('exLen').value, $('exEnv').checked); };

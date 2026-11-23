@@ -95,7 +95,8 @@
       }
       if (verb === 'logs' || verb === 'exec') { var sres = verb === 'logs' ? 'pods/log' : 'pods/exec'; if (!this.canI(who, verb === 'logs' ? 'get' : 'create', sres, nsFlag || this.ctxNs)) return err('Error from server (Forbidden): pods "' + (rest[0] || '') + '" is forbidden: User "' + who + '" cannot ' + (verb === 'logs' ? 'get' : 'create') + ' resource "' + sres + '" in API group "" in the namespace "' + (nsFlag || this.ctxNs) + '"\n'); }
     }
-    return inner0.call(this, args, stdin);
+    this._who = who && who !== ADMIN ? who : null;
+    try { return inner0.call(this, args, stdin); } finally { this._who = null; }
   };
 
   // ── kubectl certificate approve|deny ──
@@ -510,7 +511,7 @@
   var pm0 = postMutation;
   postMutation = function (sim, o, oldO, args) {
     pm0(sim, o, oldO);
-    if (o.kind === 'Pod' && JSON.stringify((o.spec.containers || []).map(function (c) { return c.resources; })) !== JSON.stringify((oldO.spec.containers || []).map(function (c) { return c.resources; }))) {
+    if (o.kind === 'Pod' && o.metadata.uid === oldO.metadata.uid && JSON.stringify((o.spec.containers || []).map(function (c) { return c.resources; })) !== JSON.stringify((oldO.spec.containers || []).map(function (c) { return c.resources; }))) {
       if (!/--subresource[= ]resize/.test(args)) throw new KErr('The Pod "' + o.metadata.name + '" is invalid: spec: Forbidden: pod updates may not change fields other than `spec.containers[*].image`, `spec.initContainers[*].image`, `spec.activeDeadlineSeconds`, `spec.tolerations` (only additions to existing tolerations), `spec.terminationGracePeriodSeconds` (allow it to be set to 1 if it was previously negative)\n  (to change CPU/memory of a running container use: kubectl patch pod NAME --subresource resize --patch ...)');
       if (qosOf(o) !== qosOf(oldO)) throw new KErr('The Pod "' + o.metadata.name + '" is invalid: Pod QOS Class may not change as a result of resizing');
       var nd = sim.get('Node', '', o.spec.nodeName), alloc = nd && nd.status && nd.status.allocatable || {}, U0 = Sim.util, cpu = 0, mem = 0;

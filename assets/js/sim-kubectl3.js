@@ -33,10 +33,12 @@
   };
   // client-side validation kubectl does before sending: removed API versions, and fields placed where the schema has none (the classic indentation mistake)
   var GONE = { 'apps/v1beta1': 1, 'apps/v1beta2': 1, 'extensions/v1beta1': 1 }, GONEK = /^(Deployment|DaemonSet|ReplicaSet|StatefulSet|Ingress|NetworkPolicy|PodSecurityPolicy)$/;
+  // other API versions removed from current Kubernetes (the "deprecated API" tickets)
+  var GONE2 = { 'batch/v1beta1': /^CronJob$/, 'networking.k8s.io/v1beta1': /^Ingress(Class)?$/, 'autoscaling/v2beta1': /^HorizontalPodAutoscaler$/, 'autoscaling/v2beta2': /^HorizontalPodAutoscaler$/, 'policy/v1beta1': /^(PodDisruptionBudget|PodSecurityPolicy)$/, 'rbac.authorization.k8s.io/v1beta1': /^(Role|RoleBinding|ClusterRole|ClusterRoleBinding)$/, 'flowcontrol.apiserver.k8s.io/v1beta2': /./ };
   var PODSPEC = 'containers initContainers ephemeralContainers volumes restartPolicy serviceAccountName serviceAccount nodeName nodeSelector affinity tolerations terminationGracePeriodSeconds activeDeadlineSeconds dnsPolicy dnsConfig hostNetwork hostPID hostIPC hostname subdomain hostAliases imagePullSecrets priorityClassName priority preemptionPolicy schedulerName securityContext shareProcessNamespace topologySpreadConstraints automountServiceAccountToken enableServiceLinks runtimeClassName readinessGates overhead setHostnameAsFQDN os hostUsers resourceClaims schedulingGates'.split(' ');
   P.strictCheck = function (d, name) {
     var q = '"' + name + '"';
-    if (GONE[d.apiVersion] && GONEK.test(d.kind)) throw new KErr('error: resource mapping not found for name: "' + ((d.metadata || {}).name || '') + '" namespace: "' + ((d.metadata || {}).namespace || '') + '" from ' + q + ': no matches for kind "' + d.kind + '" in version "' + d.apiVersion + '"\nensure CRDs are installed first');
+    if ((GONE[d.apiVersion] && GONEK.test(d.kind)) || (GONE2[d.apiVersion] && GONE2[d.apiVersion].test(d.kind))) throw new KErr('error: resource mapping not found for name: "' + ((d.metadata || {}).name || '') + '" namespace: "' + ((d.metadata || {}).namespace || '') + '" from ' + q + ': no matches for kind "' + d.kind + '" in version "' + d.apiVersion + '"\nensure CRDs are installed first');
     var spec = null, path = '';
     if (d.kind === 'Pod') { spec = d.spec; path = 'Pod.spec'; }
     else if (/^(Deployment|DaemonSet|ReplicaSet|StatefulSet|Job)$/.test(d.kind) && d.spec && d.spec.template) { spec = d.spec.template.spec; path = d.kind + '.spec.template.spec'; }
@@ -251,7 +253,7 @@
 
   P.kLabel = function (a, field) {
     var f = a.flags, ns = f.n || this.ctxNs, self = this, out = [], refs, rest = [];
-    var pos = a.pos.slice(), kvs = pos.filter(function (p) { return p.indexOf('=') > 0 || /^[\w.\/-]+-$/.test(p) && pos.indexOf(p) > 1; }); var other = pos.filter(function (p) { return kvs.indexOf(p) < 0; });
+    var pos = a.pos.slice(), kvs = pos.filter(function (p) { return p.indexOf('=') > 0 || /^[\w.\/-]+-$/.test(p) && pos.indexOf(p) > 0; }); var other = pos.filter(function (p) { return kvs.indexOf(p) < 0; });
     refs = this.parseRefs({ pos: other, flags: f }); void rest;
     refs.forEach(function (r) {
       var list = r.name ? [self.get(r.d.kind, ns, r.name)] : self.list(r.d, f['all'] ? null : ns, f.l); if (r.name && !list[0]) throw self.notFound(r.d, r.name);
