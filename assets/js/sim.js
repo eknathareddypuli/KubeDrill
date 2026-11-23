@@ -30,6 +30,8 @@
     ['PriorityClass', 'priorityclasses', 'priorityclass', ['pc'], 'scheduling.k8s.io', 'scheduling.k8s.io/v1', 0],
     ['RuntimeClass', 'runtimeclasses', 'runtimeclass', [], 'node.k8s.io', 'node.k8s.io/v1', 0],
     ['CertificateSigningRequest', 'certificatesigningrequests', 'certificatesigningrequest', ['csr'], 'certificates.k8s.io', 'certificates.k8s.io/v1', 0],
+    ['ValidatingAdmissionPolicy', 'validatingadmissionpolicies', 'validatingadmissionpolicy', ['vap'], 'admissionregistration.k8s.io', 'admissionregistration.k8s.io/v1', 0],
+    ['ValidatingAdmissionPolicyBinding', 'validatingadmissionpolicybindings', 'validatingadmissionpolicybinding', ['vapb'], 'admissionregistration.k8s.io', 'admissionregistration.k8s.io/v1', 0],
     ['ValidatingWebhookConfiguration', 'validatingwebhookconfigurations', 'validatingwebhookconfiguration', [], 'admissionregistration.k8s.io', 'admissionregistration.k8s.io/v1', 0],
     ['NetworkPolicy', 'networkpolicies', 'networkpolicy', ['netpol'], 'networking.k8s.io', 'networking.k8s.io/v1', 1],
     ['Ingress', 'ingresses', 'ingress', ['ing'], 'networking.k8s.io', 'networking.k8s.io/v1', 1],
@@ -842,6 +844,8 @@
       else if (x.st === 'cfgerr') o.state = { waiting: { reason: 'CreateContainerConfigError', message: x.msg } };
       else o.state = { waiting: { reason: 'ContainerCreating' } };
       if (x.last) o.lastState = { terminated: { exitCode: x.last.exitCode, reason: x.last.reason } };
+      if (c.resources) { o.resources = clone((pod._alloc && pod._alloc[c.name]) || c.resources); o.allocatedResources = clone(((pod._alloc && pod._alloc[c.name]) || c.resources).requests || {}); }
+      if (pod._rcx && pod._rcx[c.name]) o.restartCount += pod._rcx[c.name];
       return o;
     });
     var allReady = st.containerStatuses.every(function (c) { return c.ready; }), allRunning = st.containerStatuses.every(function (c) { return c.state.running; });

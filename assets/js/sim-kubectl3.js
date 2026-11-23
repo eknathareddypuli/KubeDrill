@@ -109,7 +109,7 @@
       case 'patch': return this.kPatch(a);
       case 'edit': return this.kEdit(a);
       case 'kustomize': return this.kustomizeBuild(a.pos[0] || '.').map(function (d) { return Y.dump(d, { lineWidth: -1, noRefs: true }); }).join('---\n');
-      case 'debug': throw new KErr('error: kubectl debug is not available in the simulator');
+      case 'debug': return this.kDebug(a);
       case 'cp': throw new KErr('error: kubectl cp is not available in the simulator');
       case 'diff': return '';
     }
@@ -165,7 +165,7 @@
         if (sub === 'clusterrolebinding') delete o.metadata.namespace; return finish(o);
       }
       case 'quota': case 'resourcequota': { var hard = {}; String(f.hard || '').split(',').forEach(function (p) { var kv = p.split('='); if (kv[0]) hard[kv[0]] = kv[1]; }); return finish({ apiVersion: 'v1', kind: 'ResourceQuota', metadata: { name: name, namespace: ns }, spec: { hard: hard } }); }
-      case 'poddisruptionbudget': case 'pdb': { var sel = {}; String(f.selector || '').split(',').forEach(function (p) { var kv = p.split('='); if (kv[0]) sel[kv[0]] = kv[1]; }); var sp = { selector: { matchLabels: sel } }; if (f['min-available']) sp.minAvailable = /^\d+$/.test(f['min-available']) ? parseInt(f['min-available'], 10) : f['min-available']; if (f['max-unavailable']) sp.maxUnavailable = /^\d+$/.test(f['max-unavailable']) ? parseInt(f['max-unavailable'], 10) : f['max-unavailable']; return finish({ apiVersion: 'policy/v1', kind: 'PodDisruptionBudget', metadata: { name: name, namespace: ns }, spec: sp }); }
+      case 'poddisruptionbudget': case 'pdb': { var sel = {}; String(f.selector || f.l || '').split(',').forEach(function (p) { var kv = p.split('='); if (kv[0]) sel[kv[0]] = kv[1]; }); var sp = { selector: { matchLabels: sel } }; if (f['min-available']) sp.minAvailable = /^\d+$/.test(f['min-available']) ? parseInt(f['min-available'], 10) : f['min-available']; if (f['max-unavailable']) sp.maxUnavailable = /^\d+$/.test(f['max-unavailable']) ? parseInt(f['max-unavailable'], 10) : f['max-unavailable']; return finish({ apiVersion: 'policy/v1', kind: 'PodDisruptionBudget', metadata: { name: name, namespace: ns }, spec: sp }); }
       case 'job': {
         if (f.from) { var cj = this.get('CronJob', ns, String(f.from).split('/')[1]); if (!cj) throw new KErr('Error from server (NotFound): cronjobs.batch "' + String(f.from).split('/')[1] + '" not found'); var jt = clone(cj.spec.jobTemplate); o = { apiVersion: 'batch/v1', kind: 'Job', metadata: { name: name, namespace: ns }, spec: jt.spec }; return finish(o); }
         if (!f.image) throw new KErr('error: required flag(s) "image" not set');
@@ -358,11 +358,11 @@
   P.kPatch = function (a) {
     var f = a.flags, ns = f.n || this.ctxNs, refs = this.parseRefs(a), r = refs[0], type = f.type || 'strategic'; if (!r || !r.name) throw new KErr('error: must specify resource and name'); if (!f.p) throw new KErr('error: must specify --patch or --patch-file containing the contents of the patch');
     var o = this.get(r.d.kind, ns, r.name); if (!o) throw this.notFound(r.d, r.name); var patch; try { patch = JSON.parse(f.p); } catch (e) { try { patch = Y.load(f.p); } catch (e2) { throw new KErr('error: unable to parse "' + f.p + '": ' + e.message); } }
-    var before = JSON.stringify([o.spec, o.metadata.labels, o.metadata.annotations, o.data, o.automountServiceAccountToken, o.metadata.finalizers]);
+    var before = JSON.stringify([o.spec, o.metadata.labels, o.metadata.annotations, o.data, o.automountServiceAccountToken, o.metadata.finalizers, o.allowVolumeExpansion, o.immutable]);
     if (type === 'json') { patch.forEach(function (op) { var parts = op.path.split('/').slice(1).map(function (x) { return x.replace(/~1/g, '/').replace(/~0/g, '~'); }), cur = o, i; for (i = 0; i < parts.length - 1; i++) cur = cur[parts[i]]; var last = parts[parts.length - 1]; if (op.op === 'replace' || op.op === 'add') { if (Array.isArray(cur) && last === '-') cur.push(op.value); else if (Array.isArray(cur) && op.op === 'add') cur.splice(+last, 0, op.value); else cur[last] = op.value; } else if (op.op === 'remove') { if (Array.isArray(cur)) cur.splice(+last, 1); else delete cur[last]; } }); }
     else { var merged = type === 'merge' ? mergePatch(clone({ spec: o.spec, metadata: { labels: o.metadata.labels, annotations: o.metadata.annotations }, data: o.data }), patch) : strategicMerge(clone({ spec: o.spec, metadata: { labels: o.metadata.labels, annotations: o.metadata.annotations }, data: o.data }), patch); if (merged.spec !== undefined) o.spec = merged.spec; if (merged.metadata) { if (merged.metadata.labels) o.metadata.labels = merged.metadata.labels; if (merged.metadata.annotations) o.metadata.annotations = merged.metadata.annotations; } if (merged.data !== undefined) o.data = merged.data; if (!Array.isArray(patch)) Object.keys(patch).forEach(function (k) { if (['spec', 'metadata', 'data', 'status', 'kind', 'apiVersion'].indexOf(k) >= 0) return; var cur = {}; cur[k] = clone(o[k]); var m2 = type === 'merge' ? mergePatch(cur, patch) : strategicMerge(cur, patch); o[k] = m2[k]; }); }
     if (type !== 'json' && patch && !Array.isArray(patch) && patch.metadata && 'finalizers' in patch.metadata) { if (patch.metadata.finalizers === null || (Array.isArray(patch.metadata.finalizers) && !patch.metadata.finalizers.length)) delete o.metadata.finalizers; else if (Array.isArray(patch.metadata.finalizers)) o.metadata.finalizers = patch.metadata.finalizers.slice(); }
-    var changed = before !== JSON.stringify([o.spec, o.metadata.labels, o.metadata.annotations, o.data, o.automountServiceAccountToken, o.metadata.finalizers]); if (changed && o.kind !== 'Pod') o.metadata.generation++; this.changed();
+    var changed = before !== JSON.stringify([o.spec, o.metadata.labels, o.metadata.annotations, o.data, o.automountServiceAccountToken, o.metadata.finalizers, o.allowVolumeExpansion, o.immutable]); if (changed && o.kind !== 'Pod') o.metadata.generation++; this.changed();
     return this.disp(r.d) + '/' + r.name + (changed ? ' patched' : ' patched (no change)') + '\n';
   };
   P.kEdit = function (a) {

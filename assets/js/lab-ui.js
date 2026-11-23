@@ -180,15 +180,19 @@
     if (res.ok && r.lab.stage2 && !Labs.stage2Active(r.sim, r.lab) && !exam) { Labs.applyStage2(r.sim, r.lab); res = Labs.check(r.sim, r.lab); s2note = '<div class="lr-stage2">🔔 <b>Not done yet.</b> ' + esc(r.lab.stage2.reveal) + ' A new task has been added.</div>'; r.stage2At = Date.now(); }
     r.checks++; res.tasks.forEach(function (t) { r.tasksOk[t.id] = t.ok; t.results.forEach(function (x) { if (!x.ok) fb.push('<li>' + esc(x.msg) + (!exam && KL.whyCmd ? KL.whyCmd(x, r.lab) : '') + '</li>'); }); });
     store.setLabTasks(r.lab.id, r.tasksOk); renderTasks(); refreshState(); r.last = res;
-    if (res.ok || (exam && auto === true)) { r.over = true; r.endAt = Date.now(); }
+    if ((res.ok && !res.score) || (res.score && res.passed === res.total && res.ok) || (exam && auto === true)) { r.over = true; r.endAt = Date.now(); }
     saveRun(r, true);
+    var sc = res.score ? '<div class="lr-score"><b>Score: ' + res.score.earned + ' / ' + res.score.total + '</b> · pass mark ' + res.score.pass + (res.score.earned >= res.score.pass ? ' ✓ (every point still counts: keep going for 100)' : ' — partial credit per task') + '</div>' : '';
+    var xh = (res.extras && res.extras.length && !exam && fb.length) ? '<div class="lr-fail"><b>Also: not a clean fix yet.</b><ul>' + res.extras.map(function (x) { return '<li>' + esc(x.msg) + '</li>'; }).join('') + '</ul></div>' : '';
     var cb = res.constraint && !res.constraint.ok ? '<div class="lr-fail lr-cons">🔒 <b>Constraint broken:</b> ' + esc(res.constraint.text) + '<br><small>' + res.constraint.msgs.map(esc).join('<br>') + '</small></div>' : '';
     try { window.dispatchEvent(new CustomEvent('kl:check', { detail: { run: r, res: res } })); } catch (e) {}
     if (r.over) { showResult(); }
     else if (s2note) $('lrFeedback').innerHTML = s2note;
-    else $('lrFeedback').innerHTML = cb + (exam ? '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Keep going — details are hidden in exam mode.</div>' : '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Still failing:<ul>' + fb.slice(0, 6).join('') + '</ul></div>');
-    if (res.ok && KL.daily) KL.daily.record(r.lab.variantOf || r.lab.id, Math.floor((Date.now() - r.start) / 1000));
-    if (res.ok) { store.markLab(r.lab.variantOf || r.lab.id, true); if (r.lab.variantOf) store.markLab(r.lab.id, true); try { window.dispatchEvent(new CustomEvent('kl:labdone', { detail: { lab: r.lab, mode: r.mode } })); } catch (e) {} if (KL.fx) KL.fx.confetti(); var n = $('lrNext'); if (n) n.hidden = false; toast('Lab ' + r.lab.num + ' complete ✓'); }
+    else if (res.extras && res.extras.length && !fb.length) $('lrFeedback').innerHTML = sc + cb + (exam ? '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks pass, but the result is not accepted.</b> Details are hidden in exam mode.</div>' : '<div class="lr-fail"><b>All checks pass, but this is not a clean fix.</b><ul>' + res.extras.map(function (x) { return '<li>' + esc(x.msg) + '</li>'; }).join('') + '</ul></div>');
+    else $('lrFeedback').innerHTML = sc + xh + cb + (exam ? '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Keep going — details are hidden in exam mode.</div>' : '<div class="lr-fail"><b>' + res.passed + ' / ' + res.total + ' tasks done.</b> Still failing:<ul>' + fb.slice(0, 6).join('') + '</ul></div>');
+    var capAgain = res.score && r.capDone; if (res.ok && res.score) r.capDone = true;
+    if (res.ok && !capAgain && KL.daily) KL.daily.record(r.lab.variantOf || r.lab.id, Math.floor((Date.now() - r.start) / 1000));
+    if (res.ok && !capAgain) { store.markLab(r.lab.variantOf || r.lab.id, true); if (r.lab.variantOf) store.markLab(r.lab.id, true); try { window.dispatchEvent(new CustomEvent('kl:labdone', { detail: { lab: r.lab, mode: r.mode } })); } catch (e) {} if (KL.fx) KL.fx.confetti(); var n = $('lrNext'); if (n) n.hidden = false; toast(res.score ? 'Capstone ' + r.lab.num + ': ' + res.score.earned + ' / ' + res.score.total + ' ✓' : 'Lab ' + r.lab.num + ' complete ✓'); }
     else if (r.over) toast('Time is up — ' + res.passed + ' / ' + res.total + ' tasks');
   }
   // result + debrief card (shown when the lab is finished, or the exam timer ran out)
@@ -196,14 +200,16 @@
     var r = cur, lab = r.lab, res = r.last || Labs.check(r.sim, lab), exam = isEx(r), fb = $('lrFeedback'); if (!fb) return;
     var secs = Math.floor(((r.endAt || Date.now()) - r.start) / 1000), hints = Object.keys(r.hintIdx).reduce(function (a, k) { return a + (r.hintIdx[k] || 0); }, 0);
     var pct = Math.round(res.passed / res.total * 100), db = (KL.debrief || {})[lab.variantOf || lab.id];
-    var head = res.ok ? '<div class="lr-pass">🎉 All ' + res.total + ' tasks pass. Lab complete' + (r.solShown ? ' (solution was viewed)' : '') + '!</div>' : '<div class="lr-fail"><b>⏱ Time is up.</b> ' + res.passed + ' / ' + res.total + ' tasks done.</div>';
+    var head = res.ok ? '<div class="lr-pass">🎉 ' + (res.score ? 'Capstone score ' + res.score.earned + ' / ' + res.score.total + ' (pass mark ' + res.score.pass + '). ' : 'All ' + res.total + ' tasks pass. ') + 'Lab complete' + (r.solShown ? ' (solution was viewed)' : '') + '!</div>' : '<div class="lr-fail"><b>⏱ Time is up.</b> ' + res.passed + ' / ' + res.total + ' tasks done.</div>';
     var stats = '<div class="lr-stats">' + (exam ? '<div><b>' + pct + '%</b><span>score</span></div>' : '') + '<div><b>' + mmss(secs) + '</b><span>' + (exam ? 'of ' + mmss(limitSecs(lab)) : 'time') + '</span></div><div><b>' + r.checks + '</b><span>checks</span></div><div><b>' + r.hist.length + '</b><span>commands</span></div>' + (exam ? '' : '<div><b>' + hints + '</b><span>hints</span></div>') + '</div>';
     var card = db ? '<div class="lr-debrief"><h4>🎓 Debrief</h4><dl><dt>Root cause</dt><dd>' + md(db[0]) + '</dd><dt>The fix</dt><dd>' + md(db[1]) + '</dd><dt>Spot it in production</dt><dd>' + md(db[2]) + '</dd><dt class="pat">Remember</dt><dd class="pat"><code>' + esc(db[3]) + '</code></dd></dl></div>' : '';
+    if (lab.redHerring) card += '<div class="lr-debrief"><h4>🎣 Red herring in this lab</h4><p>' + esc(lab.redHerring.note) + '</p></div>';
     var pl = ''; if (r.pred && !r.pred.skip) { if (!r.pred.counted) { r.pred.counted = true; predBump(r.pred.ok); saveRun(r, true); } var ps = predStats(); pl = '<div class="lr-predres ' + (r.pred.ok ? 'ok' : 'no') + '">🔮 Your prediction: ' + (r.pred.ok ? '<b>correct</b> ✓' : '<b>missed</b> — you guessed “' + esc(r.pred.pick) + '”') + ' <span>(overall ' + ps.r + '/' + ps.t + ')</span></div>'; }
     var again = '<div class="lr-after"><button class="btn-secondary" id="lrAgain">↺ Try again' + (exam ? '' : ' in Exam mode') + '</button></div>';
     var ex = KL.design && res.ok ? KL.design.resultExtras(r, res) : '';
     fb.innerHTML = head + stats + pl + ex + card + again;
     if (KL.design) KL.design.bindResult(r);
+    try { window.dispatchEvent(new CustomEvent('kl:result', { detail: { run: r, res: res } })); } catch (e) { /* ignore */ }
     $('lrAgain').onclick = function () { setMode('exam'); getRun(lab.id, true).then(function (nr) { nr.mode = 'exam'; nr.start = Date.now(); cur = nr; renderRunner(); }); };
   }
   function switchMode(m) {

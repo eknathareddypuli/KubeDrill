@@ -6,6 +6,10 @@
   function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
   function fmt(sec) { sec = Math.max(0, Math.floor(sec)); var h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60; return (h ? h + ':' : '') + ('0' + m).slice(-2) + ':' + ('0' + s).slice(-2); }
   var timer = null;
+  var PASS = { CKA: 66, CKAD: 66, CKS: 67 };
+  function passFor(track) { var t = String(track || '').split(' ')[0]; return PASS[t] || 66; }
+  S.PASS = PASS;
+  var HONEST = '<div class="ex-honest"><b>Practice, not prediction.</b> These mocks use the built-in simulator and lab-sized tasks. Task style, difficulty, wording and scoring differ from the real exam, and a pass here does not mean you will pass there (or the other way round). Use the score to find weak areas, then confirm on a real cluster. KubeDrill is independent: not affiliated with or endorsed by the CNCF or The Linux Foundation, and it uses no real exam questions.</div>';
   var PRESETS = { mini: { label: 'Mini · 30 min · 4 tasks', n: 4, mins: 30 }, std: { label: 'Standard · 60 min · 8 tasks', n: 8, mins: 60 }, full: { label: 'Full · 120 min · 14 tasks', n: 14, mins: 120 } };
 
   function pick(track, n) {
@@ -52,12 +56,29 @@
       var sum = ids.reduce(function (a, id) { return a + (parseInt(Labs.byId[id].time, 10) || 10); }, 0);
       out.push({ id: tr.toLowerCase() + '-curr', name: tr + ' Curriculum-weighted', track: tr, ids: ids, mins: Math.max(60, Math.min(120, Math.round(sum * 0.8 / 5) * 5)), curr: true });
     });
+    ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { out.push({ id: tr.toLowerCase() + '-full', name: tr + ' Full mock', track: tr, ids: new Array(16), mins: 120, full: true }); });
     return out;
   };
+  // Full mock: 16 tasks, 120 minutes, picked by official domain weights from tasks that can be done in about ten minutes,
+  // each as a randomly chosen variant (different names every attempt). Honours the Kubernetes version you set (version-aware labs).
+  function fullIds(track, seed) {
+    var V = KL.versions, tv = V ? V.getTarget() : '';
+    function usable(l, max) { return l.track.indexOf(track) >= 0 && !l.capstone && !/incident/i.test(l.domain || '') && (parseInt(l.time, 10) || 10) <= max && (!V || V.status(l, tv).ok); }
+    var pool = Labs.list.filter(function (l) { return usable(l, 12); }); if (pool.length < 16) pool = Labs.list.filter(function (l) { return usable(l, 15); }); if (pool.length < 16) pool = Labs.list.filter(function (l) { return usable(l, 99); });
+    var by = {}, ids = []; pool.forEach(function (l) { (by[bucket(track, l)] = by[bucket(track, l)] || []).push(l); });
+    Object.keys(by).forEach(function (k) { by[k].sort(function () { return Math.random() - 0.5; }); });
+    CURR[track].forEach(function (d) { var want = Math.max(1, Math.round(d[1] / 100 * 16)), arr = by[d[0]] || []; for (var i = 0; i < want && arr.length; i++) ids.push(arr.shift().id); });
+    var rest = Object.keys(by).reduce(function (a, k) { return a.concat(by[k]); }, []).sort(function () { return Math.random() - 0.5; });
+    while (ids.length < 16 && rest.length) ids.push(rest.shift().id);
+    ids = ids.slice(0, 16).sort(function () { return Math.random() - 0.5; });
+    return ids.map(function (id) { return Labs.variantFor ? Labs.variantFor(id, seed + id) : id; });
+  }
+  S.fullIds = fullIds;
   S.startBundle = function (bid, env) {
     var b = S.bundles().filter(function (x) { return x.id === bid; })[0]; if (!b) return;
+    var seed = String(Date.now()); if (b.full) b.ids = fullIds(b.track, seed);
     Promise.all(b.ids.map(function (id) { return KL.labRun(id, true); })).then(function () {
-      S.result = null; S.active = { track: b.track, ids: b.ids, start: Date.now(), end: Date.now() + b.mins * 60000, mins: b.mins, flags: {}, w: weightsFor(b.ids), env: !!env, name: b.name, curr: !!b.curr }; saveActive();
+      S.result = null; S.active = { track: b.track, ids: b.ids, start: Date.now(), end: Date.now() + b.mins * 60000, mins: b.mins, flags: {}, w: weightsFor(b.ids), env: !!env, name: b.name, curr: !!b.curr, full: !!b.full, tt: {}, cur: null }; saveActive();
       if (location.hash === '#exam') render(); else location.hash = 'exam';
     });
   };
@@ -72,8 +93,15 @@
   function saveActive() { try { if (S.active) localStorage.setItem(AK, JSON.stringify(S.active)); else localStorage.removeItem(AK); } catch (e) { /* ignore */ } }
   S.save = saveActive;
   function restoreActive() { if (S.active) return false; try { var a = JSON.parse(localStorage.getItem(AK)); if (a && a.ids && a.ids.every(function (id) { return Labs.byId[id]; })) { S.active = a; return true; } } catch (e) { /* ignore */ } return false; }
+  // time per task: counts only while the task's lab page is open
+  function flushTime(a) { if (a && a.cur) { a.tt = a.tt || {}; a.tt[a.cur.id] = (a.tt[a.cur.id] || 0) + (Date.now() - a.cur.since) / 1000; a.cur = null; } }
+  function trackNav() {
+    var a = S.active; if (!a) return; var m = /^#lab\/([^/?]+)/.exec(location.hash || ''), id = m && a.ids.indexOf(m[1]) >= 0 ? m[1] : null;
+    if (a.cur && a.cur.id === id) return; flushTime(a); if (id) a.cur = { id: id, since: Date.now() }; saveActive();
+  }
+  window.addEventListener('hashchange', trackNav); setTimeout(trackNav, 300);
   S.finish = function () {
-    var a = S.active; if (!a) return; clearInterval(timer); S.active = null; saveActive();
+    var a = S.active; if (!a) return; clearInterval(timer); flushTime(a); S.active = null; saveActive();
     Promise.all(a.ids.map(function (id) { return KL.labRun(id); })).then(function (runs) { finishWith(a, runs); });
   };
   // speed coach: reads the command history of each task and points out slow habits (no spoilers, no grading)
@@ -92,15 +120,26 @@
     if (!tips.length) tips.push('No slow habits stood out. Keep timing yourself: the real exam is mostly about speed on tasks you already know.');
     return tips;
   }
+  // review screen: where the time went, which tasks to revisit and which doc pages cover them
+  function reviewHtml(r) {
+    var tot = r.rows.reduce(function (a, x) { return a + x.t; }, 0), slow = r.rows.filter(function (x) { return x.t > r.budget * 1.6; }), failT = r.rows.filter(function (x) { return !x.res.ok; }).reduce(function (a, x) { return a + x.t; }, 0);
+    var db = KL.debrief || {};
+    var h = '<div class="ex-coach"><h3>⏱ Where the time went</h3><p>You spent ' + fmt(tot) + ' on tasks (budget ' + fmt(r.budget) + ' each).' + (tot ? ' ' + Math.round(failT / tot * 100) + '% of it went on tasks that did not pass.' : '') + (slow.length ? ' Over budget: ' + slow.length + ' task' + (slow.length > 1 ? 's' : '') + '. In the real exam, flag a task and move on once it passes about 1.5 times its share of the clock.' : ' Pacing looked even.') + '</p>' +
+      '<table class="ex-rev"><thead><tr><th></th><th>Task</th><th>Weight</th><th>Time</th><th>Revisit</th></tr></thead><tbody>' + r.rows.map(function (x) {
+        var base = x.lab.variantOf || x.lab.id, src = !x.res.ok && KL.sources ? KL.sources(base).slice(0, 2) : [], why = !x.res.ok && db[base] ? db[base][0] : '';
+        return '<tr><td class="' + (x.res.ok ? 'okq' : 'badq') + '">' + (x.res.ok ? '✓' : '✗') + '</td><td>' + esc(x.lab.title) + (x.flag ? ' ⚑' : '') + (!x.tried ? ' <em>(not attempted)</em>' : '') + '</td><td>' + (x.w ? x.w + '%' : '') + '</td><td class="' + (x.t > r.budget * 1.6 ? 'slow' : '') + '">' + fmt(x.t) + '</td><td>' + (why ? '<em>' + esc(String(why).replace(/`/g, '')).slice(0, 170) + '</em><br>' : '') + src.map(function (z) { return '<a href="' + esc(z[1]) + '" target="_blank" rel="noopener">' + esc(z[0]) + '</a>'; }).join(' · ') + '</td></tr>';
+      }).join('') + '</tbody></table></div>';
+    return h;
+  }
   function finishWith(a, runs) {
     var w = a.w || weightsFor(a.ids), dom = {};
-    var rows = a.ids.map(function (id, i) { var lab = Labs.byId[id], res = Labs.check(runs[i].sim, lab); return { lab: lab, res: res, w: w[id] || 0 }; });
+    var rows = a.ids.map(function (id, i) { var lab = Labs.byId[id], res = Labs.check(runs[i].sim, lab); return { lab: lab, res: res, w: w[id] || 0, t: (a.tt && a.tt[id]) || 0, tried: (runs[i].hist || []).length, flag: !!(a.flags && a.flags[id]) }; });
     var got = 0, tot = 0, score = 0, wt = 0; rows.forEach(function (r) { got += r.res.passed; tot += r.res.total; var f = r.res.total ? r.res.passed / r.res.total : 0; score += r.w * f; wt += r.w; var dn = a.curr && CURR[a.track] ? bucket(a.track, r.lab) : r.lab.domain, d = dom[dn] = dom[dn] || { got: 0, w: 0 }; d.got += r.w * f; d.w += r.w; });
     var pct = wt ? Math.round(score / wt * 100) : 0, secs = Math.min(Math.round((Date.now() - a.start) / 1000), a.mins * 60);
     store.addExam({ date: Date.now(), track: a.name || a.track, pct: pct, got: got, tot: tot, secs: secs, n: a.ids.length });
     var domains = Object.keys(dom).map(function (k) { var off = a.curr && CURR[a.track] ? (CURR[a.track].filter(function (c) { return c[0] === k; })[0] || [0, 0])[1] : 0; return { name: k, pct: Math.round(dom[k].got / dom[k].w * 100), w: Math.round(dom[k].w), off: off }; }).sort(function (x, y) { return x.pct - y.pct; });
-    S.result = { rows: rows, pct: pct, got: got, tot: tot, secs: secs, track: a.name || a.track, domains: domains, weighted: true, coach: coach(runs, rows) };
-    render(); if (pct >= 66 && KL.fx) KL.fx.confetti();
+    S.result = { rows: rows, pct: pct, got: got, tot: tot, secs: secs, track: a.name || a.track, domains: domains, weighted: true, coach: coach(runs, rows), pass: passFor(a.track), full: !!a.full, budget: a.mins * 60 / a.ids.length, timed: !!(a.tt && Object.keys(a.tt).length) };
+    render(); if (pct >= passFor(a.track) && KL.fx) KL.fx.confetti();
   }
   function render() {
     var root = $('examRoot'); if (!root) return; clearInterval(timer); if (!S.active && !S.result) restoreActive();
@@ -113,14 +152,14 @@
       tick(); timer = setInterval(tick, 1000); return;
     }
     if (S.result) {
-      var r = S.result, pass = r.pct >= 66;
-      h += '<div class="ex-result ' + (pass ? 'pass' : 'fail') + '"><div class="ex-score">' + r.pct + '%</div><div class="ex-verdict">' + (pass ? '🏆 PASS — you cleared 66%' : '📚 Not yet — you need 66%') + '</div><div class="ex-sub">' + r.got + ' / ' + r.tot + ' checks · ' + fmt(r.secs) + ' used · ' + r.track + (r.weighted ? ' · weighted' : '') + '</div></div>' + (r.domains ? '<div class="ex-dom"><h3>Score by domain</h3>' + r.domains.map(function (d) { return '<div class="ex-dr"><span>' + esc(d.name) + (d.off ? ' <small>(exam weight ' + d.off + '%)</small>' : '') + '</span><div class="ex-db"><div class="' + (d.pct >= 66 ? 'ok' : 'no') + '" style="width:' + d.pct + '%"></div></div><b>' + d.pct + '%</b></div>'; }).join('') + '<p class="ex-note">Weakest area: <b>' + esc(r.domains[0].name) + '</b> — retry its tasks below in practice mode.</p></div>' : '') +
-        (r.coach ? '<div class="ex-coach"><h3>⚡ Speed coach</h3><ul>' + r.coach.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul></div>' : '') + '<div class="ex-list">' + r.rows.map(function (x) { return '<div class="ex-q ' + (x.res.ok ? 'okq' : 'badq') + '"><span class="ex-n">' + (x.res.ok ? '✓' : '✗') + '</span><span class="ex-t">' + esc(x.lab.title) + '</span><span class="ex-w">' + (x.w ? x.w + '% · ' : '') + x.res.passed + '/' + x.res.total + '</span><a href="#lab/' + x.lab.id + '" onclick="KL.labRun(\'' + x.lab.id + '\',true)">retry in practice mode</a></div>'; }).join('') + '</div><button class="btn-primary" id="exAgain" style="margin-top:1.5rem">New exam</button>';
-      root.innerHTML = h; var tk = String(r.track || r.name || (S.last && S.last.track) || '').split(' ')[0]; if (KL.readinessHtml && /^(CKA|CKAD|CKS)$/.test(tk)) root.insertAdjacentHTML('beforeend', KL.readinessHtml(tk)); $('exAgain').onclick = function () { S.result = null; render(); }; return;
+      var r = S.result, pm = r.pass || passFor(r.track), pass = r.pct >= pm;
+      h += '<div class="ex-result ' + (pass ? 'pass' : 'fail') + '"><div class="ex-score">' + r.pct + '%</div><div class="ex-verdict">' + (pass ? '🏆 Above the pass mark (' + pm + '%) on this practice set' : '📚 Below the ' + pm + '% pass mark on this practice set') + '</div><div class="ex-sub">' + r.got + ' / ' + r.tot + ' checks · ' + fmt(r.secs) + ' used · ' + r.track + (r.weighted ? ' · weighted' : '') + '</div></div>' + (r.domains ? '<div class="ex-dom"><h3>Score by domain</h3>' + r.domains.map(function (d) { return '<div class="ex-dr"><span>' + esc(d.name) + (d.off ? ' <small>(exam weight ' + d.off + '%)</small>' : '') + '</span><div class="ex-db"><div class="' + (d.pct >= 66 ? 'ok' : 'no') + '" style="width:' + d.pct + '%"></div></div><b>' + d.pct + '%</b></div>'; }).join('') + '<p class="ex-note">Weakest area: <b>' + esc(r.domains[0].name) + '</b> — retry its tasks below in practice mode.</p></div>' : '') +
+        (r.coach ? '<div class="ex-coach"><h3>⚡ Speed coach</h3><ul>' + r.coach.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul></div>' : '') + (r.timed ? reviewHtml(r) : '') + '<div class="ex-list">' + r.rows.map(function (x) { return '<div class="ex-q ' + (x.res.ok ? 'okq' : 'badq') + '"><span class="ex-n">' + (x.res.ok ? '✓' : '✗') + '</span><span class="ex-t">' + esc(x.lab.title) + '</span><span class="ex-w">' + (x.w ? x.w + '% · ' : '') + x.res.passed + '/' + x.res.total + '</span><a href="#lab/' + x.lab.id + '" onclick="KL.labRun(\'' + x.lab.id + '\',true)">retry in practice mode</a></div>'; }).join('') + '</div><button class="btn-primary" id="exAgain" style="margin-top:1.5rem">New exam</button>';
+      h += HONEST; root.innerHTML = h; var tk = String(r.track || r.name || (S.last && S.last.track) || '').split(' ')[0]; if (KL.readinessHtml && /^(CKA|CKAD|CKS)$/.test(tk)) root.insertAdjacentHTML('beforeend', KL.readinessHtml(tk)); $('exAgain').onclick = function () { S.result = null; render(); }; return;
     }
     var hist = store.data().exams.slice(-8).reverse();
     h += '<div class="ex-setup"><label>Track<select id="exTrack"><option value="CKA">CKA — Administrator</option><option value="CKAD">CKAD — Developer</option><option value="CKS">CKS — Security</option><option value="ALL">Mixed</option></select></label><label>Length<select id="exLen">' + Object.keys(PRESETS).map(function (k) { return '<option value="' + k + '">' + PRESETS[k].label + '</option>'; }).join('') + '</select></label><button class="btn-primary" id="exGo">▶ Start exam</button></div>' +
-      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. Pass mark 66%.</p><div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
+      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. The <b>Full mock</b> is 16 tasks in 120 minutes, drawn by official domain weights, and different variants every attempt. Pass marks used: CKA 66%, CKAD 66%, CKS 67% (check the current handbook).</p>' + HONEST + '<div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
       '<div class="ex-hist"><h3>Your attempts</h3>' + (hist.length ? '<table><tr><th>Date</th><th>Track</th><th>Score</th><th>Time</th></tr>' + hist.map(function (e) { return '<tr><td>' + new Date(e.date).toLocaleDateString() + '</td><td>' + e.track + '</td><td class="' + (e.pct >= 66 ? 'p' : 'f') + '">' + e.pct + '%</td><td>' + fmt(e.secs) + '</td></tr>'; }).join('') + '</table>' : '<p class="ex-note">No attempts yet.</p>') + '</div>' +
       '<p class="ex-note">Disclaimer: the simulator is a teaching model of Kubernetes behaviour, not the real exam environment. Practise on a real cluster with the kind lab packs as well.</p>';
     root.innerHTML = h; $('exGo').onclick = function () { S.start($('exTrack').value, $('exLen').value, $('exEnv').checked); };

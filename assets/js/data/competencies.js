@@ -9,7 +9,8 @@
       ['Workloads & scheduling', [['cka-deploy', 'Rolling updates and rollbacks'], ['cka-config', 'ConfigMaps and Secrets'], ['cka-hpa', 'Autoscaling'], ['cka-probes', 'Probes and self-healing'], ['cka-resources', 'Requests, limits and QoS'], ['cka-sched', 'Taints, affinity, selectors'], ['cka-priority', 'Priority and preemption'], ['cka-quota', 'ResourceQuota and LimitRange']]],
       ['Services & networking', [['cka-netpol', 'NetworkPolicy'], ['cka-svc', 'Services'], ['cka-ingress', 'Ingress'], ['cka-gateway', 'Gateway API'], ['cka-dns', 'CoreDNS'], ['cka-cni', 'Pod networking / CNI']]],
       ['Storage', [['cka-pv', 'PV and PVC'], ['cka-sc', 'StorageClass'], ['cka-reclaim', 'Reclaim policy and expansion'], ['cka-sts', 'StatefulSet storage']]],
-      ['Troubleshooting', [['cka-node', 'Node failures'], ['cka-pod', 'Pod failures'], ['cka-logs', 'Logs and events'], ['cka-net', 'Network failures'], ['cka-cp', 'Control-plane failures'], ['cka-drain', 'Drain and maintenance']]]
+      ['Troubleshooting', [['cka-node', 'Node failures'], ['cka-pod', 'Pod failures'], ['cka-logs', 'Logs and events'], ['cka-net', 'Network failures'], ['cka-cp', 'Control-plane failures'], ['cka-drain', 'Drain and maintenance']]],
+      ['Exam technique', [['exam-docs', 'Documentation lookup (kubectl explain, kubernetes.io)']]]
     ],
     CKAD: [
       ['Application design & build', [['ckad-job', 'Jobs and CronJobs'], ['ckad-multi', 'Multi-container pods'], ['ckad-vol', 'Volumes'], ['ckad-image', 'Container images']]],
@@ -17,14 +18,16 @@
       ['Observability & maintenance', [['ckad-probe', 'Probes'], ['ckad-debug', 'Debugging pods'], ['ckad-api', 'API deprecations'], ['ckad-metrics', 'Resource usage']]],
       ['Environment, config & security', [['ckad-cm', 'ConfigMaps'], ['ckad-secret', 'Secrets'], ['ckad-sc', 'SecurityContext'], ['ckad-quota', 'Quotas'], ['ckad-sa', 'ServiceAccounts'], ['ckad-crd', 'CRDs']]],
       ['Services & networking', [['ckad-svc', 'Services'], ['ckad-ingress', 'Ingress'], ['ckad-netpol', 'NetworkPolicy']]],
-      ['Exam technique', [['ckad-imp', 'Imperative commands'], ['ckad-jsonpath', 'JSONPath and output formats']]]
+      ['Exam technique', [['ckad-imp', 'Imperative commands'], ['ckad-jsonpath', 'JSONPath and output formats']]],
+      ['Exam technique', [['exam-docs', 'Documentation lookup (kubectl explain, kubernetes.io)']]]
     ],
     CKS: [
       ['Cluster setup & hardening', [['cks-netpol', 'NetworkPolicy'], ['cks-rbac', 'RBAC least privilege'], ['cks-sa', 'ServiceAccount hardening'], ['cks-cis', 'CIS benchmark and API server flags'], ['cks-upgrade', 'Security patching and upgrades']]],
       ['System hardening', [['cks-seccomp', 'seccomp'], ['cks-apparmor', 'AppArmor'], ['cks-hostos', 'Host OS hardening']]],
-      ['Minimize microservice vulnerabilities', [['cks-psa', 'Pod Security Admission'], ['cks-priv', 'Privileged and securityContext'], ['cks-secrets', 'Secrets handling'], ['cks-etcdenc', 'Encryption at rest'], ['cks-sandbox', 'Sandboxed runtimes'], ['cks-mtls', 'mTLS']]],
+      ['Minimize microservice vulnerabilities', [['cks-vap', 'Admission policy (ValidatingAdmissionPolicy, CEL)'], ['cks-userns', 'User namespaces for pods'], ['cks-psa', 'Pod Security Admission'], ['cks-priv', 'Privileged and securityContext'], ['cks-secrets', 'Secrets handling'], ['cks-etcdenc', 'Encryption at rest'], ['cks-sandbox', 'Sandboxed runtimes'], ['cks-mtls', 'mTLS']]],
       ['Supply chain security', [['cks-supply', 'Image pinning and policy'], ['cks-scan', 'Image scanning'], ['cks-static', 'Static manifest analysis']]],
-      ['Monitoring & runtime security', [['cks-runtime', 'Runtime threat detection'], ['cks-auditlog', 'Audit logs']]]
+      ['Monitoring & runtime security', [['cks-runtime', 'Runtime threat detection'], ['cks-auditlog', 'Audit logs']]],
+      ['Exam technique', [['exam-docs', 'Documentation lookup (kubectl explain, kubernetes.io)']]]
     ]
   };
   var M = {

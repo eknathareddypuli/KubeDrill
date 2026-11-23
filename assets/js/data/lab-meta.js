@@ -94,14 +94,16 @@
   ];
 
   function walk(o, f) { if (typeof o === 'string') return f(o); if (Array.isArray(o)) return o.map(function (x) { return walk(x, f); }); if (o && typeof o === 'object') { var r = {}; Object.keys(o).forEach(function (k) { r[k] = walk(o[k], f); }); return r; } return o; }
-  function subst(str, rules) { rules.forEach(function (r) { if (r[0].charAt(0) === '=') { if (str === r[0].slice(1)) str = r[1]; } else str = str.split(r[0]).join(r[1]); }); return str; }
+  function subst(str, rules) { rules.forEach(function (r) { if (r[0].charAt(0) === '=') { if (str === r[0].slice(1)) str = r[1]; } else if (r[0].charAt(0) === '~') str = str.replace(new RegExp(r[0].slice(1), 'g'), r[1]); else str = str.split(r[0]).join(r[1]); }); return str; }
 
   Labs.meta = META; Labs.ladders = LADDERS; Labs.variantIds = {};
   Object.keys(META).forEach(function (id) { var l = Labs.byId[id], m = META[id]; if (!l) return; if (m.constraint) l.constraint = m.constraint; if (m.trap) l.trap = m.trap; if (m.why) l.why = m.why; if (m.stage2) l.stage2 = m.stage2; });
   // derive variants (registered in byId only, so they never inflate the lab count)
-  Object.keys(META).forEach(function (id) {
-    var base = Labs.byId[id], m = META[id]; if (!base || !m.variants) return; Labs.variantIds[id] = [id];
-    m.variants.forEach(function (v, i) {
+  // hand-written variants (META) win; every other lab gets the generated ones from variants-auto.js (tools/gen-variants.cjs, each one test-validated)
+  var AUTO = (root.KL && root.KL.autoVariants) || {}, VIDS = Object.keys(META).concat(Object.keys(AUTO).filter(function (k) { return !META[k] || !META[k].variants; }));
+  VIDS.forEach(function (id) {
+    var base = Labs.byId[id], m = META[id] || {}, vlist = m.variants || AUTO[id]; if (!base || !vlist) return; Labs.variantIds[id] = [id];
+    vlist.forEach(function (v, i) {
       var copy = walk({ story: base.story, setup: base.setup, setupCmds: base.setupCmds, setupNs: base.setupNs, files: base.files, flags: base.flags, tasks: base.tasks, solution: base.solution, ns: base.ns, constraint: base.constraint, stage2: base.stage2 }, function (s) { return subst(s, v.sub); });
       var d = Object.assign({}, base, copy, { id: id + '~v' + (i + 2), num: base.num + '·v' + (i + 2), variantOf: id, why: base.why, trap: base.trap });
       d.tasks.forEach(function (t, k) { t.id = base.tasks[k].id; });

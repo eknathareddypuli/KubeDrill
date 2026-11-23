@@ -6,6 +6,9 @@
   var KL = root.KL = root.KL || {}, K = 'https://kubernetes.io/docs/';
   function D(t, p) { return [t, /^https?:/.test(p) ? p : K + p]; }
   var BY_SKILL = {
+    'cks-vap': [D('Validating Admission Policy', 'reference/access-authn-authz/validating-admission-policy/'), D('Common Expression Language in Kubernetes', 'reference/using-api/cel/')],
+    'cks-userns': [D('User namespaces', 'concepts/workloads/pods/user-namespaces/'), D('Use a user namespace with a pod', 'tasks/configure-pod-container/user-namespaces/')],
+    'exam-docs': [D('kubectl reference (explain)', 'reference/kubectl/generated/kubectl_explain/'), D('API reference', 'reference/kubernetes-api/')],
     'cka-rbac': [D('Using RBAC authorization', 'reference/access-authn-authz/rbac/')],
     'cka-kubeadm': [D('kubeadm reference', 'reference/setup-tools/kubeadm/')],
     'cka-upgrade': [D('Upgrading kubeadm clusters', 'tasks/administer-cluster/kubeadm/kubeadm-upgrade/'), D('Version skew policy', 'https://kubernetes.io/releases/version-skew-policy/')],
@@ -84,6 +87,15 @@
   };
   // lab-specific extras (first match wins on id prefix)
   var BY_LAB = {
+    's156': [D('Debug running pods: ephemeral containers', 'tasks/debug/debug-application/debug-running-pod/#ephemeral-container')],
+    's157': [D('Debug running pods: copying a pod', 'tasks/debug/debug-application/debug-running-pod/#debugging-via-a-copy-of-the-pod')],
+    's160': [D('Expanding Persistent Volumes Claims', 'concepts/storage/persistent-volumes/#expanding-persistent-volumes-claims')],
+    's161': [D('Immutable ConfigMaps', 'concepts/configuration/configmap/#configmap-immutable')],
+    's162': [D('Projected volumes', 'concepts/storage/projected-volumes/')],
+    's163': [D('Sidecar containers', 'concepts/workloads/pods/sidecar-containers/')],
+    's164': [D('Network policies: ipBlock and port ranges', 'concepts/services-networking/network-policies/#targeting-a-range-of-ports')],
+    's165': [D('Resize CPU and memory resources assigned to containers', 'tasks/configure-pod-container/resize-container-resources/')],
+    's169': [D('Pod topology spread constraints', 'concepts/scheduling-eviction/topology-spread-constraints/')],
     's147': [D('Gateway API: traffic splitting', 'https://gateway-api.sigs.k8s.io/guides/traffic-splitting/')],
     's148': [D('Gateway API: ReferenceGrant', 'https://gateway-api.sigs.k8s.io/api-types/referencegrant/')],
     's150': [D('helm upgrade', 'https://helm.sh/docs/helm/helm_upgrade/')],

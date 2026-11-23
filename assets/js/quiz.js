@@ -88,7 +88,7 @@
     var r = $('quizResults'); r.style.display = 'block'; r.classList.add('show');
     var pct = Math.round(session.score / session.qs.length * 100);
     $('resultScore').textContent = session.score; $('resultTotal').textContent = session.qs.length;
-    $('resultGrade').textContent = pct >= 85 ? '🏆 Exam ready' : pct >= 66 ? '👍 Passing — review the misses' : '📚 Keep practising';
+    $('resultGrade').textContent = pct >= 85 ? '🏆 Strong score on this quiz' : pct >= 66 ? '👍 Above 66% on this quiz — review the misses' : '📚 Keep practising';
     var p = r.querySelector('p'); p.innerHTML = session.wrongIds.length ? 'Missed questions come back through <b>Due for review</b> (spaced repetition). <button class="btn-secondary" onclick="startQuiz({mode:\'missed\'})">Practise misses</button>' : 'Perfect round!';
     if (pct >= 85 && KL.fx) KL.fx.confetti();
   }

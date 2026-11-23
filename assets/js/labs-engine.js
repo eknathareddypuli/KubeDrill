@@ -40,6 +40,8 @@
       case 'podsReady': ps = sim.list('Pod', a.ns, a.sel || null).filter(function (p) { return !(sim.podReady(p) && p.status.phase === 'Running'); }); if (!ps.length) return a.max !== undefined ? 'too many pods are Ready' : 'no pods match' + (a.sel ? ' ' + a.sel : '') + ' in ' + a.ns + ' (is the workload created, and in the right namespace?)';
         w = (sim.events || []).filter(function (e) { return e.ns === a.ns && e.name === ps[0].metadata.name && e.type === 'Warning'; }).pop(); return ps[0].metadata.name + ' is ' + sim.podStatus(ps[0]) + (w ? ' — ' + w.reason + ': ' + String(w.msg).slice(0, 110) : '');
       case 'curl': { var from = sim.get('Pod', a.ns, a.from); if (!from) return ''; var hp = String(a.to).split(':'), c = sim.connect(from, hp[0], parseInt(hp[1] || '80', 10)); if (a.ok === false) return c.code === 0 ? 'the request still succeeds: no NetworkPolicy is blocking it yet (or an allow rule is too broad)' : ''; if (c.code === 6 && (sim.list('NetworkPolicy', from.metadata.namespace) || []).some(function (np) { return (np.spec.policyTypes || []).indexOf('Egress') >= 0; })) return 'DNS cannot resolve ' + hp[0] + ' because an egress policy on the source pod blocks DNS: allow UDP/TCP 53 to CoreDNS in kube-system'; if (c.code === 6) return 'DNS cannot resolve ' + hp[0] + ' (does the Service exist, in this namespace?)'; if (c.code === 28 || /timed out/.test(c.out || '')) return 'the connection times out: a NetworkPolicy or egress rule is dropping it'; if (/refused/.test(c.out || '')) return 'connection refused: the Service has no ready endpoint or the port is wrong'; return c.out || ''; }
+      case 'probe': return a.fails ? 'the command still succeeds (' + a.cmd + '); the rule or restriction is not in effect yet' : 'the command is rejected (' + a.cmd + '); read the error and fix what it names';
+      case 'event': return 'no event recorded for ' + a.kind + '/' + a.name + ' in ' + a.ns + ' (events outlive the object for about an hour, so create it and the proof stays)';
       case 'canI': return a.expect === false ? 'the subject is still allowed; find the Role/ClusterRole and binding that grants it (kubectl get rolebindings,clusterrolebindings -A)' : 'no Role/ClusterRole bound to this subject grants it; check the verb, the resource, the namespace and the binding subject';
       case 'noNotReady': return '';
       case 'jp': return '';
@@ -70,6 +72,8 @@
       case 'endpoints': o = sim.get('Service', a.ns, a.svc); if (!o) return { ok: false, msg: 'service ' + a.svc + ' not found' }; n = sim.endpointsFor(o).length; return { ok: n >= (a.min || 1), msg: 'service ' + a.svc + ' should have ≥' + (a.min || 1) + ' endpoints (has ' + n + ')' };
       case 'canI': { if (a.groups) { sim.flags = sim.flags || {}; sim.flags.userGroups = sim.flags.userGroups || {}; sim.flags.userGroups[a.as] = a.groups.slice(); } var yes = sim.canI(a.as, a.verb, a.res, a.ns); return { ok: yes === (a.expect !== false), msg: a.as.split(':').pop() + ' ' + (a.expect === false ? 'must NOT be able to ' : 'should be able to ') + a.verb + ' ' + a.res }; }
       case 'curl': { var from = sim.get('Pod', a.ns, a.from); if (!from || from.status.phase !== 'Running') return { ok: false, msg: 'client pod ' + a.from + ' is not running' }; var hp = String(a.to).split(':'), r = sim.connect(from, hp[0], parseInt(hp[1] || '80', 10)); return { ok: (r.code === 0) === (a.ok !== false), msg: a.from + ' → ' + a.to + (a.ok === false ? ' should be BLOCKED' : ' should succeed') }; }
+      case 'probe': { var pc = new sim.constructor(); pc.load(sim.dump()); var pr = pc.exec(a.cmd), ptxt = (pr.stdout || '') + (pr.stderr || ''), pfail = pr.code !== 0; return { ok: (a.fails ? pfail : !pfail) && (!a.re || new RegExp(a.re, 'i').test(ptxt)), msg: a.msg || (a.fails ? 'this must be REJECTED: ' : 'this must be ACCEPTED: ') + a.cmd }; }
+      case 'event': { var evs = (sim.events || []).filter(function (e) { return e.ns === (a.ns || '') && e.name === a.name && (!a.kind || e.kind === a.kind) && (!a.reason || e.reason === a.reason); }); return { ok: evs.length > 0, msg: a.msg || ('an event ' + (a.reason || '') + ' for ' + (a.kind || 'object') + '/' + a.name + ' should exist (it proves the object was created at some point)') }; }
       case 'qty': { o = ref(sim, a); if (!o) return { ok: false, msg: a.ref + ' not found in ' + a.ns }; v = pathVal(sim, o, a.path); var q0 = String(v), nq; if (a.kind === 'cpu') nq = /m$/.test(q0) ? parseFloat(q0) : parseFloat(q0) * 1000; else if (a.kind === 'mem') { var mm = q0.match(/^([\d.]+)(Ki|Mi|Gi|K|M|G)?$/); nq = mm ? parseFloat(mm[1]) * ({ Ki: 1 / 1024, Mi: 1, Gi: 1024, K: 1000 / 1048576, M: 1000000 / 1048576, G: 1e9 / 1048576 }[mm[2]] || 1 / 1048576) : NaN; } else nq = parseFloat(q0); var okq = !isNaN(nq) && (a.min === undefined || nq >= a.min) && (a.max === undefined || nq <= a.max); return { ok: okq, msg: a.msg || (a.ref + ' ' + a.path + ' should be ' + (a.min !== undefined ? '≥ ' + a.min : '') + (a.max !== undefined ? ' ≤ ' + a.max : '') + (a.kind === 'cpu' ? ' millicores' : a.kind === 'mem' ? ' MiB' : '') + ' (is "' + v + '")') }; }
       case 'ctx': { var cx = (sim.flags && sim.flags.contexts) || [], hit = a.name ? cx.filter(function (c) { return c.name === a.name; })[0] : null; if (a.current !== undefined) return { ok: !!sim.flags && sim.flags.current === a.current, msg: 'current context should be ' + a.current + ' (is ' + ((sim.flags && sim.flags.current) || 'none') + ')' }; var cn = hit && hit.name === sim.flags.current ? sim.ctxNs : hit && hit.ns; return { ok: !!hit && (a.ns === undefined || cn === a.ns) && (a.user === undefined || hit.user === a.user), msg: 'context ' + a.name + (hit ? ' should use ' + (a.user !== undefined ? 'user ' + a.user + ' and ' : '') + 'namespace ' + a.ns + ' (is ' + hit.user + ' / ' + cn + ')' : ' does not exist') }; }
       case 'fval': { var fv2 = sim.flags, ps = String(a.path).split('.'), qi; for (qi = 0; qi < ps.length && fv2 != null; qi++) fv2 = fv2[ps[qi]]; return { ok: String(fv2) === String(a.eq), msg: a.msg || (a.path + ' should be ' + a.eq + ' (now ' + fv2 + ')') }; }
@@ -97,7 +101,7 @@
     (st.applyCmds || []).forEach(function (c) { var r = sim.exec(c); if (r.code) throw new Error('stage2 cmd of ' + lab.id + ' failed: ' + c + ' → ' + r.stderr); });
     sim.flags = sim.flags || {}; sim.flags.stage2 = true; sim.settle(st.settle || 8); return true;
   };
-  Labs.check = function (sim, lab) {
+  function baseCheck(sim, lab) {
     sim.fastForward && sim.fastForward();
     var res = Labs.allTasks(sim, lab).map(function (t) {
       var rs = (t.assert || []).map(function (a) { var r; try { r = Labs.evalAssert(sim, a); } catch (e) { r = { ok: false, msg: 'check error: ' + e.message }; } r.a = a; return r; });
@@ -109,8 +113,51 @@
       cons = { ok: cr.every(function (r) { return r.ok; }), text: lab.constraint.text, msgs: cr.filter(function (r) { return !r.ok; }).map(function (r) { return r.msg; }) };
     }
     var allOk = res.every(function (r) { return r.ok; });
-    return { tasks: res, passed: res.filter(function (r) { return r.ok; }).length, total: res.length, ok: allOk && (!cons || cons.ok), constraint: cons };
+    var out = { tasks: res, passed: res.filter(function (r) { return r.ok; }).length, total: res.length, ok: allOk && (!cons || cons.ok), constraint: cons };
+    if (lab.capstone) {
+      var tot = 0, got = 0; lab.tasks.forEach(function (t, i) { var pts = t.pts || 0; tot += pts; if (res[i] && res[i].ok) got += pts; res[i].pts = pts; });
+      out.score = { earned: got, total: tot, pass: lab.capstone.pass || 66 };
+      out.ok = got >= out.score.pass && (!cons || cons.ok);
+    }
+    return out;
+  }
+  // ── extras on a PASS: collateral damage ("over-fix") and durability. Both run only when every task already passes. ──
+  // collateral: protective objects that existed after setup must still exist, unless the reference solution itself removes them (lab.collateralOk lists more).
+  // durability: a clone of the cluster has its controller-managed pods deleted and its workloads restarted; every task must still pass.
+  var PROTECT = { NetworkPolicy: 1, ResourceQuota: 1, LimitRange: 1, PodDisruptionBudget: 1, Role: 1, RoleBinding: 1, ClusterRole: 1, ClusterRoleBinding: 1, Secret: 1, ConfigMap: 1, PersistentVolumeClaim: 1, PersistentVolume: 1, ServiceAccount: 1, Namespace: 1, ValidatingAdmissionPolicy: 1, ValidatingAdmissionPolicyBinding: 1 };
+  function isSys(o) { var m = o.metadata || {}; return /^kube-/.test(m.namespace || '') || /^kube-/.test(o.kind === 'Namespace' ? m.name : '') || m.name === 'default' || m.name === 'kube-root-ca.crt' || (m.ownerReferences || []).length > 0 || /^system:|^kubeadm:|^cluster-admin$|^admin$|^edit$|^view$/.test(m.name || '') || o.type === 'kubernetes.io/service-account-token'; }
+  function pkeys(sim) { var out = {}; Object.keys(sim.objs).forEach(function (k) { var o = sim.objs[k]; if ((PROTECT[o.kind] || (o.metadata || {}).namespace === 'kd-noise') && !isSys(o)) out[k] = o.kind + '/' + (o.metadata.name) + (o.metadata.namespace ? ' in ' + o.metadata.namespace : ''); }); return out; }
+  var LEGIT = {};
+  function legit(sim, lab) {
+    if (LEGIT[lab.id]) return LEGIT[lab.id];
+    var f = new sim.constructor(), d = {}; try { Labs.setup(f, lab); var base = pkeys(f); f.exec(lab.solution.join('\n')); f.settle(30); if (lab.stage2) { Labs.applyStage2(f, lab); f.settle(10); f.exec(lab.stage2.solution.join('\n')); f.settle(30); } var after = pkeys(f); Object.keys(base).forEach(function (k) { if (!after[k]) d[k] = 1; }); d._base = base; } catch (e) { d._base = {}; }
+    return (LEGIT[lab.id] = d);
+  }
+  function collateral(sim, lab) {
+    var L = legit(sim, lab), ok = (lab.collateralOk || []).map(function (x) { return String(x).toLowerCase(); }), gone = [], now = pkeys(sim);
+    Object.keys(L._base).forEach(function (k) { if (!L[k] && !now[k] && !ok.some(function (x) { return L._base[k].toLowerCase().indexOf(x) === 0; })) gone.push(L._base[k]); });
+    return gone.length ? { ok: false, kind: 'collateral', msg: 'Over-fix: you removed ' + gone.slice(0, 3).join(', ') + ', which the task did not ask you to remove. It works now, but something else lost its protection or data. Restore it and fix the real cause.' } : { ok: true, kind: 'collateral' };
+  }
+  function durable(sim, lab) {
+    if (lab.durable === false) return { ok: true, kind: 'durable' };
+    var c = new sim.constructor(); try { c.load(sim.dump()); } catch (e) { return { ok: true, kind: 'durable' }; }
+    var pods = Object.keys(c.objs).filter(function (k) { var o = c.objs[k]; return o.kind === 'Pod' && (o.metadata.ownerReferences || []).some(function (r) { return /^(ReplicaSet|StatefulSet|DaemonSet)$/.test(r.kind); }); });
+    var wl = Object.keys(c.objs).filter(function (k) { var o = c.objs[k]; return /^(Deployment|StatefulSet|DaemonSet)$/.test(o.kind) && !/^kube-/.test(o.metadata.namespace || ''); });
+    if (!pods.length && !wl.length) return { ok: true, kind: 'durable' };
+    pods.forEach(function (k) { var o = c.objs[k]; c.exec('kubectl delete pod ' + o.metadata.name + ' -n ' + o.metadata.namespace + ' --wait=false'); });
+    c.settle(30);
+    wl.forEach(function (k) { var o = c.objs[k]; if (o && !Object.keys(c.objs).some(function (q) { return c.objs[q].kind === 'ResourceQuota' && c.objs[q].metadata.namespace === o.metadata.namespace; })) c.exec('kubectl rollout restart ' + o.kind.toLowerCase() + '/' + o.metadata.name + ' -n ' + o.metadata.namespace); });
+    c.settle(60);
+    var r2 = baseCheck(c, lab); if (r2.ok) return { ok: true, kind: 'durable' };
+    var bad = r2.tasks.filter(function (t) { return !t.ok; }).map(function (t) { return t.id; });
+    return { ok: false, kind: 'durable', msg: 'Not durable: it passes now, but after the pods were recreated and the workloads restarted, task ' + bad.join(', ') + ' failed again. The fix lives in a running pod or a one-off change instead of in the Deployment/StatefulSet/DaemonSet template (or the object that owns it).' };
+  }
+  Labs.check = function (sim, lab, opt) {
+    var res = baseCheck(sim, lab); res.extras = [];
+    if (res.ok && !(opt && opt.noExtras)) { var cx = collateral(sim, lab), dx = durable(sim, lab); res.extras = [cx, dx].filter(function (x) { return !x.ok; }); if (res.extras.length) res.ok = false; }
+    return res;
   };
+  Labs._baseCheck = baseCheck;
 
   // ── bash backend (real cluster) ──
   function q(s) { return "'" + String(s).replace(/'/g, "'\\''") + "'"; }
@@ -128,6 +175,8 @@
       case 'endpoints': return '[ "$(kubectl get endpoints ' + a.svc + ns + ' -o jsonpath=' + q('{.subsets[*].addresses[*].ip}') + ' 2>/dev/null | wc -w)" -ge ' + (a.min || 1) + ' ]';
       case 'canI': return '[ "$(kubectl auth can-i ' + a.verb + ' ' + a.res + ' --as=' + a.as + (a.groups || []).map(function (g) { return ' --as-group=' + g; }).join('') + (a.all ? ' -A' : ns) + ' 2>/dev/null)" = ' + (a.expect === false ? 'no' : 'yes') + ' ]';
       case 'curl': return (a.ok === false ? '! ' : '') + 'kubectl exec' + ns + ' ' + a.from + ' -- wget -qO- -T 3 ' + a.to + ' >/dev/null 2>&1';
+      case 'probe': { var pcmd = a.cmd + ' --dry-run=server'; return a.fails ? '{ o="$(' + pcmd + ' 2>&1)"; r=$?; [ $r -ne 0 ]' + (a.re ? ' && printf %s "$o" | grep -Eiq ' + q(a.re) : '') + '; }' : pcmd + ' >/dev/null 2>&1'; }
+      case 'event': return '[ -n "$(kubectl get events' + ns + ' --field-selector involvedObject.name=' + a.name + (a.reason ? ',reason=' + a.reason : '') + ' -o name 2>/dev/null)" ]';
       case 'jpRe': { var g2 = '"$(kubectl get ' + a.ref + ns + ' -o jsonpath=' + q('{' + a.path + '}') + ' 2>/dev/null)"'; return 'echo ' + g2 + ' | grep -Eq -- ' + q(a.re); }
       case 'qty': { var gq = '"$(kubectl get ' + a.ref + ns + ' -o jsonpath=' + q('{' + a.path + '}') + ' 2>/dev/null)"'; return 'echo ' + gq + ' | awk -v k=' + (a.kind || 'num') + ' -v mn=' + (a.min !== undefined ? a.min : '""') + ' -v mx=' + (a.max !== undefined ? a.max : '""') + ' ' + q(QTY_AWK); }
       case 'ctx': if (a.name) return 'kubectl config get-contexts -o name | grep -qx ' + q(a.name) + (a.ns !== undefined ? ' && [ "$(kubectl config view -o jsonpath=' + q('{.contexts[?(@.name=="' + a.name + '")].context.namespace}') + ')" = ' + q(a.ns) + ' ]' : '') + (a.user !== undefined ? ' && [ "$(kubectl config view -o jsonpath=' + q('{.contexts[?(@.name=="' + a.name + '")].context.user}') + ')" = ' + q(a.user) + ' ]' : ''); return '[ "$(kubectl config current-context)" = ' + q(a.current) + ' ]';
