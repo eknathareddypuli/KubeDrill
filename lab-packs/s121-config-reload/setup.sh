@@ -41,6 +41,37 @@ spec:
               key: FEATURE
 
 KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kd-noise
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: metrics-agent-old
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: metrics-agent-old
+  template:
+    metadata:
+      labels:
+        app: metrics-agent-old
+    spec:
+      containers:
+      - name: agent
+        image: nginx:1.25
+        command: ["sh", "-c", "echo agent v1 is retired; exit 1"]
+
+KUBEDRILL_EOF
 
 
 kubectl config set-context --current --namespace=reload >/dev/null
