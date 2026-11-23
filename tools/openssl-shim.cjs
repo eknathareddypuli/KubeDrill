@@ -3,7 +3,7 @@
 // so the generated lab-pack bash (setup.sh / solution.sh) can run against the simulator through tools/kubectl-shim.cjs.
 const fs = require('fs'), path = require('path'), root = path.join(__dirname, '..');
 const Sim = require(path.join(root, 'assets/js/sim.js'));
-['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras', 'sim-csr'].forEach(f => require(path.join(root, 'assets/js', f + '.js')));
+['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras', 'sim-csr','sim-explain'].forEach(f => require(path.join(root, 'assets/js', f + '.js')));
 const s = new Sim(), real = p => path.resolve(process.cwd(), p);
 s.readFile = p => { try { return fs.readFileSync(real(p), 'utf8'); } catch (e) { return null; } };
 s.writeFile = (p, c) => { fs.writeFileSync(real(p), c); return true; };

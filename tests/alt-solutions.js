@@ -1,6 +1,6 @@
 // Alternative-solution tests: a lab checker must accept ANY correct fix (imperative, patch, apply, replace, other valid values)
 // and reject near-misses (right idea, wrong place). Each case starts from a freshly broken lab.
-const Sim = require('../assets/js/sim.js'); ['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras','sim-csr'].forEach(f => require('../assets/js/' + f + '.js'));
+const Sim = require('../assets/js/sim.js'); ['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras','sim-csr','sim-explain'].forEach(f => require('../assets/js/' + f + '.js'));
 const Labs = require('../assets/js/labs-engine.js'), fs = require('fs'), path = require('path');
 for (const f of fs.readdirSync(path.join(__dirname, '../assets/js/data')).filter(x => /^labs-sim-.*\.js$/.test(x)).sort()) require('../assets/js/data/' + f);
 const C = [];
@@ -39,6 +39,36 @@ fail('s11-rbac-sa', 'near miss: binds a different SA', ['kubectl create role dep
 pass('s30-wrong-namespace', 'apply with namespace flag', ['kubectl create deployment portal --image=nginx:1.25 --replicas=3 -n staging', 'kubectl delete deploy portal -n default']);
 // s13 pvc pending
 pass('s13-pvc-pending', 'patch the claim is impossible, recreate', ['kubectl delete pvc store-data -n data --wait=false', 'kubectl create -f - <<EOF\napiVersion: v1\nkind: PersistentVolumeClaim\nmetadata:\n  name: store-data\n  namespace: data\nspec:\n  storageClassName: standard\n  accessModes: [ReadWriteOnce]\n  resources:\n    requests:\n      storage: 2Gi\nEOF']);
+// ── S156–S169 (outcome, not method) ──
+pass('s156-ephemeral-debug', 'debug without -it', ['kubectl debug -n dbg api --image=busybox:1.36 --target=api -c inspector']);
+fail('s156-ephemeral-debug', 'near miss: swapped the pod image instead', ['kubectl set image pod/api api=busybox:1.36 -n dbg']);
+fail('s156-ephemeral-debug', 'near miss: no target container', ['kubectl debug -n dbg api --image=busybox:1.36 -c inspector']);
+pass('s157-debug-copy', 'sleep infinity copy, fix with nginx entrypoint', ['kubectl debug $(kubectl get pods -n dbgcopy -o name | head -1) -n dbgcopy --copy-to=billing-debug --container=app -- sleep infinity', 'kubectl patch deployment billing -n dbgcopy --type=json -p ' + J([{ op: 'replace', path: '/spec/template/spec/containers/0/command', value: ['nginx', '-g', 'daemon off;'] }]), 'kubectl delete pod billing-debug -n dbgcopy']);
+fail('s157-debug-copy', 'near miss: debug pod left behind', ['kubectl debug $(kubectl get pods -n dbgcopy -o name | head -1) -n dbgcopy --copy-to=billing-debug --container=app -- sleep 3600', 'kubectl patch deployment billing -n dbgcopy --type=json -p ' + J([{ op: 'remove', path: '/spec/template/spec/containers/0/command' }])]);
+fail('s157-debug-copy', 'near miss: deleted and recreated the Deployment', ['kubectl delete deployment billing -n dbgcopy', 'kubectl create deployment billing --image=nginx:1.25 -n dbgcopy']);
+const BIND = (extra, act) => 'kubectl apply -f - <<EOF\napiVersion: admissionregistration.k8s.io/v1\nkind: ValidatingAdmissionPolicyBinding\nmetadata:\n  name: b\nspec:\n  policyName: no-latest\n  validationActions: ["' + (act || 'Deny') + '"]\n' + (extra || '') + 'EOF';
+pass('s158-vap-binding', 'select by the namespace name label', [BIND('  matchResources:\n    namespaceSelector:\n      matchLabels:\n        kubernetes.io/metadata.name: shop-prod\n')]);
+fail('s158-vap-binding', 'near miss: cluster-wide binding', [BIND('')]);
+fail('s158-vap-binding', 'near miss: Warn only', [BIND('  matchResources:\n    namespaceSelector:\n      matchLabels:\n        env: prod\n', 'Warn')]);
+fail('s158-vap-binding', 'near miss: edited the policy to drop the rule', ['kubectl delete validatingadmissionpolicy no-latest']);
+fail('s159-vap-rejected', 'near miss: deleted the binding', ['kubectl delete validatingadmissionpolicybinding team-rules-teamx', 'kubectl apply -f /home/student/web.yaml']);
+pass('s159-vap-rejected', 'four replicas via kubectl apply of a new file', ["printf 'apiVersion: apps/v1\\nkind: Deployment\\nmetadata:\\n  name: web\\n  namespace: teamx\\n  labels:\\n    owner: me\\nspec:\\n  replicas: 4\\n  selector:\\n    matchLabels:\\n      app: web\\n  template:\\n    metadata:\\n      labels:\\n        app: web\\n    spec:\\n      containers:\\n      - name: web\\n        image: registry.k8s.io/pause:3.9\\n' > /tmp/w.yaml", 'kubectl apply -f /tmp/w.yaml']);
+pass('s160-pvc-expand', 'merge patch on the StorageClass', ['kubectl patch storageclass slow --type=merge -p ' + J({ allowVolumeExpansion: true }), 'kubectl patch pvc db-data -n data --type=merge -p ' + J({ spec: { resources: { requests: { storage: '3Gi' } } } })]);
+fail('s160-pvc-expand', 'near miss: delete and recreate the claim', ['kubectl patch storageclass slow -p ' + J({ allowVolumeExpansion: true }), 'kubectl delete pod db -n data', 'kubectl delete pvc db-data -n data', "printf 'apiVersion: v1\\nkind: PersistentVolumeClaim\\nmetadata:\\n  name: db-data\\n  namespace: data\\nspec:\\n  storageClassName: slow\\n  accessModes: [ReadWriteOnce]\\n  resources:\\n    requests:\\n      storage: 3Gi\\n' | kubectl apply -f -"]);
+fail('s160-pvc-expand', 'near miss: only the claim, class not changed', ['kubectl patch pvc db-data -n data -p ' + J({ spec: { resources: { requests: { storage: '3Gi' } } } })]);
+fail('s161-immutable-config', 'near miss: deleted v1 and recreated with debug', ['kubectl delete cm web-config-v1 -n conf', "printf 'apiVersion: v1\\nkind: ConfigMap\\nmetadata:\\n  name: web-config-v1\\n  namespace: conf\\nimmutable: true\\ndata:\\n  LOG_LEVEL: debug\\n' | kubectl apply -f -", 'kubectl rollout restart deployment/web -n conf']);
+fail('s161-immutable-config', 'near miss: v2 not immutable', ["printf 'apiVersion: v1\\nkind: ConfigMap\\nmetadata:\\n  name: web-config-v2\\n  namespace: conf\\ndata:\\n  LOG_LEVEL: debug\\n' | kubectl apply -f -", 'kubectl patch deployment web -n conf --type=json -p ' + J([{ op: 'replace', path: '/spec/template/spec/containers/0/envFrom/0/configMapRef/name', value: 'web-config-v2' }])]);
+fail('s163-native-sidecar', 'near miss: plain init container (blocks the pod)', ['kubectl patch deployment shop -n side --type=json -p ' + J([{ op: 'remove', path: '/spec/template/spec/containers/1' }, { op: 'add', path: '/spec/template/spec/initContainers', value: [{ name: 'shipper', image: 'busybox:1.36', command: ['sh', '-c', 'sleep 3600'] }] }])]);
+const NP = (ports) => 'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: allow\n  namespace: ranges\nspec:\n  podSelector:\n    matchLabels:\n      app: api\n  policyTypes: ["Ingress"]\n  ingress:\n  - from:\n    - podSelector:\n        matchLabels: {}\n' + (ports ? '    ports:\n' + ports : '') + 'EOF';
+pass('s164-netpol-iprange', 'two port entries instead of endPort (same outcome)', [NP('    - port: 8080\n    - port: 8081\n').replace('podSelector:\n        matchLabels: {}', 'ipBlock:\n        cidr: 10.244.0.0/16')]);
+fail('s164-netpol-iprange', 'near miss: no ports restriction', [NP('')]);
+fail('s164-netpol-iprange', 'near miss: ipBlock for the wrong range', [NP('    - port: 8080\n      endPort: 8081\n').replace('podSelector:\n        matchLabels: {}', 'ipBlock:\n        cidr: 192.168.0.0/16')]);
+fail('s165-inplace-resize', 'near miss: plain patch without the subresource', ['kubectl patch pod worker -n resize -p ' + J({ spec: { containers: [{ name: 'worker', resources: { requests: { cpu: '400m' }, limits: { cpu: '400m' } } }] } })]);
+fail('s165-inplace-resize', 'near miss: limit only (QoS would change)', ['kubectl patch pod worker -n resize --subresource resize -p ' + J({ spec: { containers: [{ name: 'worker', resources: { limits: { cpu: '400m' } } }] } })]);
+fail('s165-inplace-resize', 'near miss: recreate the pod', ['kubectl delete pod worker -n resize', 'kubectl run worker -n resize --image=nginx:1.25 --requests=cpu=400m,memory=128Mi --limits=cpu=400m,memory=128Mi']);
+fail('s166-user-namespace', 'near miss: hostUsers true', ['kubectl patch deployment legacy -n userns -p ' + J({ spec: { template: { spec: { hostUsers: true } } } })]);
+fail('s169-build-from-explain', 'near miss: ScheduleAnyway', ['kubectl patch deployment web -n spread -p ' + J({ spec: { template: { spec: { topologySpreadConstraints: [{ maxSkew: 1, topologyKey: 'kubernetes.io/hostname', whenUnsatisfiable: 'ScheduleAnyway', labelSelector: { matchLabels: { app: 'web' } } }] } } } })]);
+
 let bad = 0, only = process.argv[2];
 for (const c of C) {
   if (only && c.id.indexOf(only) < 0) continue;

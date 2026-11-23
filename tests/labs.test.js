@@ -1,10 +1,10 @@
 // Runs every interactive lab: broken state must FAIL checks, applying the solution must PASS all tasks.
 const path=require('path');
-const Sim=require('../assets/js/sim.js');['sim-shell','sim-kubectl','sim-kubectl2','sim-kubectl3','sim-faults','sim-faults2','sim-extras','sim-csr'].forEach(f=>require('../assets/js/'+f+'.js'));
+const Sim=require('../assets/js/sim.js');['sim-shell','sim-kubectl','sim-kubectl2','sim-kubectl3','sim-faults','sim-faults2','sim-extras','sim-csr','sim-explain'].forEach(f=>require('../assets/js/'+f+'.js'));
 const Labs=require('../assets/js/labs-engine.js');
 const fs=require('fs');
 for(const f of fs.readdirSync(path.join(__dirname,'../assets/js/data')).filter(x=>/^labs-sim-.*\.js$/.test(x)).sort()) require('../assets/js/data/'+f);
-require('../assets/js/data/lab-meta.js');
+global.KL=global.KL||{};require('../assets/js/data/hint-ladder.js');require('../assets/js/data/variants-auto.js');require('../assets/js/data/lab-meta.js');
 global.KL=global.KL||{};require('../assets/js/data/debrief.js');require('../assets/js/data/debrief-j.js');require('../assets/js/data/debrief-k.js');require('../assets/js/data/debrief-l.js');
 let bad=0, only=process.argv[2];
 for(const l of Labs.list){ const d=(globalThis.KL.debrief||{})[l.id]; if(!d||d.length!==4||d.some(x=>!x)){bad++;console.log('✘ missing debrief',l.id);} }

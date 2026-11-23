@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>KubeDrill — Free Offline Kubernetes Practice Lab · CKA CKAD CKS</title>
-<meta name="description" content="Free, offline-first Kubernetes practice lab: in-browser kubectl simulator with auto-checked labs, CKA/CKAD/CKS exam mode, 300+ quiz questions, error encyclopedia and 9 offline tools. No signup. No ads.">
+<meta name="description" content="Free, offline-first Kubernetes practice lab: in-browser kubectl simulator with auto-checked labs, CKA/CKAD/CKS-style timed practice, 300+ quiz questions, error encyclopedia and 9 offline tools. No signup. No ads.">
 <meta name="theme-color" content="#090E1A">
 <link rel="canonical" href="https://kubedrill.eknathalabs.com/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="KubeDrill — Free Offline Kubernetes Practice Lab">
-<meta property="og:description" content="kubectl simulator, auto-checked labs, CKA/CKAD/CKS exam mode. Free forever. No signup. No ads. Works offline.">
+<meta property="og:description" content="kubectl simulator, auto-checked labs, CKA/CKAD/CKS-style timed practice. Free forever. No signup. No ads. Works offline.">
 <meta property="og:url" content="https://kubedrill.eknathalabs.com/">
 <meta property="og:image" content="https://kubedrill.eknathalabs.com/icons/og.png">
 <meta name="twitter:card" content="summary_large_image">
@@ -341,6 +341,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
     <li><a href="#path" data-page="path">Path</a></li>
     <li><a href="#labs" data-page="labs">Labs</a></li>
     <li><a href="#exam" data-page="exam">Exam</a></li>
+    <li><a href="#drills" data-page="drills">Drills</a></li>
     <li><a href="#quiz" data-page="quiz">Quiz</a></li>
     <li><a href="#visualize" data-page="visualize">Visualize</a></li>
     <li class="nav-more"><button type="button" class="nav-more-btn" id="navMore" aria-haspopup="true" aria-expanded="false" aria-controls="navMenu">More <span aria-hidden="true">▾</span></button>
@@ -349,6 +350,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
         <li><a href="#field" data-page="field">Field Guide</a></li>
         <li><a href="#cheatsheet" data-page="cheatsheet">Cheatsheet</a></li>
         <li><a href="#tools" data-page="tools">Tools</a></li>
+        <li><a href="#decode" data-page="decode">Error decoder</a></li>
         <li><a href="#errors" data-page="errors">Errors</a></li>
         <li><a href="#fidelity" data-page="fidelity">Fidelity</a></li>
         <li><a href="#coverage" data-page="coverage">Coverage</a></li>
@@ -373,7 +375,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
     <div class="hero-copy">
       <div class="hero-tag">Free · No ads · No signup · Works offline</div>
       <h1>Break a cluster.<br>Fix it.<br><span class="h1-free">Free.</span></h1>
-      <p class="hero-sub"><span data-fill="labs">155</span> auto-checked Kubernetes labs with a kubectl simulator that runs in your browser. Practise for CKA, CKAD and CKS, then check your work.</p>
+      <p class="hero-sub"><span data-fill="labs">172</span> auto-checked Kubernetes labs with a kubectl simulator that runs in your browser. Practise for CKA, CKAD and CKS, then check your work.</p>
       <div class="hero-ctas">
         <button class="btn-primary btn-lg" onclick="location.hash='#lab/s03-oomkilled'">Fix the broken pod</button>
         <a class="btn-quiet" href="#labs">Browse all labs</a>
@@ -424,7 +426,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
 <section class="band band-l" id="homeStats">
   <div class="band-in">
     <div class="stats4">
-      <div class="stat"><div class="stat-num" data-count="ilabs">155</div><div class="stat-label">Auto-checked labs</div></div>
+      <div class="stat"><div class="stat-num" data-count="ilabs">172</div><div class="stat-label">Auto-checked labs</div></div>
       <div class="stat"><div class="stat-num" data-count="lessons">22</div><div class="stat-label">Lessons</div></div>
       <div class="stat"><div class="stat-num" data-count="quiz">314</div><div class="stat-label">Quiz questions</div></div>
       <div class="stat"><div class="stat-num">$0</div><div class="stat-label">No ads · No signup</div></div>
@@ -432,7 +434,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
     <div class="band-head tools-head"><div class="u3-eyebrow">Also included</div><h2>Everything for the exam, offline</h2></div>
     <div class="tools-grid">
       <div class="tool-card" onclick="showPage('modules')"><div class="tool-icon ti-blue">📚</div><div class="tool-title"><span data-count="modules">19</span> Learning modules</div><div class="tool-desc">From cluster architecture to GKE, structured and filterable.</div></div>
-      <div class="tool-card" onclick="showPage('exam')"><div class="tool-icon ti-yellow">⏱</div><div class="tool-title">CKA / CKAD / CKS exam mode</div><div class="tool-desc">Timed hands-on exam on a simulated cluster with a score by domain.</div></div>
+      <div class="tool-card" onclick="showPage('exam')"><div class="tool-icon ti-yellow">⏱</div><div class="tool-title">CKA / CKAD / CKS timed practice</div><div class="tool-desc">Timed hands-on exam on a simulated cluster with a score by domain.</div></div>
       <div class="tool-card" onclick="showPage('tools')"><div class="tool-icon ti-green">🤖</div><div class="tool-title"><span data-count="tools">9</span> offline tools</div><div class="tool-desc">Troubleshooter, YAML generator, RBAC, PromQL and more. No network.</div></div>
       <div class="tool-card" onclick="showPage('cheatsheet')"><div class="tool-icon ti-yellow">⌘</div><div class="tool-title">kubectl cheatsheet</div><div class="tool-desc">Searchable, click to copy, with exam tips.</div></div>
       <div class="tool-card" onclick="showPage('errors')"><div class="tool-icon" style="background:rgba(248,113,113,0.12);">🔴</div><div class="tool-title">Error encyclopedia</div><div class="tool-desc">Causes, fixes and debug commands for common errors.</div></div>
@@ -478,6 +480,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
 <footer>
   <div class="footer-logo"><span style="color:var(--accent2)">Kube</span><span style="background:linear-gradient(135deg,var(--green),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">Drill</span></div>
   <div class="footer-sub">kubedrill.eknathalabs.com</div>
+  <p class="footer-legal" style="max-width:760px;margin:8px auto;font-size:12px;opacity:.75;line-height:1.5">KubeDrill is an independent practice tool. It is not affiliated with, endorsed by or sponsored by The Linux Foundation, the CNCF or the Kubernetes project. Kubernetes®, CKA, CKAD and CKS are trademarks of their owners. Labs and mock exams are original, use no real exam questions, and run in a simulator: practice, not a prediction of any exam result.</p>
   <div class="footer-links">
     <a href="https://eknathalabs.com" target="_blank" rel="noopener">eknathalabs.com</a>
     <a href="#compare">Compare</a>
@@ -634,6 +637,8 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
 <div class="page" id="page-settings" role="main"><div class="section-wrap" id="settingsRoot"></div></div>
 <div class="page" id="page-coverage" role="main"><div class="section-wrap" id="covRoot"></div></div>
 <div class="page" id="page-fidelity" role="main"><div class="section-wrap" id="fidRoot"></div></div>
+<div class="page" id="page-decode" role="main"><div class="section-wrap" id="decodeRoot"></div></div>
+<div class="page" id="page-drills" role="main"><div class="section-wrap" id="drillRoot"></div></div>
 <div class="page" id="page-break" role="main"><div class="section-wrap" id="breakRoot"></div></div>
 <canvas id="confetti" aria-hidden="true"></canvas>
 
@@ -3733,6 +3738,7 @@ renderEnc();
 <script src="assets/js/sim-faults2.js"></script>
 <script src="assets/js/sim-extras.js"></script>
 <script src="assets/js/sim-csr.js"></script>
+<script src="assets/js/sim-explain.js"></script>
 <script src="assets/js/labs-engine.js"></script>
 <script src="assets/js/data/labs-sim-a.js"></script>
 <script src="assets/js/data/labs-sim-b.js"></script>
@@ -3750,12 +3756,19 @@ renderEnc();
 <script src="assets/js/data/labs-sim-m.js"></script>
 <script src="assets/js/data/labs-sim-n.js"></script>
 <script src="assets/js/data/labs-sim-o.js"></script>
+<script src="assets/js/data/labs-sim-p.js"></script>
+<script src="assets/js/data/labs-sim-q.js"></script>
 <script src="assets/js/data/debrief.js"></script>
 <script src="assets/js/data/debrief-j.js"></script>
 <script src="assets/js/data/debrief-k.js"></script>
 <script src="assets/js/data/debrief-l.js"></script>
+<script src="assets/js/data/hint-ladder.js"></script>
+<script src="assets/js/data/variants-auto.js"></script>
 <script src="assets/js/data/lab-meta.js"></script>
 <script src="assets/js/data/docs-peek.js"></script>
+<script src="assets/js/data/versions.js"></script>
+<script src="assets/js/data/decoder-data.js"></script>
+<script src="assets/js/data/drills-data.js"></script>
 <script src="assets/js/data/sources.js"></script>
 <script src="assets/js/data/modules-extra.js"></script>
 <script src="assets/js/data/quiz-extra.js"></script>
@@ -3785,6 +3798,9 @@ renderEnc();
 <script src="assets/js/learn-features.js"></script>
 <script src="assets/js/pro-term.js"></script>
 <script src="assets/js/pro-explain.js"></script>
+<script src="assets/js/decoder.js"></script>
+<script src="assets/js/version-ui.js"></script>
+<script src="assets/js/drills.js"></script>
 <script>routeFromHash();</script>
 </body>
 </html>

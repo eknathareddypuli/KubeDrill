@@ -1,7 +1,7 @@
 // Lesson quality: schema, links, and every doit command must run in the simulator without errors.
 const path=require('path'),fs=require('fs');
 global.window=global;
-const Sim=require('../assets/js/sim.js');['sim-shell','sim-kubectl','sim-kubectl2','sim-kubectl3','sim-faults','sim-faults2','sim-extras','sim-csr'].forEach(f=>require('../assets/js/'+f+'.js'));
+const Sim=require('../assets/js/sim.js');['sim-shell','sim-kubectl','sim-kubectl2','sim-kubectl3','sim-faults','sim-faults2','sim-extras','sim-csr','sim-explain'].forEach(f=>require('../assets/js/'+f+'.js'));
 const Labs=require('../assets/js/labs-engine.js');
 for(const f of fs.readdirSync(path.join(__dirname,'../assets/js/data')).filter(x=>/^labs-sim-.*\.js$/.test(x))) require('../assets/js/data/'+f);
 global.KL=global.KL||{};require('../assets/js/data/lessons-a.js');require('../assets/js/data/lessons-b.js');

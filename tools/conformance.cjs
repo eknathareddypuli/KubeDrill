@@ -8,7 +8,7 @@ const fs = require('fs'), path = require('path'), cp = require('child_process'),
 const root = path.join(__dirname, '..');
 if (process.argv.includes('--real')) { console.log('Run on a real cluster:\n  kind create cluster --name kubedrill\n  bash tools/conformance-real.sh   # setup → check(expect fail) → solution → check(expect pass) → reset, per lab\nResults go to conformance-real.tsv'); process.exit(0); }
 global.window = undefined; const Labs = require(path.join(root, 'assets/js/labs-engine.js'));
-const Sim = require(path.join(root, 'assets/js/sim.js')); ['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras','sim-csr'].forEach(f => require(path.join(root, 'assets/js', f + '.js')));
+const Sim = require(path.join(root, 'assets/js/sim.js')); ['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras','sim-csr','sim-explain'].forEach(f => require(path.join(root, 'assets/js', f + '.js')));
 fs.readdirSync(path.join(root, 'assets/js/data')).filter(f => /^labs-sim-.*\.js$/.test(f)).sort().forEach(f => require(path.join(root, 'assets/js/data', f)));
 const only = process.argv[2] && !process.argv[2].startsWith('--') ? process.argv[2] : null;
 const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'kd-conf-')), bin = path.join(tmp, 'bin'); fs.mkdirSync(bin);

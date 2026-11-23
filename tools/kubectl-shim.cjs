@@ -3,7 +3,7 @@
 // lab-pack bash scripts (setup.sh / check.sh / solution.sh) can run under REAL bash against the simulator.
 const fs = require('fs'), path = require('path'), root = path.join(__dirname, '..');
 const Sim = require(path.join(root, 'assets/js/sim.js'));
-['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras','sim-csr'].forEach(f => require(path.join(root, 'assets/js', f + '.js')));
+['sim-shell', 'sim-kubectl', 'sim-kubectl2', 'sim-kubectl3', 'sim-faults', 'sim-faults2', 'sim-extras','sim-csr','sim-explain'].forEach(f => require(path.join(root, 'assets/js', f + '.js')));
 const st = process.env.KD_STATE; const s = new Sim();
 if (st && fs.existsSync(st)) s.load(JSON.parse(fs.readFileSync(st, 'utf8')));
 // one-way sync: real files under $KD_HOME appear in the simulator's /home/student, so `kubectl apply -f x.yaml` / `-k dir` see what bash wrote

@@ -146,3 +146,25 @@ New files: `assets/js/pro-term.js`, `pro-explain.js`, `pro-fidelity.js`, `assets
 - **Why did my check fail:** every failing check suggests the command that shows what it looked at. **Completion card:** a PNG drawn in your browser (nothing is uploaded).
 - **Readiness range** (Coverage and Exam result pages): the range of your last timed exam scores per track, never a single number or a pass prediction, and always with a reminder to practise more before the real exam. It needs at least two timed exams.
 - **Source credits:** each lab lists the official docs for its skills (`assets/js/data/sources.js`). Run `node tools/check-links.cjs` (needs network) to test every link.
+
+## Trustworthy checking and capstones (S156–S172) — 172 labs in total
+- **Check the outcome, not the method**: assertions inspect resulting state (or run a `probe` / look for an `event`), so any valid route passes; 47 alternative-solution cases are tested.
+- **Over-fix detection**: the checker derives what the reference solution deletes and flags removal of anything else protective (NetworkPolicy, quota, RBAC, Secrets, PVCs…).
+- **Durability checks**: a passing state is cloned, controller-owned pods are deleted and the Deployment restarted; a fix that does not survive is reported as not durable (opt-out `durable:false`).
+- **Mutation testing** (`node tools/mutation.cjs --strict`): drops each solution step and fails if the lab still passes; `lab-lint.cjs` finds assertions that need names the learner is never told.
+- **Red herrings**: 12 labs add look-alike broken objects in namespace `kd-noise`; deleting them is an over-fix and the result card explains the decoys.
+- **Capstones S170 (CKA), S171 (CKAD), S172 (CKS)**: 8–10 weighted tasks, partial credit, pass mark 66 of 100.
+- **Documentation lookup S167–S169**: `kubectl explain` (about 25 kinds) used to find and build fields; vi editing is a stub.
+- Honest limits: ValidatingAdmissionPolicy supports a CEL subset and Deny only; `kubectl debug` is non-interactive; the real-cluster conformance pack has not been run on a real cluster by me.
+
+## About exam practice (read this)
+KubeDrill is independent: it is not affiliated with, endorsed by or sponsored by The Linux Foundation, the CNCF or the Kubernetes project. CKA, CKAD, CKS and Kubernetes are trademarks of their owners. The labs and mock exams are original, use no real exam questions, and run in a simulator, so task style, difficulty and scoring differ from the real exams. A score here is practice feedback, not a prediction. The exam's Kubernetes version changes: set the version you are practising for on the Labs page and check the official exam page.
+
+## Practice tools added in this release
+- **Full mock exam** (Exam page): 16 tasks, 120 minutes, drawn by the official domain weights, fresh variants each attempt, per-task time in the review. Tasks are lab-sized, so time pressure is harsher than the real exam.
+- **Drills** (`#drills`): 35 timed command drills and 25 `kubectl explain` doc races, checked on the outcome.
+- **Error decoder** (`#decode`): 61 rules, runs locally. It points to likely causes; it does not see your cluster.
+- **Teach-back** on the result card: write the root cause in your own words before the answer is shown.
+- **Version-aware labs**: set the Kubernetes version you are practising for; labs using newer features are flagged. Feature stages come from release notes and KEPs, so check the version your exam actually uses.
+- **Variants**: 308 auto-generated variants rename the namespace and objects only; hand-written variants change the scenario.
+- Quality gates: `node tools/teach-lint.cjs --strict` (trap/why coverage is a ratchet, 124 labs still lack one), `tools/mutation.cjs --strict`, `tests/*.test.js`.
