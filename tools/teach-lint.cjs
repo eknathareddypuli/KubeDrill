@@ -18,7 +18,7 @@ require(path.join(root, 'assets/js/data/competencies.js'));
 for (const f of LS.filter(x => x > 'labs-sim-k.js')) require(path.join(root, 'assets/js/data', f));
 require(path.join(root, 'assets/js/data/sources.js'));
 for (const f of ['debrief', 'debrief-j', 'debrief-k', 'debrief-l']) require(path.join(root, 'assets/js/data', f + '.js'));
-require(path.join(root, 'assets/js/data/hint-ladder.js')); require(path.join(root, 'assets/js/data/variants-auto.js')); require(path.join(root, 'assets/js/data/lab-meta.js'));
+require(path.join(root, 'assets/js/data/hint-ladder.js')); require(path.join(root, 'assets/js/data/variants-auto.js')); fs.readdirSync(path.join(root, 'assets/js/data')).filter(x => /^traps-.*\.js$/.test(x)).sort().forEach(x => require(path.join(root, 'assets/js/data', x))); require(path.join(root, 'assets/js/data/lab-meta.js'));
 const ALLOW = fs.existsSync(path.join(__dirname, 'teach-lint.allow.json')) ? JSON.parse(fs.readFileSync(path.join(__dirname, 'teach-lint.allow.json'), 'utf8')) : {};
 const strict = process.argv.includes('--strict'), list = process.argv.includes('--list');
 const norm = s => String(s).toLowerCase().replace(/[`'"\s]+/g, ' ').trim();
@@ -44,6 +44,6 @@ for (const lab of Labs.list) {
 if (list || out.length) out.forEach(o => console.log(o.code, o.id, o.msg));
 console.log('\n' + Labs.list.length + ' labs; teaching findings: ' + JSON.stringify(counts));
 /* TQ3 (a trap/why/constraint on every lab) is a content gap, so it is a ratchet: it may shrink but never grow. */
-const RATCHET = { TQ3: 124 };
+const RATCHET = { TQ3: 0 };
 const bad = Object.keys(counts).filter(c => counts[c] > (RATCHET[c] || 0));
 if (strict && bad.length) { console.error('teach-lint: over limit: ' + bad.join(', ')); process.exit(1); }

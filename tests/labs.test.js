@@ -4,7 +4,7 @@ const Sim=require('../assets/js/sim.js');['sim-shell','sim-kubectl','sim-kubectl
 const Labs=require('../assets/js/labs-engine.js');
 const fs=require('fs');
 for(const f of fs.readdirSync(path.join(__dirname,'../assets/js/data')).filter(x=>/^labs-sim-.*\.js$/.test(x)).sort()) require('../assets/js/data/'+f);
-global.KL=global.KL||{};require('../assets/js/data/hint-ladder.js');require('../assets/js/data/variants-auto.js');require('../assets/js/data/lab-meta.js');
+global.KL=global.KL||{};require('../assets/js/data/hint-ladder.js');require('../assets/js/data/variants-auto.js');require('fs').readdirSync(__dirname+'/../assets/js/data').filter(x=>/^traps-.*\.js$/.test(x)).sort().forEach(x=>require('../assets/js/data/'+x));require('../assets/js/data/lab-meta.js');
 global.KL=global.KL||{};require('../assets/js/data/debrief.js');require('../assets/js/data/debrief-j.js');require('../assets/js/data/debrief-k.js');require('../assets/js/data/debrief-l.js');
 let bad=0, only=process.argv[2];
 for(const l of Labs.list){ const d=(globalThis.KL.debrief||{})[l.id]; if(!d||d.length!==4||d.some(x=>!x)){bad++;console.log('✘ missing debrief',l.id);} }
