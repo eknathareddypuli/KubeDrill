@@ -32,6 +32,32 @@ spec:
             memory: 100Mi
 
 KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kd-noise
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nightly-export
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: export
+        image: busybox:1.36
+        command: ["sh", "-c", "echo export failed: upstream timeout >&2; exit 2"]
+
+KUBEDRILL_EOF
 
 
 kubectl config set-context --current --namespace=batch >/dev/null

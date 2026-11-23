@@ -53,6 +53,45 @@ spec:
         image: nginx:1.25
 
 KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: kd-noise
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+data:
+  LOG_LEVEL: "verbose"
+  FEATURE_X: "off"
+
+KUBEDRILL_EOF
+kubectl apply -f - <<'KUBEDRILL_EOF'
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: nightly-export
+  namespace: kd-noise
+  labels:
+    kubedrill/noise: "true"
+spec:
+  backoffLimit: 0
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: export
+        image: busybox:1.36
+        command: ["sh", "-c", "echo export failed: upstream timeout >&2; exit 2"]
+
+KUBEDRILL_EOF
 
 
 kubectl config set-context --current --namespace=cfg >/dev/null
