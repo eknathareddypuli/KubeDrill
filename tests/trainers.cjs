@@ -3,7 +3,7 @@ const {chromium}=require('playwright-core');let bad=0;const ok=(c,m)=>{console.l
 (async()=>{const b=await chromium.launch({executablePath:'/usr/bin/google-chrome',args:['--no-sandbox']});const p=await b.newPage({viewport:{width:1200,height:900}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
 const U='file://'+process.cwd()+'/index.html';
 await p.goto(U+'#trainers');await p.waitForTimeout(900);
-ok(await p.locator('.tr-tabs .an-tab').count()===4,'four trainer tabs');
+ok(await p.locator('.tr-tabs .an-tab').count()===5,'five trainer tabs');
 ok(await p.locator('.tr-row').count()>=6,'weak-spot rows shown');
 // weak-spot session: answer wrong then right, records go to the quiz store
 await p.click('#trStart');await p.waitForTimeout(200);
