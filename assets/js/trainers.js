@@ -9,7 +9,7 @@
   function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { /* ignore */ } }
   function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
   function pct(x) { return Math.round(x * 100); }
-  var TABS = [['weak', 'Weak spots'], ['err', 'Explain the error'], ['docs', 'Docs search'], ['plan', 'Study plan']];
+  var TABS = [['weak', 'Weak spots'], ['err', 'Explain the error'], ['docs', 'Docs search'], ['review', 'Lab review'], ['plan', 'Study plan']];
 
   // ── weak-spot analysis ──
   function quizWeakness() {
@@ -159,11 +159,11 @@
 
   function draw() {
     var root = $('trRoot'); if (!root) return;
-    var body = S.tab === 'weak' ? weakHtml() : S.tab === 'plan' ? planHtml() : mcHtml(S.tab);
+    var body = S.tab === 'weak' ? weakHtml() : S.tab === 'plan' ? planHtml() : S.tab === 'review' ? (KL.labReview ? KL.labReview.html() : '') : mcHtml(S.tab);
     root.innerHTML = '<div class="section-header"><div class="section-tag">Practice</div><h2 class="section-title">Trainers</h2><p class="section-desc">Four short trainers aimed at how people actually lose points: weak topics, misread errors, slow docs lookups and an unplanned calendar.</p></div>' +
-      '<div class="an-tabs tr-tabs" role="tablist">' + TABS.map(function (t) { return '<button class="an-tab' + (S.tab === t[0] ? ' active' : '') + '" role="tab" aria-selected="' + (S.tab === t[0]) + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' + body;
+      '<div class="an-tabs tr-tabs" role="tablist">' + TABS.map(function (t) { return '<button class="an-tab' + (S.tab === t[0] ? ' active' : '') + '" role="tab" aria-selected="' + (S.tab === t[0]) + '" data-t="' + t[0] + '">' + t[1] + (t[0] === 'review' && KL.labReview && KL.labReview.due().length ? ' (' + KL.labReview.due().length + ')' : '') + '</button>'; }).join('') + '</div>' + body;
     root.querySelectorAll('.tr-tabs .an-tab').forEach(function (b) { b.onclick = function () { S.tab = b.dataset.t; draw(); }; });
-    if (S.tab === 'weak') bindWeak(); else if (S.tab === 'plan') bindPlan(); else bindMc(S.tab);
+    if (S.tab === 'weak') bindWeak(); else if (S.tab === 'plan') bindPlan(); else if (S.tab === 'review') { /* links only */ } else bindMc(S.tab);
   }
   KL.route('trainers', draw);
   KL.trainers = { buildPlan: buildPlan, quizWeakness: quizWeakness, labWeakness: labWeakness };
