@@ -11,8 +11,10 @@ html = html.replace('<link rel="stylesheet" href="assets/css/ui3.css">', () => '
 html = html.replace('<link rel="stylesheet" href="assets/css/ui4.css">', () => '<style>' + rd('assets/css/ui4.css') + '</style>');
 html = html.replace('<link rel="stylesheet" href="assets/css/pro.css">', () => '<style>' + rd('assets/css/pro.css') + '</style>');
 html = html.replace('<link rel="stylesheet" href="assets/css/home.css">', () => '<style>' + rd('assets/css/home.css') + '</style>');
+html = html.replace(/<link rel="stylesheet" href="(assets\/css\/[^"]+\.css)">/g, (m, f) => '<style>' + rd(f) + '</style>'); // any stylesheet not named above (visuals.css was missed once)
 html = html.replace(/<script src="([^"]+)"><\/script>/g, (m, src) => '<script>/* ' + src + ' */\n' + safeJs(rd(src).toString()) + '\n</script>');
 html = html.replace(/<link rel="manifest"[^>]*>\n?/, '').replace(/<link rel="apple-touch-icon"[^>]*>\n?/, '').replace(/<link rel="icon"[^>]*>/, () => '<link rel="icon" href="data:image/svg+xml;base64,' + rd('icons/icon.svg').toString('base64') + '">');
 html = html.replace('<body>', '<body data-build="offline-single-file">');
 fs.mkdirSync(path.join(root, 'dist'), { recursive: true }); fs.writeFileSync(path.join(root, 'dist/kubedrill-offline.html'), html);
+if (/<link rel="stylesheet"/.test(html)) { console.error('build: a stylesheet link was left in the single file'); process.exit(1); }
 console.log('dist/kubedrill-offline.html', (html.length / 1024).toFixed(0) + ' KB', 'external refs left:', (html.match(/(src|href)="(?!#|data:|https?:|mailto:)[^"]+"/g) || []).length);

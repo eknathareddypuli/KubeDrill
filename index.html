@@ -347,6 +347,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
     <li><a href="#visualize" data-page="visualize">Visualize</a></li>
     <li class="nav-more"><button type="button" class="nav-more-btn" id="navMore" aria-haspopup="true" aria-expanded="false" aria-controls="navMenu">More <span aria-hidden="true">▾</span></button>
       <ul class="nav-menu" id="navMenu">
+        <li><a href="#trainers" data-page="trainers">Trainers</a></li>
         <li><a href="#learn" data-page="learn">Lessons</a></li>
         <li><a href="#field" data-page="field">Field Guide</a></li>
         <li><a href="#cheatsheet" data-page="cheatsheet">Cheatsheet</a></li>
@@ -430,7 +431,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
     <div class="stats4">
       <div class="stat"><div class="stat-num" data-count="ilabs">172</div><div class="stat-label">Auto-checked labs</div></div>
       <div class="stat"><div class="stat-num" data-count="lessons">22</div><div class="stat-label">Lessons</div></div>
-      <div class="stat"><div class="stat-num" data-count="quiz">314</div><div class="stat-label">Quiz questions</div></div>
+      <div class="stat"><div class="stat-num" data-count="quiz">358</div><div class="stat-label">Quiz questions</div></div>
       <div class="stat"><div class="stat-num">$0</div><div class="stat-label">No ads · No signup</div></div>
     </div>
     <div class="band-head tools-head"><div class="u3-eyebrow">Also included</div><h2>Everything for the exam, offline</h2></div>
@@ -640,6 +641,7 @@ footer{position:relative;z-index:1;border-top:1px solid var(--border);padding:2.
 <div class="page" id="page-coverage" role="main"><div class="section-wrap" id="covRoot"></div></div>
 <div class="page" id="page-fidelity" role="main"><div class="section-wrap" id="fidRoot"></div></div>
 <div class="page" id="page-decode" role="main"><div class="section-wrap" id="decodeRoot"></div></div>
+<div class="page" id="page-trainers" role="main"><div class="section-wrap" id="trRoot"></div></div>
 <div class="page" id="page-drills" role="main"><div class="section-wrap" id="drillRoot"></div></div>
 <div class="page" id="page-reading" role="main"><div class="section-wrap" id="readRoot"></div></div>
 <div class="page" id="page-break" role="main"><div class="section-wrap" id="breakRoot"></div></div>
@@ -3524,6 +3526,47 @@ const LABS = [
    verify:'Pod can access GCS using Workload Identity. No service account key files involved. gcloud auth list inside pod shows the GCP SA.',
    cleanup:'kubectl delete namespace workload-id-demo\ngcloud iam service-accounts delete gcs-reader@PROJECT_ID.iam.gserviceaccount.com'
   },
+  {num:'13',diff:'Beginner',cls:'diff-b',title:'Configure an App with a ConfigMap and a Secret',time:'20 min',tags:'ConfigMap · Secret · Env · Volume',
+   objective:'Inject settings into a Deployment as environment variables and as a mounted file, then change a value and see what updates by itself and what does not.',
+   prerequisites:['kubectl configured with a running cluster','Basic understanding of Pods and Deployments'],
+   steps:[
+     {title:'Create a namespace',cmd:'kubectl create namespace cfg-demo\nkubectl config set-context --current --namespace=cfg-demo'},
+     {title:'Create a ConfigMap and a Secret from literals',cmd:'kubectl create configmap app-config --from-literal=LOG_LEVEL=info --from-literal=GREETING=hello\nkubectl create secret generic app-secret --from-literal=API_KEY=change-me-123'},
+     {title:'Create a Deployment that reads both',cmd:'kubectl create deployment web --image=nginx:1.25 --replicas=1\nkubectl set env deployment/web --from=configmap/app-config\nkubectl set env deployment/web --from=secret/app-secret --prefix=SECRET_'},
+     {title:'Check the variables inside the pod',cmd:'kubectl rollout status deployment/web\nkubectl exec deploy/web -- printenv LOG_LEVEL GREETING SECRET_API_KEY'},
+     {title:'Mount the ConfigMap as files',cmd:'kubectl patch deployment web -p \'{"spec":{"template":{"spec":{"volumes":[{"name":"cfg","configMap":{"name":"app-config"}}],"containers":[{"name":"nginx","volumeMounts":[{"name":"cfg","mountPath":"/etc/app"}]}]}}}}\'\nkubectl rollout status deployment/web\nkubectl exec deploy/web -- ls /etc/app'},
+     {title:'Change the value and compare',cmd:'kubectl patch configmap app-config -p \'{"data":{"LOG_LEVEL":"debug"}}\'\nkubectl exec deploy/web -- printenv LOG_LEVEL\nkubectl exec deploy/web -- cat /etc/app/LOG_LEVEL\nkubectl rollout restart deployment/web'},
+   ],
+   verify:'Before the restart, the environment variable still shows info while the mounted file shows debug after a short delay. After the restart the variable shows debug too.',
+   cleanup:'kubectl delete namespace cfg-demo'
+  },
+  {num:'14',diff:'Intermediate',cls:'diff-i',title:'Default-deny NetworkPolicy, then open exactly one path',time:'25 min',tags:'NetworkPolicy · Isolation · Testing',
+   objective:'Block all ingress to a namespace, then allow one named client to reach one named server, and prove each step with a connection test.',
+   prerequisites:['A CNI that enforces NetworkPolicy (Calico, Cilium)','kubectl configured with a running cluster'],
+   steps:[
+     {title:'Create a namespace with a server and two clients',cmd:'kubectl create namespace np-demo\nkubectl run server -n np-demo --image=nginx:1.25 --labels=app=server --port=80\nkubectl expose pod server -n np-demo --port=80\nkubectl run good -n np-demo --image=busybox:1.36 --labels=app=good --command -- sleep 3600\nkubectl run bad -n np-demo --image=busybox:1.36 --labels=app=bad --command -- sleep 3600'},
+     {title:'Prove that everything can connect today',cmd:'kubectl exec -n np-demo good -- wget -qO- -T 2 server\nkubectl exec -n np-demo bad -- wget -qO- -T 2 server'},
+     {title:'Apply a default-deny ingress policy',cmd:'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: default-deny\n  namespace: np-demo\nspec:\n  podSelector: {}\n  policyTypes: [Ingress]\nEOF'},
+     {title:'Test again: both clients are blocked',cmd:'kubectl exec -n np-demo good -- wget -qO- -T 2 server\nkubectl exec -n np-demo bad -- wget -qO- -T 2 server'},
+     {title:'Allow only app=good to reach app=server on port 80',cmd:'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: allow-good\n  namespace: np-demo\nspec:\n  podSelector:\n    matchLabels:\n      app: server\n  policyTypes: [Ingress]\n  ingress:\n  - from:\n    - podSelector:\n        matchLabels:\n          app: good\n    ports:\n    - protocol: TCP\n      port: 80\nEOF'},
+     {title:'Confirm one path is open and the other is not',cmd:'kubectl exec -n np-demo good -- wget -qO- -T 2 server\nkubectl exec -n np-demo bad -- wget -qO- -T 2 server\nkubectl get networkpolicy -n np-demo'},
+   ],
+   verify:'good prints the nginx page; bad times out. If both succeed, your CNI is not enforcing policies.',
+   cleanup:'kubectl delete namespace np-demo'
+  },
+  {num:'15',diff:'Intermediate',cls:'diff-i',title:'Roll out a bad version, watch it stall, roll back',time:'25 min',tags:'Rolling Update · Readiness · Rollback',
+   objective:'Use a readiness probe and maxUnavailable to keep a bad release from taking the service down, then undo it.',
+   prerequisites:['kubectl configured with a running cluster'],
+   steps:[
+     {title:'Deploy version 1 with a readiness probe',cmd:'kubectl create namespace roll-demo\nkubectl apply -n roll-demo -f - <<EOF\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 4\n  strategy:\n    rollingUpdate:\n      maxUnavailable: 1\n      maxSurge: 1\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: web\n        image: nginx:1.25\n        readinessProbe:\n          httpGet:\n            path: /\n            port: 80\n          periodSeconds: 3\nEOF\nkubectl rollout status deployment/web -n roll-demo'},
+     {title:'Record the change cause',cmd:'kubectl annotate deployment/web -n roll-demo kubernetes.io/change-cause="v1 nginx 1.25"'},
+     {title:'Release a version that does not exist',cmd:'kubectl set image deployment/web web=nginx:1.99-does-not-exist -n roll-demo\nkubectl annotate deployment/web -n roll-demo kubernetes.io/change-cause="v2 bad tag" --overwrite'},
+     {title:'Watch the rollout stall',cmd:'kubectl rollout status deployment/web -n roll-demo --timeout=30s\nkubectl get pods -n roll-demo\nkubectl get deployment web -n roll-demo'},
+     {title:'Read the history and undo',cmd:'kubectl rollout history deployment/web -n roll-demo\nkubectl rollout undo deployment/web -n roll-demo\nkubectl rollout status deployment/web -n roll-demo'},
+   ],
+   verify:'During the stall, 3 of 4 pods stay Ready with the old image because new pods never become Ready. After undo, all 4 pods run nginx:1.25.',
+   cleanup:'kubectl delete namespace roll-demo'
+  },
 ];
 
 function renderLabs() {
@@ -3766,6 +3809,8 @@ renderEnc();
 <script src="assets/js/data/labs-sim-t.js"></script>
 <script src="assets/js/data/labs-sim-u.js"></script>
 <script src="assets/js/data/labs-sim-v.js"></script>
+<script src="assets/js/data/labs-sim-w.js"></script>
+<script src="assets/js/data/labs-sim-x.js"></script>
 <script src="assets/js/data/debrief.js"></script>
 <script src="assets/js/data/debrief-j.js"></script>
 <script src="assets/js/data/debrief-k.js"></script>
@@ -3789,6 +3834,7 @@ renderEnc();
 <script src="assets/js/data/modules-extra.js"></script>
 <script src="assets/js/data/quiz-extra.js"></script>
 <script src="assets/js/data/quiz-cmd.js"></script>
+<script src="assets/js/data/quiz-more.js"></script>
 <script src="assets/js/quiz.js"></script>
 <script src="assets/js/persist.js"></script>
 <script src="assets/js/anim.js"></script>
@@ -3799,10 +3845,14 @@ renderEnc();
 <script src="assets/js/data/field.js"></script>
 <script src="assets/js/ux.js"></script>
 <script src="assets/js/data/flow.js"></script>
+<script src="assets/js/data/field-more.js"></script>
+<script src="assets/js/data/trainers-data.js"></script>
 <script src="assets/js/more.js"></script>
 <script src="assets/js/motion.js"></script>
 <script src="assets/js/visuals.js"></script>
 <script src="assets/js/touches.js"></script>
+<script src="assets/js/flash.js"></script>
+<script src="assets/js/trainers.js"></script>
 <script src="assets/js/ui2.js"></script>
 <script src="assets/js/ui3.js"></script>
 <script src="assets/js/data/lessons-a.js"></script>

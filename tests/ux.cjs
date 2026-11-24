@@ -25,7 +25,7 @@ await run('kubctl get pods');ok((await pg.locator('.lr-o.hint').allInnerTexts())
 // failure strip
 await pg.goto(BASE+'#labs');await pg.waitForTimeout(400);ok(await pg.locator('.fail-card').count()===5,'failure library strip: 5 cards');
 // field guide
-await pg.goto(BASE+'#field');await pg.waitForTimeout(300);ok(await pg.locator('.fg-ep').count()===3,'3 story episodes');
+await pg.goto(BASE+'#field');await pg.waitForTimeout(300);ok(await pg.locator('.fg-ep').count()===4,'4 story episodes');
 await pg.click('[data-t="outages"]');ok(await pg.locator('.fg-out').count()===5,'5 outage explainers');
 ok(await pg.locator('.fg-src a[href^="https://"]').count()>=4,'outage sources linked');
 await pg.click('[data-t="concepts"]');const s1=await pg.locator('.cp-stage h4').innerText();await pg.click('#cpNext');ok((await pg.locator('.cp-stage h4').innerText())!==s1,'animation steps forward');

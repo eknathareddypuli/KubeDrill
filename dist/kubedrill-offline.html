@@ -1307,7 +1307,124 @@ table.wg-t tr.hl td,table.wg-t td.hl{background:rgba(56,189,248,.12)}
 @media(max-width:860px){.tools-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:520px){.tools-grid{grid-template-columns:1fr}}
 .free-quiet .zero{margin:0 0 22px 0}
 </style>
-<link rel="stylesheet" href="assets/css/visuals.css">
+<style>/* transform/opacity only; every rule is inert when html[data-motion=off] */
+@keyframes vz-fade{from{opacity:.4}to{opacity:1}}
+@keyframes vz-pop{0%{transform:scaleX(.985)}50%{transform:scaleX(1.01)}100%{transform:scaleX(1)}}
+@keyframes vz-flash{0%{opacity:.35}100%{opacity:1}}
+html:not([data-motion=off]) .vz-fade{animation:vz-fade .15s ease-out}
+html:not([data-motion=off]) .vz-pop{animation:vz-pop .4s ease-out;transform-origin:left}
+html:not([data-motion=off]) .vz-ok,html:not([data-motion=off]) .vz-bad{animation:vz-flash .3s ease-out}
+.vz-bad{color:#f87171}.vz-ok{color:var(--green)}
+.ex-time.warn{color:var(--warn)}
+.ex-time.low{color:#f87171;animation:none}
+html[data-motion=off] .vz-fade,html[data-motion=off] .vz-pop,html[data-motion=off] .vz-ok,html[data-motion=off] .vz-bad{animation:none!important}
+/* cluster panel */
+.vz-panel{margin:8px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg2);font-size:12px}
+.vz-panel>summary{cursor:pointer;padding:7px 12px;color:var(--text);font-weight:600}
+.vz-body{padding:0 12px 10px;display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+.vz-sec h6{margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--text3)}
+.vz-node{margin-bottom:8px}.vz-node b{margin-right:6px}
+.vz-row{display:grid;grid-template-columns:96px 1fr auto;gap:6px;align-items:center;margin:2px 0;color:var(--text2)}
+.vz-bar{display:block;height:7px;border-radius:4px;background:rgba(127,127,127,.2);overflow:hidden}
+.vz-bar i{display:block;height:100%;width:100%;background:var(--green);transform-origin:left}
+.vz-bar.warm i{background:var(--warn)}.vz-bar.hot i{background:#f87171}
+html:not([data-motion=off]) .vz-bar i{transition:transform .35s ease-out}
+.vz-t{font-variant-numeric:tabular-nums;font-size:11px}
+.vz-chip{display:inline-block;margin:0 4px 2px 0;padding:0 6px;border-radius:9px;border:1px solid var(--border2);font-size:10.5px;color:var(--text2)}
+.vz-chip.match{border-color:var(--green);color:var(--green)}
+.vz-note{margin:4px 0 0;color:var(--text2)}
+.vz-cp{display:flex;flex-wrap:wrap;gap:8px}
+.vz-hb{display:inline-flex;align-items:center;gap:5px}
+.vz-hb i,.vz-pr i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green)}
+.vz-hb.down i,.vz-pr.bad i{background:#f87171}
+@keyframes vz-beat{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.35);opacity:.65}}
+html:not([data-motion=off]) .vz-hb.up i,html:not([data-motion=off]) .vz-pr.ok i{animation:vz-beat 2s ease-in-out infinite}
+.vz-vol{display:flex;align-items:center;gap:6px;margin:2px 0}.vz-vol i{flex:0 0 28px;height:2px;background:var(--border2)}.vz-vol.bound i{background:var(--green)}
+.vz-probes{display:flex;flex-wrap:wrap;gap:8px}.vz-pr{display:inline-flex;align-items:center;gap:4px}
+/* terminal lifecycle pills */
+.vz-life{display:flex;flex-wrap:wrap;gap:6px;padding:2px 0}
+.vz-pill{padding:1px 8px;border-radius:10px;font-size:11px;border:1px solid var(--border2)}
+.vz-pill em{font-style:normal;opacity:.85}
+.vz-pill.ok{border-color:var(--green);color:var(--green)}.vz-pill.bad{border-color:#f87171;color:#f87171}.vz-pill.wait{border-color:var(--warn);color:var(--warn)}.vz-pill.term{opacity:.7}
+@keyframes vz-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+html:not([data-motion=off]) .vz-pill{animation:vz-in .25s ease-out both}
+.dia-pod.has-rev{border-bottom:3px solid var(--rev)}
+html[data-motion=off] .vz-hb i,html[data-motion=off] .vz-pr i,html[data-motion=off] .vz-pill,html[data-motion=off] .vz-bar i{animation:none!important;transition:none!important}
+/* learning-flow touches */
+.vz-ring{vertical-align:-5px;margin-left:6px}
+.vz-mastery{margin:22px 0 8px}.vz-mastery h3{margin:0 0 4px}.vz-sub{margin:0 0 10px;color:var(--text2);font-size:13px}
+.vz-hexes{display:flex;flex-wrap:wrap;gap:4px;max-width:720px}
+.vz-hex{position:relative;width:26px;height:30px;clip-path:polygon(50% 0,100% 25%,100% 75%,50% 100%,0 75%,0 25%);background:rgba(127,127,127,.2)}
+.vz-hex i{position:absolute;inset:0;background:var(--green);opacity:var(--f)}
+.vz-hex.none{opacity:.35}
+.vz-streak{display:inline-flex;align-items:center;gap:6px;margin:0 0 10px;font-size:13px}
+@keyframes vz-flick{0%,100%{transform:scale(1)}50%{transform:scale(1.08,1.04)}}
+html:not([data-motion=off]) .vz-flame{transform-origin:50% 100%;animation:vz-flick 1.6s ease-in-out infinite}
+@keyframes vz-slide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+html:not([data-motion=off]) .vz-slide{animation:vz-slide .25s ease-out}
+.vz-diff{display:flex;align-items:center;gap:8px;margin:6px 0;font-size:12.5px;color:var(--text2)}.vz-diff input{width:120px}
+.rd-panes[data-focus=broken] .rd-pane:not(.broken),.rd-panes[data-focus=fixed] .rd-pane.broken{opacity:.3}
+html:not([data-motion=off]) .rd-pane{transition:opacity .25s}
+.vz-trail{display:flex;align-items:flex-end;gap:2px;height:12px;margin:3px 0}
+.vz-trail i{display:block;width:4px;height:12px;border-radius:2px;background:var(--green);opacity:.7;transform:scaleY(.1);transform-origin:bottom}
+html:not([data-motion=off]) .vz-trail i{transition:transform .15s ease-out}
+@keyframes vz-sweep{from{transform:translateX(-100%);opacity:.5}to{transform:translateX(100%);opacity:0}}
+.vz-sweep{position:fixed;inset:0;z-index:9999;pointer-events:none;background:linear-gradient(90deg,transparent,rgba(127,127,127,.25),transparent);animation:vz-sweep .35s ease-out both}
+html[data-motion=off] .vz-sweep{display:none}
+@keyframes vz-off{from{opacity:.3}to{opacity:1}}
+html:not([data-motion=off]) .off-badge:not([hidden]){animation:vz-off .6s ease-out}
+html[data-motion=off] .vz-flame,html[data-motion=off] .vz-slide{animation:none!important}
+/* flashcards */
+.fc-on .quiz-progress-bar,.fc-on #quizCard,.fc-on #quizResults,.fc-on #quizExplain,.fc-on #quizNext{display:none!important}
+.fc-root{max-width:640px;margin:14px auto}
+.fc-meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);margin-bottom:8px}
+.fc-card{perspective:1000px;min-height:230px;cursor:pointer;outline-offset:3px}
+.fc-in{position:relative;min-height:230px}
+.fc-face{position:absolute;inset:0;padding:22px 24px;border:1px solid var(--border);border-radius:14px;background:var(--bg2);display:flex;flex-direction:column;justify-content:center;gap:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:auto}
+.fc-back{transform:rotateY(180deg)}
+html:not([data-motion=off]) .fc-in{transition:transform .4s ease;transform-style:preserve-3d}
+html:not([data-motion=off]) .fc-card.flipped .fc-in{transform:rotateY(180deg)}
+html[data-motion=off] .fc-face{backface-visibility:visible}
+html[data-motion=off] .fc-back{transform:none;visibility:hidden}
+html[data-motion=off] .fc-card.flipped .fc-back{visibility:visible}
+html[data-motion=off] .fc-card.flipped .fc-front{visibility:hidden}
+.fc-q,.fc-a{font-size:1.05rem;margin:0}.fc-a{font-weight:600;color:var(--green)}.fc-e{margin:0;color:var(--text2);font-size:13.5px}.fc-hint{font-size:11.5px;color:var(--text3)}
+.fc-grade{display:flex;gap:10px;justify-content:center;margin-top:12px}.fc-done{text-align:center;padding:30px 0}
+/* request journey, policy view, hint cost, fix confirmation, rollout wave */
+.vz-jr{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:6px 12px 8px;font-size:12px;color:var(--text2)}
+.vz-js{padding:1px 8px;border:1px solid var(--border2);border-radius:10px}.vz-js.rej{border-color:#f87171;color:#f87171}
+.vz-ja{color:var(--text3)}
+@keyframes vz-hop{from{opacity:.2;transform:translateY(3px)}to{opacity:1;transform:none}}
+html:not([data-motion=off]) .vz-js{animation:vz-hop .22s ease-out both}
+.vz-hintm{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12px;color:var(--text2)}
+.vz-hp{display:inline-flex;gap:3px}.vz-hp i{width:8px;height:8px;border-radius:50%;background:rgba(127,127,127,.3)}.vz-hp i.on{background:var(--warn)}
+@keyframes vz-pip{from{transform:scale(2.2)}to{transform:scale(1)}}
+html:not([data-motion=off]) .vz-hp i.new{animation:vz-pip .3s ease-out}
+@keyframes vz-tick{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}
+html:not([data-motion=off]) .vz-tickpop{display:inline-block;animation:vz-tick .4s ease-out}
+@keyframes vz-fixed{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+html:not([data-motion=off]) .vz-fixed{animation:vz-fixed .6s ease-out}
+@keyframes vz-wave{0%{transform:scale(1);opacity:1}40%{transform:scale(1.14);opacity:.6}100%{transform:scale(1);opacity:1}}
+html:not([data-motion=off]) .vz-wave{animation:vz-wave .55s ease-out both}
+html[data-motion=off] .vz-js,html[data-motion=off] .vz-hp i,html[data-motion=off] .vz-tickpop,html[data-motion=off] .vz-fixed,html[data-motion=off] .vz-wave{animation:none!important}
+/* Visualize scenes built from concept data */
+.an-stage .an-chips{position:absolute;inset:0;margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;padding:18px}
+.an-stage .an-chips .cp-it{font-size:.95rem;padding:14px 18px}
+/* Trainers page */
+.tr-card{border:1px solid var(--border);border-radius:14px;padding:18px;margin:14px 0;background:var(--bg2)}
+.tr-two{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:760px){.tr-two{grid-template-columns:1fr}}
+.tr-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 1fr auto;gap:10px;align-items:center;margin:6px 0;font-size:.9rem}.tr-row em{font-style:normal;color:var(--text3,#64748b);font-size:.8rem}
+.tr-bar{display:block;height:8px;border-radius:6px;background:var(--border);overflow:hidden}.tr-bar i{display:block;height:100%;background:#3b82f6;border-radius:6px}.tr-bar i.warn{background:#f59e0b}
+.tr-meta{font-size:.8rem;color:var(--text3,#64748b);margin-bottom:6px}.tr-q{margin:6px 0 12px}
+.tr-err{white-space:pre-wrap;word-break:break-word;background:#0b1220;color:#e2e8f0;padding:12px 14px;border-radius:10px;font-size:.85rem;margin:8px 0 12px}
+.tr-opts{display:grid;gap:8px}.tr-opt{text-align:left;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:inherit;cursor:pointer;font:inherit}
+.tr-opt:hover:not([disabled]){border-color:#3b82f6}.tr-opt.good{border-color:#22c55e;background:rgba(34,197,94,.14)}.tr-opt.bad{border-color:#ef4444;background:rgba(239,68,68,.12)}.tr-opt.dim{opacity:.55}
+.tr-exp{margin:12px 0 4px}.tr-bad{color:#ef4444;min-height:1.2em}
+.tr-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.tr-form label{display:grid;gap:4px;font-size:.85rem}.tr-form input,.tr-form select{padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:inherit;font:inherit}
+.tr-week{border:1px solid var(--border);border-radius:10px;margin:8px 0;padding:6px 12px}.tr-week summary{cursor:pointer;font-weight:600;padding:4px 0}
+.tr-day{padding:8px 0;border-top:1px solid var(--border)}.tr-day.today{background:rgba(59,130,246,.08);border-radius:8px;padding:8px}.tr-day ul{list-style:none;margin:4px 0 0;padding:0}.tr-day li{margin:3px 0}.tr-day small{color:var(--text3,#64748b)}
+@media print{body *{visibility:hidden}#trRoot,#trRoot *{visibility:visible}#trRoot{position:absolute;left:0;top:0;width:100%}.tr-tabs,.tr-form,.btn-primary,.btn-secondary{display:none!important}}
+</style>
 </head>
 <body data-build="offline-single-file">
 <div id="main" tabindex="-1"></div>
@@ -1329,6 +1446,7 @@ table.wg-t tr.hl td,table.wg-t td.hl{background:rgba(56,189,248,.12)}
     <li><a href="#visualize" data-page="visualize">Visualize</a></li>
     <li class="nav-more"><button type="button" class="nav-more-btn" id="navMore" aria-haspopup="true" aria-expanded="false" aria-controls="navMenu">More <span aria-hidden="true">▾</span></button>
       <ul class="nav-menu" id="navMenu">
+        <li><a href="#trainers" data-page="trainers">Trainers</a></li>
         <li><a href="#learn" data-page="learn">Lessons</a></li>
         <li><a href="#field" data-page="field">Field Guide</a></li>
         <li><a href="#cheatsheet" data-page="cheatsheet">Cheatsheet</a></li>
@@ -1412,7 +1530,7 @@ table.wg-t tr.hl td,table.wg-t td.hl{background:rgba(56,189,248,.12)}
     <div class="stats4">
       <div class="stat"><div class="stat-num" data-count="ilabs">172</div><div class="stat-label">Auto-checked labs</div></div>
       <div class="stat"><div class="stat-num" data-count="lessons">22</div><div class="stat-label">Lessons</div></div>
-      <div class="stat"><div class="stat-num" data-count="quiz">314</div><div class="stat-label">Quiz questions</div></div>
+      <div class="stat"><div class="stat-num" data-count="quiz">358</div><div class="stat-label">Quiz questions</div></div>
       <div class="stat"><div class="stat-num">$0</div><div class="stat-label">No ads · No signup</div></div>
     </div>
     <div class="band-head tools-head"><div class="u3-eyebrow">Also included</div><h2>Everything for the exam, offline</h2></div>
@@ -1622,6 +1740,7 @@ table.wg-t tr.hl td,table.wg-t td.hl{background:rgba(56,189,248,.12)}
 <div class="page" id="page-coverage" role="main"><div class="section-wrap" id="covRoot"></div></div>
 <div class="page" id="page-fidelity" role="main"><div class="section-wrap" id="fidRoot"></div></div>
 <div class="page" id="page-decode" role="main"><div class="section-wrap" id="decodeRoot"></div></div>
+<div class="page" id="page-trainers" role="main"><div class="section-wrap" id="trRoot"></div></div>
 <div class="page" id="page-drills" role="main"><div class="section-wrap" id="drillRoot"></div></div>
 <div class="page" id="page-reading" role="main"><div class="section-wrap" id="readRoot"></div></div>
 <div class="page" id="page-break" role="main"><div class="section-wrap" id="breakRoot"></div></div>
@@ -4505,6 +4624,47 @@ const LABS = [
    ],
    verify:'Pod can access GCS using Workload Identity. No service account key files involved. gcloud auth list inside pod shows the GCP SA.',
    cleanup:'kubectl delete namespace workload-id-demo\ngcloud iam service-accounts delete gcs-reader@PROJECT_ID.iam.gserviceaccount.com'
+  },
+  {num:'13',diff:'Beginner',cls:'diff-b',title:'Configure an App with a ConfigMap and a Secret',time:'20 min',tags:'ConfigMap · Secret · Env · Volume',
+   objective:'Inject settings into a Deployment as environment variables and as a mounted file, then change a value and see what updates by itself and what does not.',
+   prerequisites:['kubectl configured with a running cluster','Basic understanding of Pods and Deployments'],
+   steps:[
+     {title:'Create a namespace',cmd:'kubectl create namespace cfg-demo\nkubectl config set-context --current --namespace=cfg-demo'},
+     {title:'Create a ConfigMap and a Secret from literals',cmd:'kubectl create configmap app-config --from-literal=LOG_LEVEL=info --from-literal=GREETING=hello\nkubectl create secret generic app-secret --from-literal=API_KEY=change-me-123'},
+     {title:'Create a Deployment that reads both',cmd:'kubectl create deployment web --image=nginx:1.25 --replicas=1\nkubectl set env deployment/web --from=configmap/app-config\nkubectl set env deployment/web --from=secret/app-secret --prefix=SECRET_'},
+     {title:'Check the variables inside the pod',cmd:'kubectl rollout status deployment/web\nkubectl exec deploy/web -- printenv LOG_LEVEL GREETING SECRET_API_KEY'},
+     {title:'Mount the ConfigMap as files',cmd:'kubectl patch deployment web -p \'{"spec":{"template":{"spec":{"volumes":[{"name":"cfg","configMap":{"name":"app-config"}}],"containers":[{"name":"nginx","volumeMounts":[{"name":"cfg","mountPath":"/etc/app"}]}]}}}}\'\nkubectl rollout status deployment/web\nkubectl exec deploy/web -- ls /etc/app'},
+     {title:'Change the value and compare',cmd:'kubectl patch configmap app-config -p \'{"data":{"LOG_LEVEL":"debug"}}\'\nkubectl exec deploy/web -- printenv LOG_LEVEL\nkubectl exec deploy/web -- cat /etc/app/LOG_LEVEL\nkubectl rollout restart deployment/web'},
+   ],
+   verify:'Before the restart, the environment variable still shows info while the mounted file shows debug after a short delay. After the restart the variable shows debug too.',
+   cleanup:'kubectl delete namespace cfg-demo'
+  },
+  {num:'14',diff:'Intermediate',cls:'diff-i',title:'Default-deny NetworkPolicy, then open exactly one path',time:'25 min',tags:'NetworkPolicy · Isolation · Testing',
+   objective:'Block all ingress to a namespace, then allow one named client to reach one named server, and prove each step with a connection test.',
+   prerequisites:['A CNI that enforces NetworkPolicy (Calico, Cilium)','kubectl configured with a running cluster'],
+   steps:[
+     {title:'Create a namespace with a server and two clients',cmd:'kubectl create namespace np-demo\nkubectl run server -n np-demo --image=nginx:1.25 --labels=app=server --port=80\nkubectl expose pod server -n np-demo --port=80\nkubectl run good -n np-demo --image=busybox:1.36 --labels=app=good --command -- sleep 3600\nkubectl run bad -n np-demo --image=busybox:1.36 --labels=app=bad --command -- sleep 3600'},
+     {title:'Prove that everything can connect today',cmd:'kubectl exec -n np-demo good -- wget -qO- -T 2 server\nkubectl exec -n np-demo bad -- wget -qO- -T 2 server'},
+     {title:'Apply a default-deny ingress policy',cmd:'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: default-deny\n  namespace: np-demo\nspec:\n  podSelector: {}\n  policyTypes: [Ingress]\nEOF'},
+     {title:'Test again: both clients are blocked',cmd:'kubectl exec -n np-demo good -- wget -qO- -T 2 server\nkubectl exec -n np-demo bad -- wget -qO- -T 2 server'},
+     {title:'Allow only app=good to reach app=server on port 80',cmd:'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: allow-good\n  namespace: np-demo\nspec:\n  podSelector:\n    matchLabels:\n      app: server\n  policyTypes: [Ingress]\n  ingress:\n  - from:\n    - podSelector:\n        matchLabels:\n          app: good\n    ports:\n    - protocol: TCP\n      port: 80\nEOF'},
+     {title:'Confirm one path is open and the other is not',cmd:'kubectl exec -n np-demo good -- wget -qO- -T 2 server\nkubectl exec -n np-demo bad -- wget -qO- -T 2 server\nkubectl get networkpolicy -n np-demo'},
+   ],
+   verify:'good prints the nginx page; bad times out. If both succeed, your CNI is not enforcing policies.',
+   cleanup:'kubectl delete namespace np-demo'
+  },
+  {num:'15',diff:'Intermediate',cls:'diff-i',title:'Roll out a bad version, watch it stall, roll back',time:'25 min',tags:'Rolling Update · Readiness · Rollback',
+   objective:'Use a readiness probe and maxUnavailable to keep a bad release from taking the service down, then undo it.',
+   prerequisites:['kubectl configured with a running cluster'],
+   steps:[
+     {title:'Deploy version 1 with a readiness probe',cmd:'kubectl create namespace roll-demo\nkubectl apply -n roll-demo -f - <<EOF\napiVersion: apps/v1\nkind: Deployment\nmetadata:\n  name: web\nspec:\n  replicas: 4\n  strategy:\n    rollingUpdate:\n      maxUnavailable: 1\n      maxSurge: 1\n  selector:\n    matchLabels:\n      app: web\n  template:\n    metadata:\n      labels:\n        app: web\n    spec:\n      containers:\n      - name: web\n        image: nginx:1.25\n        readinessProbe:\n          httpGet:\n            path: /\n            port: 80\n          periodSeconds: 3\nEOF\nkubectl rollout status deployment/web -n roll-demo'},
+     {title:'Record the change cause',cmd:'kubectl annotate deployment/web -n roll-demo kubernetes.io/change-cause="v1 nginx 1.25"'},
+     {title:'Release a version that does not exist',cmd:'kubectl set image deployment/web web=nginx:1.99-does-not-exist -n roll-demo\nkubectl annotate deployment/web -n roll-demo kubernetes.io/change-cause="v2 bad tag" --overwrite'},
+     {title:'Watch the rollout stall',cmd:'kubectl rollout status deployment/web -n roll-demo --timeout=30s\nkubectl get pods -n roll-demo\nkubectl get deployment web -n roll-demo'},
+     {title:'Read the history and undo',cmd:'kubectl rollout history deployment/web -n roll-demo\nkubectl rollout undo deployment/web -n roll-demo\nkubectl rollout status deployment/web -n roll-demo'},
+   ],
+   verify:'During the stall, 3 of 4 pods stay Ready with the old image because new pods never become Ready. After undo, all 4 pods run nginx:1.25.',
+   cleanup:'kubectl delete namespace roll-demo'
   },
 ];
 
@@ -11834,6 +11994,220 @@ EOF`] }),
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+<script>/* assets/js/data/labs-sim-w.js */
+/* Labs S217–S219: NetworkPolicy peers (AND vs OR in one list item), a Deployment whose ServiceAccount does not exist (and what the new account may read),
+   and runAsNonRoot refusing to start a root image. Original scenarios from the public curriculum outline, not exam questions.
+   Marked simOnly: verified in the simulator, not on a real cluster. */
+(function (root) {
+  'use strict';
+  var KL = root.KL = root.KL || {}, Labs = KL.Labs || require('../labs-engine.js');
+  function T(title, hints, assert, desc) { return { id: '', title: title, desc: desc || '', hints: hints, assert: assert }; }
+  function L(o) { o.tasks.forEach(function (t, i) { t.id = String(i + 1); }); o.curriculum = true; o.simOnly = true; return o; }
+  function Y() { return Array.prototype.slice.call(arguments).join('\n') + '\n'; }
+  function NSY(n, lbl) { return Y('apiVersion: v1', 'kind: Namespace', 'metadata:', '  name: ' + n).replace(/\n$/, '') + (lbl ? '\n  labels:\n    ' + lbl : '') + '\n'; }
+  function POD(ns, name, labels) { return Y('apiVersion: v1', 'kind: Pod', 'metadata:', '  name: ' + name, '  namespace: ' + ns, '  labels:', '    ' + labels, 'spec:', '  containers:', '  - name: c', '    image: busybox:1.36', '    command: ["sleep", "3600"]'); }
+  Labs.register([
+    // ── S217 AND vs OR ──
+    L({ id: 's217-netpol-and-or', num: 'S217', title: 'NetworkPolicy: two selectors in one peer, not two peers', diff: 'Advanced', track: ['CKA', 'CKAD', 'CKS'], domain: 'Services & Networking', time: '15 min', ns: 'vault',
+      story: 'Only the backup job may read the `store` Service in `vault`: a pod labelled `role=backup` that runs in the `ops` namespace. The policy `store-in` was written for that, yet `scratch` (also in `ops`, role `scratch`) and `rogue` (in `vault` itself, role `backup`) can both reach the store. Change the policy so that only `backup` in `ops` gets through.',
+      caution: 'Do not "fix" this by deleting the policy or by adding a deny-all next to it: policies add up, so a second policy cannot take away what the first one allows. Look at where the dashes are.',
+      setup: [NSY('vault'), NSY('ops', 'team: ops'),
+        Y('apiVersion: apps/v1', 'kind: Deployment', 'metadata:', '  name: store', '  namespace: vault', 'spec:', '  replicas: 1', '  selector:', '    matchLabels:', '      app: store', '  template:', '    metadata:', '      labels:', '        app: store', '    spec:', '      containers:', '      - name: store', '        image: nginx:1.25'),
+        Y('apiVersion: v1', 'kind: Service', 'metadata:', '  name: store', '  namespace: vault', 'spec:', '  selector:', '    app: store', '  ports:', '  - port: 80', '    targetPort: 80'),
+        POD('ops', 'backup', 'role: backup'), POD('ops', 'scratch', 'role: scratch'), POD('vault', 'rogue', 'role: backup'),
+        Y('apiVersion: networking.k8s.io/v1', 'kind: NetworkPolicy', 'metadata:', '  name: store-in', '  namespace: vault', 'spec:', '  podSelector:', '    matchLabels:', '      app: store', '  policyTypes: [Ingress]', '  ingress:', '  - from:', '    - namespaceSelector:', '        matchLabels:', '          team: ops', '    - podSelector:', '        matchLabels:', '          role: backup', '    ports:', '    - protocol: TCP', '      port: 80')],
+      tasks: [
+        T('Read the policy and test from the three pods', ['`kubectl get netpol store-in -n vault -o yaml`', '`kubectl exec -n ops scratch -- wget -qO- -T 2 store.vault` shows the over-allow.'], [{ t: 'exists', ref: 'networkpolicy/store-in', ns: 'vault' }]),
+        T('`backup` in `ops` still reaches the store', ['The `from` entry must still select namespace `team=ops`.'], [{ t: 'curl', ns: 'ops', from: 'backup', to: 'store.vault:80' }]),
+        T('`scratch` in `ops` is refused', ['A namespaceSelector alone admits every pod of that namespace. Put the podSelector in the same list item.'], [{ t: 'curl', ns: 'ops', from: 'scratch', to: 'store.vault:80', ok: false }]),
+        T('`rogue` in `vault` is refused', ['A separate `- podSelector` item admits pods with that label from the policy\'s own namespace.'], [{ t: 'curl', ns: 'vault', from: 'rogue', to: 'store.vault:80', ok: false }])
+      ],
+      solution: ['kubectl get netpol store-in -n vault -o yaml', 'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: store-in\n  namespace: vault\nspec:\n  podSelector:\n    matchLabels:\n      app: store\n  policyTypes: [Ingress]\n  ingress:\n  - from:\n    - namespaceSelector:\n        matchLabels:\n          team: ops\n      podSelector:\n        matchLabels:\n          role: backup\n    ports:\n    - protocol: TCP\n      port: 80\nEOF', 'kubectl exec -n ops scratch -- wget -qO- -T 2 store.vault'] }),
+
+    // ── S218 missing ServiceAccount ──
+    L({ id: 's218-missing-sa-view', num: 'S218', title: 'Deployment has no pods: its ServiceAccount does not exist', diff: 'Intermediate', track: ['CKAD', 'CKA'], domain: 'Security', time: '12 min', ns: 'metrics',
+      story: 'Deployment `reporter` in `metrics` wants two replicas but has no pods. The ReplicaSet events say it cannot look up a service account. Create the account the Deployment names, let it read pods and nothing more in this namespace using the built-in `view` ClusterRole, and get both pods running.',
+      caution: 'Do not remove `serviceAccountName` from the Deployment to get pods quickly: the pods would run as `default`, which may hold other permissions. Bind `view` with a RoleBinding in this namespace, not a ClusterRoleBinding.',
+      setup: [NSY('metrics'), Y('apiVersion: apps/v1', 'kind: Deployment', 'metadata:', '  name: reporter', '  namespace: metrics', 'spec:', '  replicas: 2', '  selector:', '    matchLabels:', '      app: reporter', '  template:', '    metadata:', '      labels:', '        app: reporter', '    spec:', '      serviceAccountName: metrics-reader', '      containers:', '      - name: reporter', '        image: nginx:1.25')],
+      tasks: [
+        T('Find the error and the account name', ['`kubectl get rs -n metrics` then `kubectl describe rs -n metrics`, or `kubectl get events -n metrics`.'], [{ t: 'exists', ref: 'deploy/reporter', ns: 'metrics' }]),
+        T('ServiceAccount `metrics-reader` exists', ['`kubectl create serviceaccount metrics-reader -n metrics`'], [{ t: 'exists', ref: 'sa/metrics-reader', ns: 'metrics' }]),
+        T('It may read pods in `metrics`, but not delete them or read pods elsewhere', ['`kubectl create rolebinding metrics-view -n metrics --clusterrole=view --serviceaccount=metrics:metrics-reader`', '`kubectl auth can-i list pods -n metrics --as system:serviceaccount:metrics:metrics-reader`'], [{ t: 'canI', as: 'system:serviceaccount:metrics:metrics-reader', verb: 'list', res: 'pods', ns: 'metrics' }, { t: 'canI', as: 'system:serviceaccount:metrics:metrics-reader', verb: 'delete', res: 'pods', ns: 'metrics', expect: false }, { t: 'canI', as: 'system:serviceaccount:metrics:metrics-reader', verb: 'list', res: 'pods', ns: 'default', expect: false }]),
+        T('Both pods are running', ['The ReplicaSet retries by itself once the account exists.'], [{ t: 'podsReady', ns: 'metrics', sel: 'app=reporter', min: 2 }])
+      ],
+      solution: ['kubectl get events -n metrics', 'kubectl create serviceaccount metrics-reader -n metrics', 'kubectl create rolebinding metrics-view -n metrics --clusterrole=view --serviceaccount=metrics:metrics-reader', 'kubectl get pods -n metrics'] }),
+
+    // ── S219 runAsNonRoot ──
+    L({ id: 's219-runasnonroot', num: 'S219', title: 'Pod refuses to start: runAsNonRoot with an image that runs as root', diff: 'Intermediate', track: ['CKAD', 'CKS'], domain: 'Security', time: '10 min', ns: 'hardened',
+      story: 'The `web` Deployment in `hardened` was given `runAsNonRoot: true` by the platform team and now its pod sits in `CreateContainerConfigError`. The policy must stay: the container must not run as UID 0. Make the pod start with a numeric non-root user and drop all Linux capabilities.',
+      caution: 'Do not flip `runAsNonRoot` to false or delete the securityContext: that is the control the platform team asked for. Kubernetes cannot verify a named user, so give a numeric `runAsUser`.',
+      setup: [NSY('hardened'), Y('apiVersion: apps/v1', 'kind: Deployment', 'metadata:', '  name: web', '  namespace: hardened', 'spec:', '  replicas: 1', '  selector:', '    matchLabels:', '      app: web', '  template:', '    metadata:', '      labels:', '        app: web', '    spec:', '      securityContext:', '        runAsNonRoot: true', '      containers:', '      - name: web', '        image: nginx:1.25')],
+      tasks: [
+        T('Read the error', ['`kubectl get pods -n hardened`, then `kubectl describe pod -n hardened -l app=web` or `kubectl get events -n hardened`.'], [{ t: 'exists', ref: 'deploy/web', ns: 'hardened' }]),
+        T('Pod spec keeps `runAsNonRoot: true` and sets a numeric `runAsUser`', ['`kubectl patch deploy web -n hardened -p \'{"spec":{"template":{"spec":{"securityContext":{"runAsUser":10001}}}}}\'`'], [{ t: 'jp', ref: 'deploy/web', ns: 'hardened', path: '.spec.template.spec.securityContext.runAsNonRoot', eq: 'true' }, { t: 'jpRe', ref: 'deploy/web', ns: 'hardened', path: '.spec.template.spec.securityContext.runAsUser', re: '^[1-9][0-9]*$' }]),
+        T('Container drops all capabilities and the pod is Ready', ['Container securityContext: `capabilities: {drop: ["ALL"]}`. Patch the container by name.'], [{ t: 'jpRe', ref: 'deploy/web', ns: 'hardened', path: '.spec.template.spec.containers[*].securityContext.capabilities.drop', re: 'ALL' }, { t: 'podsReady', ns: 'hardened', sel: 'app=web', min: 1 }])
+      ],
+      solution: ['kubectl get events -n hardened', `kubectl patch deploy web -n hardened -p '{"spec":{"template":{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001},"containers":[{"name":"web","securityContext":{"capabilities":{"drop":["ALL"]}}}]}}}}'`, 'kubectl get pods -n hardened'] })
+,
+
+    // ── S220 Ingress: wrong pathType and backend port ──
+    L({ id: 's220-ingress-pathtype-port', num: 'S220', title: 'Ingress: /api/v1 returns 404 and / returns 503', diff: 'Intermediate', track: ['CKA', 'CKAD'], domain: 'Services & Networking', time: '12 min', ns: 'shop',
+      story: 'Ingress `store` in `shop` (class `nginx`, host `store.local`) is meant to send `/api` and everything below it (`/api/v1/orders`) to Service `api` on port 80, and every other path to Service `web` on port 80. Today `/api/v1/orders` answers 404 and `/` answers 503. Fix the Ingress in place; do not change the Services.',
+      caution: 'Do not widen the match with a wildcard host or a catch-all path to hide the 404: only `/api` and `/` should be routed. Check the Services with `kubectl get svc` before choosing a backend port.',
+      setup: [NSY('shop'),
+        Y('apiVersion: apps/v1', 'kind: Deployment', 'metadata:', '  name: web', '  namespace: shop', 'spec:', '  replicas: 1', '  selector:', '    matchLabels:', '      app: web', '  template:', '    metadata:', '      labels:', '        app: web', '    spec:', '      containers:', '      - name: web', '        image: nginx:1.25'),
+        Y('apiVersion: v1', 'kind: Service', 'metadata:', '  name: web', '  namespace: shop', 'spec:', '  selector:', '    app: web', '  ports:', '  - port: 80', '    targetPort: 80'),
+        Y('apiVersion: apps/v1', 'kind: Deployment', 'metadata:', '  name: api', '  namespace: shop', 'spec:', '  replicas: 1', '  selector:', '    matchLabels:', '      app: api', '  template:', '    metadata:', '      labels:', '        app: api', '    spec:', '      containers:', '      - name: api', '        image: nginx:1.25'),
+        Y('apiVersion: v1', 'kind: Service', 'metadata:', '  name: api', '  namespace: shop', 'spec:', '  selector:', '    app: api', '  ports:', '  - port: 80', '    targetPort: 80'),
+        Y('apiVersion: networking.k8s.io/v1', 'kind: Ingress', 'metadata:', '  name: store', '  namespace: shop', 'spec:', '  ingressClassName: nginx', '  rules:', '  - host: store.local', '    http:', '      paths:', '      - path: /api', '        pathType: Exact', '        backend:', '          service:', '            name: api', '            port:', '              number: 80', '      - path: /', '        pathType: Prefix', '        backend:', '          service:', '            name: web', '            port:', '              number: 8080')],
+      tasks: [
+        T('Compare the Ingress with the Services', ['`kubectl get ingress store -n shop -o yaml` and `kubectl get svc -n shop`.', 'Exact matches only the path `/api` itself.'], [{ t: 'exists', ref: 'ingress/store', ns: 'shop' }]),
+        T('`/api` matches by prefix', ['`pathType: Prefix` matches the path and everything below it, split on `/`.'], [{ t: 'jpRe', ref: 'ingress/store', ns: 'shop', path: '.spec.rules[0].http.paths[*].pathType', re: '^Prefix Prefix$' }]),
+        T('Both backends use port 80', ['The Service `web` exposes port 80, not 8080.', '`kubectl edit ingress store -n shop` or apply a corrected manifest.'], [{ t: 'jpRe', ref: 'ingress/store', ns: 'shop', path: '.spec.rules[0].http.paths[*].backend.service.port.number', re: '^80 80$' }, { t: 'jp', ref: 'ingress/store', ns: 'shop', path: '.spec.ingressClassName', eq: 'nginx' }])
+      ],
+      solution: ['kubectl get ingress store -n shop -o yaml', 'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: Ingress\nmetadata:\n  name: store\n  namespace: shop\nspec:\n  ingressClassName: nginx\n  rules:\n  - host: store.local\n    http:\n      paths:\n      - path: /api\n        pathType: Prefix\n        backend:\n          service:\n            name: api\n            port:\n              number: 80\n      - path: /\n        pathType: Prefix\n        backend:\n          service:\n            name: web\n            port:\n              number: 80\nEOF'] }),
+
+    // ── S221 JSONPath / custom-columns report ──
+    L({ id: 's221-inventory-report', num: 'S221', title: 'Inventory report: custom columns, sorted output and a jsonpath value', diff: 'Intermediate', track: ['CKA', 'CKAD'], domain: 'Troubleshooting', time: '12 min', ns: 'inv',
+      story: 'The audit team wants three small files in `/home/student` for the pods in namespace `inv`. `images.txt`: a table with the columns NAME and IMAGE, one row per pod. `oldest.txt`: the pod names, oldest first, one per line, as `pod/<name>`. `node.txt`: only the name of the node that runs pod `api`, with nothing else in the file. No extra tools: use kubectl output options.',
+      caution: 'Do not copy values by hand. Names and images change; the output options keep the files correct. A jsonpath for one pod needs the pod name in the command, not a loop.',
+      setup: [NSY('inv'),
+        Y('apiVersion: v1', 'kind: Pod', 'metadata:', '  name: api', '  namespace: inv', 'spec:', '  containers:', '  - name: c', '    image: nginx:1.25'),
+        Y('apiVersion: v1', 'kind: Pod', 'metadata:', '  name: worker', '  namespace: inv', 'spec:', '  containers:', '  - name: c', '    image: busybox:1.36', '    command: ["sleep", "3600"]'),
+        Y('apiVersion: v1', 'kind: Pod', 'metadata:', '  name: cache', '  namespace: inv', 'spec:', '  containers:', '  - name: c', '    image: redis:7')],
+      tasks: [
+        T('`images.txt` has NAME and IMAGE columns', ['`-o custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[0].image`', 'Redirect with `>` into `/home/student/images.txt`.'], [{ t: 'fileRe', path: '/home/student/images.txt', re: 'NAME\\s+IMAGE' }, { t: 'fileRe', path: '/home/student/images.txt', re: 'api\\s+nginx:1\\.25' }, { t: 'fileRe', path: '/home/student/images.txt', re: 'cache\\s+redis:7' }]),
+        T('`oldest.txt` lists pods oldest first', ['`--sort-by=.metadata.creationTimestamp` and `-o name`.'], [{ t: 'fileRe', path: '/home/student/oldest.txt', re: 'pod/api' }, { t: 'fileRe', path: '/home/student/oldest.txt', re: 'pod/worker' }, { t: 'fileRe', path: '/home/student/oldest.txt', re: 'pod/cache' }, { t: 'fileRe', path: '/home/student/oldest.txt', re: '^pod/[a-z]+\\npod/[a-z]+\\npod/[a-z]+\\s*$' }]),
+        T('`node.txt` holds only the node of `api`', ['`kubectl get pod api -n inv -o jsonpath=\'{.spec.nodeName}\'`'], [{ t: 'fileRe', path: '/home/student/node.txt', re: '^(worker1|worker2)$' }])
+      ],
+      solution: ['kubectl get pods -n inv -o custom-columns=NAME:.metadata.name,IMAGE:.spec.containers[0].image > images.txt', 'kubectl get pods -n inv --sort-by=.metadata.creationTimestamp -o name > oldest.txt', `kubectl get pod api -n inv -o jsonpath='{.spec.nodeName}' > node.txt`, 'cat node.txt'] })
+  ]);
+  if (KL.COMP) KL.COMP.add({ 's217-netpol-and-or': 'ckad-netpol cka-netpol cks-netpol', 's218-missing-sa-view': 'ckad-sa cka-rbac cks-rbac', 's219-runasnonroot': 'cks-psa cks-priv ckad-sc', 's220-ingress-pathtype-port': 'cka-ingress ckad-ingress cka-svc', 's221-inventory-report': 'ckad-jsonpath exam-docs' });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* assets/js/data/labs-sim-x.js */
+/* Labs S222–S226: CKS audit-policy rule order and kubelet hardening, Helm drift, a Kustomize patch that silently matches nothing,
+   and an Ingress-to-Gateway-API migration. Original scenarios from the public curriculum outline, not exam questions.
+   Marked simOnly: verified in the simulator, not on a real cluster. */
+(function (root) {
+  'use strict';
+  var KL = root.KL = root.KL || {}, Labs = KL.Labs || require('../labs-engine.js');
+  function T(title, hints, assert, desc) { return { id: '', title: title, desc: desc || '', hints: hints, assert: assert }; }
+  function L(o) { o.tasks.forEach(function (t, i) { t.id = String(i + 1); }); o.curriculum = true; o.simOnly = true; return o; }
+  function Y() { return Array.prototype.slice.call(arguments).join('\n') + '\n'; }
+  function NSY(n) { return Y('apiVersion: v1', 'kind: Namespace', 'metadata:', '  name: ' + n); }
+  Labs.register([
+    // ── S222 audit policy: first matching rule wins ──
+    L({ id: 's222-audit-rule-order', num: 'S222', title: 'Audit policy: the first matching rule wins', diff: 'Advanced', track: ['CKS'], domain: 'Monitoring, logging & runtime security', time: '12 min', ns: 'default',
+      story: 'The draft audit policy in `/home/student/audit-policy.yaml` is meant to (1) record nothing for `get` and `list` on `events`, (2) log Secret access at `Metadata` level only, so the secret values never reach the log, (3) log `pods/exec` at `RequestResponse`, and (4) log everything else at `Metadata`. With the rules in their current order, only the last one ever applies. Reorder them; keep all four rules.',
+      caution: 'The API server uses the first rule that matches a request and ignores the rest. A broad rule at the top hides every specific rule below it. Never log Secrets at Request or RequestResponse: the values would be written to disk in clear text.',
+      setup: [],
+      files: [{ path: '/home/student/audit-policy.yaml', content: Y('apiVersion: audit.k8s.io/v1', 'kind: Policy', 'rules:', '- level: Metadata', '- level: None', '  verbs: ["get", "list"]', '  resources:', '  - group: ""', '    resources: ["events"]', '- level: RequestResponse', '  resources:', '  - group: ""', '    resources: ["pods/exec"]', '- level: Metadata', '  resources:', '  - group: ""', '    resources: ["secrets"]') }],
+      tasks: [
+        T('Read the draft and find the rule that hides the others', ['`cat /home/student/audit-policy.yaml`', 'A rule with only `level` and no selectors matches every request.'], [{ t: 'file', path: '/home/student/audit-policy.yaml', msg: 'the policy file must still exist' }]),
+        T('The catch-all `Metadata` rule is last', ['Move the `- level: Metadata` rule with no resources to the end of the list.'], [{ t: 'fileRe', path: '/home/student/audit-policy.yaml', re: 'resources: \\["secrets"\\][\\s\\S]*- level: Metadata\\s*$', msg: 'the rule with no selectors must come after the Secrets rule and be the final rule' }]),
+        T('All four rules are still present, Secrets are not logged above Metadata', ['Keep the `None` rule for events, the `RequestResponse` rule for `pods/exec`, and the Secrets rule at `Metadata`.'], [{ t: 'fileRe', path: '/home/student/audit-policy.yaml', re: 'level: None' }, { t: 'fileRe', path: '/home/student/audit-policy.yaml', re: 'level: RequestResponse[\\s\\S]*pods/exec' }, { t: 'fileNo', path: '/home/student/audit-policy.yaml', re: 'level: (Request|RequestResponse)\\s*\\n\\s*resources:\\s*\\n\\s*- group: ""\\s*\\n\\s*resources: \\["secrets"\\]', msg: 'Secrets must stay at Metadata' }])
+      ],
+      solution: ['cat /home/student/audit-policy.yaml', 'cat > /home/student/audit-policy.yaml <<EOF\napiVersion: audit.k8s.io/v1\nkind: Policy\nrules:\n- level: None\n  verbs: ["get", "list"]\n  resources:\n  - group: ""\n    resources: ["events"]\n- level: RequestResponse\n  resources:\n  - group: ""\n    resources: ["pods/exec"]\n- level: Metadata\n  resources:\n  - group: ""\n    resources: ["secrets"]\n- level: Metadata\nEOF', 'cat /home/student/audit-policy.yaml'] }),
+
+    // ── S223 kubelet hardening ──
+    L({ id: 's223-kubelet-hardening', num: 'S223', title: 'Kubelet config: anonymous access, AlwaysAllow and the read-only port', diff: 'Advanced', track: ['CKS', 'CKA'], domain: 'Cluster hardening', time: '10 min', ns: 'default',
+      story: 'A benchmark scan flags the kubelet configuration copy in `/home/student/kubelet-config.yaml`: anonymous requests are allowed, authorization is `AlwaysAllow`, and the unauthenticated read-only port is open. Fix those three settings and leave the rest of the file as it is. Do not change the certificate paths.',
+      caution: 'With `AlwaysAllow` any caller that reaches the kubelet API may run commands in pods. Setting authorization to `Webhook` makes the kubelet ask the API server; anonymous auth must be off or the check is skipped for anonymous callers. Port 0 turns the read-only port off.',
+      setup: [],
+      files: [{ path: '/home/student/kubelet-config.yaml', content: Y('apiVersion: kubelet.config.k8s.io/v1beta1', 'kind: KubeletConfiguration', 'authentication:', '  anonymous:', '    enabled: true', '  webhook:', '    enabled: true', '  x509:', '    clientCAFile: /etc/kubernetes/pki/ca.crt', 'authorization:', '  mode: AlwaysAllow', 'readOnlyPort: 10255', 'cgroupDriver: systemd', 'clusterDomain: cluster.local') }],
+      tasks: [
+        T('Anonymous authentication is off', ['Change `anonymous.enabled` to `false`.'], [{ t: 'fileRe', path: '/home/student/kubelet-config.yaml', re: 'anonymous:\\s*\\n\\s*enabled: false' }]),
+        T('Authorization mode is Webhook', ['`mode: Webhook`'], [{ t: 'fileRe', path: '/home/student/kubelet-config.yaml', re: 'mode: Webhook' }, { t: 'fileNo', path: '/home/student/kubelet-config.yaml', re: 'AlwaysAllow' }]),
+        T('Read-only port is closed and nothing else changed', ['`readOnlyPort: 0`', 'The certificate path and cgroupDriver must stay.'], [{ t: 'fileRe', path: '/home/student/kubelet-config.yaml', re: 'readOnlyPort: 0' }, { t: 'fileRe', path: '/home/student/kubelet-config.yaml', re: 'clientCAFile: /etc/kubernetes/pki/ca.crt' }, { t: 'fileRe', path: '/home/student/kubelet-config.yaml', re: 'cgroupDriver: systemd' }])
+      ],
+      solution: ['cat /home/student/kubelet-config.yaml', 'cat > /home/student/kubelet-config.yaml <<EOF\napiVersion: kubelet.config.k8s.io/v1beta1\nkind: KubeletConfiguration\nauthentication:\n  anonymous:\n    enabled: false\n  webhook:\n    enabled: true\n  x509:\n    clientCAFile: /etc/kubernetes/pki/ca.crt\nauthorization:\n  mode: Webhook\nreadOnlyPort: 0\ncgroupDriver: systemd\nclusterDomain: cluster.local\nEOF', 'cat /home/student/kubelet-config.yaml'] }),
+
+    // ── S224 Helm drift ──
+    L({ id: 's224-helm-drift', num: 'S224', title: 'Helm release drift: someone scaled it with kubectl', diff: 'Intermediate', track: ['CKA', 'CKAD'], domain: 'Deployment', time: '12 min', ns: 'store-h',
+      story: 'Release `store` (chart `kd/web`) was installed with 2 replicas, and someone then ran `kubectl scale` to 5 during a sale. The sale is over and the team wants 3 replicas that Helm itself remembers, so the next upgrade does not undo it. Make the release say 3, keep its other settings, and get 3 pods Ready.',
+      caution: 'Scaling with kubectl changes the object but not the release, so the next `helm upgrade` quietly sets it back. A plain `helm upgrade` without `--reuse-values` also drops every value you do not pass again.',
+      setupCmds: ['helm repo add kd https://charts.kubedrill.example', 'helm install store kd/web -n store-h --create-namespace --set replicaCount=2 --set image.tag=1.26', 'kubectl scale deploy/store-web -n store-h --replicas=5'],
+      tasks: [
+        T('Compare what Helm believes with what is running', ['`helm get values store -n store-h` and `kubectl get deploy -n store-h`.'], [{ t: 'exists', ref: 'deploy/store-web', ns: 'store-h' }]),
+        T('The release has a new revision that sets 3 replicas', ['`helm upgrade store kd/web -n store-h --reuse-values --set replicaCount=3`'], [{ t: 'fval', path: 'helm.rel.store-h/store.revs.1.desc', eq: 'Upgrade complete', msg: 'use `helm upgrade` so the release records the change' }, { t: 'jp', ref: 'deploy/store-web', ns: 'store-h', path: '.spec.replicas', eq: '3' }]),
+        T('The image tag is still 1.26 and three pods are Ready', ['Without `--reuse-values` the tag would fall back to the chart default.'], [{ t: 'jp', ref: 'deploy/store-web', ns: 'store-h', path: '.spec.template.spec.containers[0].image', eq: 'nginx:1.26' }, { t: 'podsReady', ns: 'store-h', sel: 'app=store-web', min: 3 }])
+      ],
+      solution: ['helm get values store -n store-h', 'helm upgrade store kd/web -n store-h --reuse-values --set replicaCount=3', 'kubectl get pods -n store-h'] }),
+
+    // ── S225 Kustomize patch that matches nothing ──
+    L({ id: 's225-kustomize-patch-target', num: 'S225', title: 'Kustomize: the patch builds without error and changes nothing', diff: 'Intermediate', track: ['CKA', 'CKAD'], domain: 'Deployment', time: '12 min', ns: 'kust-t',
+      story: 'The overlay in `/root/app/prod` should give the Deployment 3 replicas and the label `tier: frontend`. Building the overlay prints no error, yet the output still shows 1 replica and no tier label. Fix the overlay, leave the base untouched, and apply the overlay to namespace `kust-t`.',
+      caution: 'A strategic-merge patch finds its target by group, kind and name. If the name in the patch is not the name in the base, nothing matches, and Kustomize reports no error. Read the base before editing the patch.',
+      setup: [NSY('kust-t')],
+      files: [{ path: '/root/app/base/kustomization.yaml', content: Y('resources:', '- deployment.yaml') },
+        { path: '/root/app/base/deployment.yaml', content: Y('apiVersion: apps/v1', 'kind: Deployment', 'metadata:', '  name: webapp', 'spec:', '  replicas: 1', '  selector:', '    matchLabels:', '      app: webapp', '  template:', '    metadata:', '      labels:', '        app: webapp', '    spec:', '      containers:', '      - name: web', '        image: nginx:1.25') },
+        { path: '/root/app/prod/kustomization.yaml', content: Y('resources:', '- ../base', 'namespace: kust-t', 'patches:', '- patch: |-', '    apiVersion: apps/v1', '    kind: Deployment', '    metadata:', '      name: web', '    spec:', '      replicas: 3', '      template:', '        metadata:', '          labels:', '            tier: frontend') }],
+      tasks: [
+        T('Find why the patch does nothing', ['`kubectl kustomize /root/app/prod` and `cat /root/app/base/deployment.yaml`.', 'Compare the patch `metadata.name` with the base.'], [{ t: 'fileRe', path: '/root/app/base/deployment.yaml', re: 'name: webapp' }]),
+        T('The patch names the Deployment from the base', ['In the overlay change `name: web` to `name: webapp`. Do not edit the base.'], [{ t: 'fileRe', path: '/root/app/prod/kustomization.yaml', re: 'name: webapp' }, { t: 'fileRe', path: '/root/app/base/deployment.yaml', re: 'replicas: 1' }]),
+        T('Apply the overlay: 3 replicas with the tier label', ['`kubectl apply -k /root/app/prod`'], [{ t: 'jp', ref: 'deploy/webapp', ns: 'kust-t', path: '.spec.replicas', eq: '3' }, { t: 'jp', ref: 'deploy/webapp', ns: 'kust-t', path: '.spec.template.metadata.labels.tier', eq: 'frontend' }, { t: 'podsReady', ns: 'kust-t', sel: 'app=webapp', min: 3 }])
+      ],
+      solution: ['kubectl kustomize /root/app/prod', "sed -i 's/      name: web$/      name: webapp/' /root/app/prod/kustomization.yaml", 'kubectl apply -k /root/app/prod', 'kubectl get pods -n kust-t'] }),
+
+    // ── S226 Ingress -> Gateway API ──
+    L({ id: 's226-ingress-to-gateway', num: 'S226', title: 'Migrate an Ingress to the Gateway API', diff: 'Advanced', track: ['CKA'], domain: 'Services & Networking', time: '15 min', ns: 'mig',
+      story: 'Ingress `site` in `mig` sends host `site.example.com`, path prefix `/shop` to Service `shop` (port 80) and every other path to Service `landing` (port 80). Replace it with a Gateway `edge` (class `nginx`, HTTP listener on port 80) and one HTTPRoute `site` that routes the same way, then remove the Ingress.',
+      caution: 'Do not delete the Ingress first: keep traffic flowing until the Gateway and route exist. The route must attach to the Gateway through `parentRefs`, and the hostname moves from the Ingress rule to the route.',
+      setup: [NSY('mig'),
+        Y('apiVersion: v1', 'kind: Service', 'metadata:', '  name: shop', '  namespace: mig', 'spec:', '  selector:', '    app: shop', '  ports:', '  - port: 80', '    targetPort: 80'),
+        Y('apiVersion: v1', 'kind: Service', 'metadata:', '  name: landing', '  namespace: mig', 'spec:', '  selector:', '    app: landing', '  ports:', '  - port: 80', '    targetPort: 80'),
+        Y('apiVersion: networking.k8s.io/v1', 'kind: Ingress', 'metadata:', '  name: site', '  namespace: mig', 'spec:', '  ingressClassName: nginx', '  rules:', '  - host: site.example.com', '    http:', '      paths:', '      - path: /shop', '        pathType: Prefix', '        backend:', '          service:', '            name: shop', '            port:', '              number: 80', '      - path: /', '        pathType: Prefix', '        backend:', '          service:', '            name: landing', '            port:', '              number: 80')],
+      tasks: [
+        T('Gateway `edge` exists with an HTTP listener on port 80', ['`gatewayClassName: nginx`, listener `protocol: HTTP`, `port: 80`.'], [{ t: 'jp', ref: 'gateway/edge', ns: 'mig', path: '.spec.gatewayClassName', eq: 'nginx' }, { t: 'jp', ref: 'gateway/edge', ns: 'mig', path: '.spec.listeners[0].port', eq: '80' }]),
+        T('HTTPRoute `site` attaches to `edge` for the host', ['`parentRefs: [{name: edge}]` and `hostnames: ["site.example.com"]`.'], [{ t: 'jp', ref: 'httproute/site', ns: 'mig', path: '.spec.parentRefs[0].name', eq: 'edge' }, { t: 'jp', ref: 'httproute/site', ns: 'mig', path: '.spec.hostnames[0]', eq: 'site.example.com' }]),
+        T('`/shop` goes to `shop` and everything else to `landing`', ['A PathPrefix match on `/shop` in the first rule, a PathPrefix `/` in the second.'], [{ t: 'jpRe', ref: 'httproute/site', ns: 'mig', path: '.spec.rules[*].matches[0].path.value', re: '^/shop /$' }, { t: 'jpRe', ref: 'httproute/site', ns: 'mig', path: '.spec.rules[*].backendRefs[0].name', re: '^shop landing$' }]),
+        T('The old Ingress is gone', ['`kubectl delete ingress site -n mig` once the route is in place.'], [{ t: 'absent', ref: 'ingress/site', ns: 'mig' }])
+      ],
+      solution: ['kubectl get ingress site -n mig -o yaml', 'kubectl apply -f - <<EOF\napiVersion: gateway.networking.k8s.io/v1\nkind: Gateway\nmetadata:\n  name: edge\n  namespace: mig\nspec:\n  gatewayClassName: nginx\n  listeners:\n  - name: http\n    port: 80\n    protocol: HTTP\n---\napiVersion: gateway.networking.k8s.io/v1\nkind: HTTPRoute\nmetadata:\n  name: site\n  namespace: mig\nspec:\n  parentRefs:\n  - name: edge\n  hostnames: ["site.example.com"]\n  rules:\n  - matches:\n    - path:\n        type: PathPrefix\n        value: /shop\n    backendRefs:\n    - name: shop\n      port: 80\n  - matches:\n    - path:\n        type: PathPrefix\n        value: /\n    backendRefs:\n    - name: landing\n      port: 80\nEOF', 'kubectl delete ingress site -n mig'] })
+,
+
+    // ── S227 five-fault game day ──
+    L({ id: 's227-gameday-five', num: 'S227', title: 'Game day: five independent faults in the bazaar', diff: 'Expert', track: ['CKA', 'CKAD'], domain: 'Troubleshooting', time: '35 min', ns: 'bazaar',
+      story: 'Namespace `bazaar` runs five workloads and every one of them is broken in a different way. `frontend` (2 pods) must answer to the `tester` pod; Service `cart` must answer on port 80 for `tester`; `orders` (1 pod), `mailer` (1 pod) and `search` (1 pod) must be Ready. Nothing was changed on purpose. Find each cause from the evidence and fix it. Treat it as a timed drill: 35 minutes.',
+      caution: 'The faults are unrelated, so fixing one does not help the others, and two of them look alike (a pod that does not run, and a pod that runs but is unreachable). Start with `kubectl get pods -n bazaar` and `kubectl get events -n bazaar`, then take them one at a time. Do not delete the namespace or the NetworkPolicy; adjust what is wrong.',
+      setup: [NSY('bazaar'), Labs.y.tester('bazaar'),
+        Labs.y.dep('frontend', 'bazaar', 'nginx:1.25', 2), Labs.y.svc('frontend', 'bazaar', 'frontend', 80, 80),
+        Y('apiVersion: networking.k8s.io/v1', 'kind: NetworkPolicy', 'metadata:', '  name: frontend-lockdown', '  namespace: bazaar', 'spec:', '  podSelector:', '    matchLabels:', '      app: frontend', '  policyTypes: [Ingress]'),
+        Labs.y.dep('cart', 'bazaar', 'nginx:1.25', 2), Labs.y.svc('cart', 'bazaar', 'carts', 80, 80),
+        Labs.y.dep('orders', 'bazaar', 'nginx:1.25', 1, '        resources:\n          requests:\n            memory: 64Gi\n'),
+        Labs.y.dep('mailer', 'bazaar', 'nginx:1.25', 1, '        env:\n        - name: API_KEY\n          valueFrom:\n            secretKeyRef:\n              name: mailer-secret\n              key: API_KEY\n'),
+        Labs.y.dep('search', 'bazaar', 'nginx:1.255', 1)],
+      tasks: [
+        T('`tester` reaches `frontend:80`', ['The pods are Ready but a policy selects them and allows nothing in.', '`kubectl get netpol -n bazaar` and `kubectl describe netpol frontend-lockdown -n bazaar`.', 'Add an ingress rule from pods labelled `run=tester`.'], [{ t: 'podsReady', ns: 'bazaar', sel: 'app=frontend', min: 2 }, { t: 'curl', ns: 'bazaar', from: 'tester', to: 'frontend:80' }]),
+        T('`tester` reaches `cart:80`', ['`kubectl get endpoints cart -n bazaar` is empty.', 'Compare the Service selector with the pod labels.'], [{ t: 'curl', ns: 'bazaar', from: 'tester', to: 'cart:80' }]),
+        T('`orders` pod Ready', ['The pod is Pending: read the scheduling event.', 'It asks for far more memory than any node has. Request 64Mi.'], [{ t: 'podsReady', ns: 'bazaar', sel: 'app=orders', min: 1 }]),
+        T('`mailer` pod Ready', ['`CreateContainerConfigError`: a Secret is missing.', 'Create `mailer-secret` with the key `API_KEY`.'], [{ t: 'podsReady', ns: 'bazaar', sel: 'app=mailer', min: 1 }]),
+        T('`search` pod Ready', ['`ErrImagePull` / `ImagePullBackOff`: the tag does not exist. Use `nginx:1.25`.'], [{ t: 'podsReady', ns: 'bazaar', sel: 'app=search', min: 1 }, { t: 'exists', ref: 'netpol/frontend-lockdown', ns: 'bazaar' }])
+      ],
+      solution: ['kubectl get pods -n bazaar', `kubectl patch netpol frontend-lockdown -n bazaar --type=merge -p '{"spec":{"ingress":[{"from":[{"podSelector":{"matchLabels":{"run":"tester"}}}]}]}}'`, `kubectl patch svc cart -n bazaar --type=json -p '[{"op":"replace","path":"/spec/selector/app","value":"cart"}]'`, `kubectl patch deploy orders -n bazaar --type=json -p '[{"op":"replace","path":"/spec/template/spec/containers/0/resources/requests/memory","value":"64Mi"}]'`, 'kubectl create secret generic mailer-secret -n bazaar --from-literal=API_KEY=demo-key', 'kubectl set image deploy/search search=nginx:1.25 -n bazaar', 'kubectl get pods -n bazaar'] }),
+
+    // ── S228 CKS game day ──
+    L({ id: 's228-gameday-cks', num: 'S228', title: 'Game day (CKS): four hardening gaps in one namespace', diff: 'Expert', track: ['CKS'], domain: 'Security', time: '30 min', ns: 'ledger',
+      story: 'Namespace `ledger` enforces the `restricted` Pod Security level, yet it has four gaps. Deployment `books` (1 pod) never gets a pod. The ServiceAccount `default` can administer the cluster. Pods in the namespace accept traffic from anywhere. And Deployment `audit-job` runs `nginx:latest`. Close all four: pods Ready, no admin rights for `default`, ingress denied unless allowed, and an exact image tag. Treat it as a timed drill: 30 minutes.',
+      caution: 'Do not lower the Pod Security level or relabel the namespace to make `books` start: fix the pod spec. Do not delete other bindings or the namespace. Removing the admin rights of `default` must not remove the access of anything else.',
+      setup: [Y('apiVersion: v1', 'kind: Namespace', 'metadata:', '  name: ledger', '  labels:', '    pod-security.kubernetes.io/enforce: restricted'),
+        Labs.y.dep('books', 'ledger', 'nginx:1.25', 1),
+        Labs.y.dep('audit-job', 'ledger', 'nginx:latest', 1, '        securityContext:\n          allowPrivilegeEscalation: false\n          capabilities:\n            drop: ["ALL"]\n          runAsNonRoot: true\n          runAsUser: 10001\n          seccompProfile:\n            type: RuntimeDefault\n'),
+        Y('apiVersion: rbac.authorization.k8s.io/v1', 'kind: RoleBinding', 'metadata:', '  name: default-admin', '  namespace: ledger', 'roleRef:', '  apiGroup: rbac.authorization.k8s.io', '  kind: ClusterRole', '  name: admin', 'subjects:', '- kind: ServiceAccount', '  name: default', '  namespace: ledger')],
+      tasks: [
+        T('`books` pod Ready under `restricted`', ['`kubectl describe rs -n ledger` lists every violation.', 'Pod and container `securityContext`: runAsNonRoot, a numeric runAsUser, allowPrivilegeEscalation false, drop ALL, seccompProfile RuntimeDefault.'], [{ t: 'podsReady', ns: 'ledger', sel: 'app=books', min: 1 }, { t: 'jp', ref: 'ns/ledger', path: '.metadata.labels.pod-security\\.kubernetes\\.io/enforce', eq: 'restricted' }]),
+        T('ServiceAccount `default` has no admin rights in `ledger`', ['`kubectl auth can-i --list --as system:serviceaccount:ledger:default -n ledger`', 'Delete the binding that grants it `admin`.'], [{ t: 'canI', as: 'system:serviceaccount:ledger:default', verb: 'create', res: 'deployments', ns: 'ledger', expect: false }]),
+        T('NetworkPolicy `default-deny` denies all ingress', ['A policy with an empty podSelector and policyTypes `Ingress` and no rules.'], [{ t: 'jp', ref: 'netpol/default-deny', ns: 'ledger', path: '.spec.policyTypes[0]', eq: 'Ingress' }, { t: 'jp', ref: 'netpol/default-deny', ns: 'ledger', path: '.spec.podSelector', eq: '{}' }]),
+        T('`audit-job` uses an exact tag and is Ready', ['Use `nginx:1.25`.'], [{ t: 'jp', ref: 'deploy/audit-job', ns: 'ledger', path: '.spec.template.spec.containers[0].image', eq: 'nginx:1.25' }, { t: 'podsReady', ns: 'ledger', sel: 'app=audit-job', min: 1 }])
+      ],
+      solution: ['kubectl describe rs -n ledger', `kubectl patch deploy books -n ledger -p '{"spec":{"template":{"spec":{"securityContext":{"runAsNonRoot":true,"runAsUser":10001,"seccompProfile":{"type":"RuntimeDefault"}},"containers":[{"name":"books","securityContext":{"allowPrivilegeEscalation":false,"capabilities":{"drop":["ALL"]}}}]}}}}'`, 'kubectl delete rolebinding default-admin -n ledger', 'kubectl apply -f - <<EOF\napiVersion: networking.k8s.io/v1\nkind: NetworkPolicy\nmetadata:\n  name: default-deny\n  namespace: ledger\nspec:\n  podSelector: {}\n  policyTypes: [Ingress]\nEOF', 'kubectl set image deploy/audit-job audit-job=nginx:1.25 -n ledger', 'kubectl get pods -n ledger'] })
+  ]);
+  if (KL.COMP) KL.COMP.add({ 's222-audit-rule-order': 'cks-auditlog', 's223-kubelet-hardening': 'cks-cis cks-hostos', 's224-helm-drift': 'ckad-helm cka-pkg', 's225-kustomize-patch-target': 'ckad-kust cka-pkg', 's226-ingress-to-gateway': 'cka-gateway cka-ingress', 's227-gameday-five': 'cka-pod cka-svc cka-netpol cka-sched ckad-debug', 's228-gameday-cks': 'cks-psa cks-rbac cks-netpol cks-supply' });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
 <script>/* assets/js/data/debrief.js */
 /* Post-lab debrief cards: root cause · fix · how to spot it in production · pattern to memorise. id -> [cause, fix, spot, pattern] */
 (function (root) {
@@ -12086,7 +12460,19 @@ EOF`] }),
     's213-sts-canary': ["A StatefulSet updates pods from the highest ordinal down, and updateStrategy.rollingUpdate.partition is the first ordinal that is updated, so partition 3 with four pods updates only web-3.", "Patch the partition and the image together so no other pod starts updating, then confirm with rollout status and the pod images.", "rollout status says the partitioned roll out is complete once the pods at or above the partition are updated and Ready.", "Pods below the partition keep, and when deleted are recreated with, the old revision, so the canary stays a canary until the partition is lowered."],
     's214-sts-finish-rollout': ["Partitioned roll out complete only means the pods at or above the partition are updated: queue-0 to queue-2 were never meant to change until the partition moves.", "Lower rollingUpdate.partition to 0 and the controller replaces the remaining pods from the highest ordinal down, one at a time.", "Deleting an old pod by hand does not help: below the partition it is recreated from the old revision.", "kubectl rollout status then reports a full rolling update and updatedReplicas equals the replica count."],
     's215-admin-cert-renew': ["Only the admin client certificate had expired, shown as invalid in kubeadm certs check-expiration, so the API server and the pods kept working while every kubectl call from the workstation was unauthorized.", "Renew just admin.conf on cp1, then copy the new /etc/kubernetes/admin.conf over the workstation kubeconfig; renewing on the node alone does not change the copy kubectl reads.", "Copying the file before the renewal brings the expired certificate back, which is why the order matters.", "Renewing all certificates and restarting the control plane would have worked but touches components that were not expiring, and kubeadm does not renew the certificate authorities."],
-    's216-gameday-three': ["Three unrelated faults: web used an image tag that does not exist, the api Service forwarded to port 8080 while the pods listen on 80, and worker asked for the ConfigMap key mode while the key is spelled Mode.", "Read pods and events first, then take each symptom to its own cause: ImagePullBackOff to the tag, a Ready Deployment with failing requests to the Service targetPort, CreateContainerConfigError to the missing key.", "Each fault shows up in a different place, so one fix does not change the others and none of them needed the namespace recreated.", "Fix the smallest thing that is wrong, in the object that owns it, and verify each workload separately."]
+    's216-gameday-three': ["Three unrelated faults: web used an image tag that does not exist, the api Service forwarded to port 8080 while the pods listen on 80, and worker asked for the ConfigMap key mode while the key is spelled Mode.", "Read pods and events first, then take each symptom to its own cause: ImagePullBackOff to the tag, a Ready Deployment with failing requests to the Service targetPort, CreateContainerConfigError to the missing key.", "Each fault shows up in a different place, so one fix does not change the others and none of them needed the namespace recreated.", "Fix the smallest thing that is wrong, in the object that owns it, and verify each workload separately."],
+    's217-netpol-and-or': ["Inside one from list item, namespaceSelector and podSelector are ANDed: the peer must be in the namespace and carry the label. As two separate items they are ORed, so every pod in ops and every backup-labelled pod in vault was admitted.", "Rewrite the policy with both selectors in the same item, then test from backup, scratch and rogue instead of trusting the YAML.", "A podSelector on its own only matches pods in the policy's own namespace, which is how rogue got in.", "Policies are additive and cannot subtract, so the fix is to narrow the allow rule itself, not to add another policy."],
+    's218-missing-sa-view': ["The Deployment named a ServiceAccount that did not exist, so the ReplicaSet could not create any pod and the error appears in ReplicaSet events, not on a pod.", "Create the account, then give it the built-in view ClusterRole through a RoleBinding in this namespace so it can read, not change, objects there.", "A RoleBinding that references a ClusterRole grants it only inside the binding's namespace, which is why listing pods in default stays denied.", "Verify with kubectl auth can-i --as system:serviceaccount:<ns>:<name> for an allowed and a denied case."],
+    's219-runasnonroot': ["runAsNonRoot makes the kubelet refuse to start a container whose image would run as UID 0, which shows as CreateContainerConfigError on the pod.", "Keep the control and give the pod a numeric runAsUser, because the kubelet cannot prove that a named user is not root.", "Drop all capabilities at container level as well, and add back only what the app needs.", "Read the event first: it names the exact check that failed."],
+    's220-ingress-pathtype-port': ["Exact matches only the path /api itself, so /api/v1/orders found no rule; Prefix matches the path and everything below it, split on slashes.", "The web backend named port 8080 while the Service exposes 80, so the controller had no upstream and answered 503.", "Compare the Ingress backends with kubectl get svc before choosing a port, and edit the Ingress in place.", "A catch-all or wildcard would stop the errors and send traffic to places nobody intended."],
+    's221-inventory-report': ["custom-columns builds the NAME and IMAGE table from JSONPath expressions, so the file stays right when pods change.", "--sort-by with metadata.creationTimestamp orders the list and -o name prints one pod/<name> per line.", "jsonpath {.spec.nodeName} on one named pod prints just the node, with no newline or extra text.", "Generate the files with kubectl output options instead of copying values by hand."],
+    's222-audit-rule-order': ["The API server uses the first audit rule that matches a request. The draft began with a rule that had no selectors, so every request matched it and the specific rules below never ran.", "Put the specific rules first and the catch-all last: events at None, pods/exec at RequestResponse, Secrets at Metadata, everything else at Metadata.", "Secrets stay at Metadata. At Request or RequestResponse the secret values would be written to the audit log in clear text.", "Order is part of the policy, so read it top to bottom whenever a rule seems to have no effect."],
+    's223-kubelet-hardening': ["Anonymous authentication let unauthenticated callers reach the kubelet API, AlwaysAllow authorised every caller, and the read-only port served pod data with no authentication at all.", "Set anonymous.enabled to false, authorization.mode to Webhook so the kubelet asks the API server, and readOnlyPort to 0.", "Leave the client CA path and the rest of the file alone: a hardening change should be the smallest one that fixes the finding.", "On a real node, restart the kubelet after editing its config and check the node returns to Ready."],
+    's224-helm-drift': ["kubectl scale changed the Deployment but not the release, so Helm still recorded 2 replicas and would reset the change on the next upgrade.", "Change the value through Helm so the release records it and keeps a history: helm upgrade with --reuse-values and --set replicaCount=3.", "--reuse-values keeps the other settings, here image.tag=1.26. Without it every value you did not pass falls back to the chart default.", "helm get values shows what the release believes; kubectl shows what is running. A difference between them is drift."],
+    's225-kustomize-patch-target': ["A strategic-merge patch finds its target by group, kind and name. The patch named web, the base Deployment is webapp, so nothing matched and Kustomize raised no error.", "Fix the name in the overlay, not the base, then compare kubectl kustomize output before applying.", "When an overlay seems to do nothing, check names, kinds and namespaces in the patch against the base first.", "kubectl apply -k builds the overlay and applies the result in one step."],
+    's226-ingress-to-gateway': ["The Ingress rules map onto two objects: a Gateway holds the listener, and an HTTPRoute holds hostnames, matches and backends and attaches through parentRefs.", "The host moves from the Ingress rule to the route hostnames, and each Ingress path becomes a rule with a PathPrefix match.", "Create the Gateway and route and check them before removing the Ingress, so traffic is never left without a path.", "A route that names a Gateway that does not exist attaches to nothing, so check parentRefs first when a route does not work."],
+    's227-gameday-five': ["Five unrelated faults, five different layers: a policy selecting the frontend pods and allowing nothing, a Service selector that matches no pod, a memory request no node can satisfy, a Secret that does not exist, and an image tag that does not exist.", "Each one left its own evidence: a policy in kubectl get netpol, empty endpoints, a Pending pod with a scheduling event, CreateContainerConfigError, and ImagePullBackOff.", "Sort by symptom first: pods that do not run (events), pods that run but are unreachable (endpoints, then policy), and fix them one at a time, testing after each.", "Keep the NetworkPolicy and add the one allowed path instead of deleting the policy."],
+    's228-gameday-cks': ["Restricted Pod Security rejected books for several missing securityContext settings at once; the ReplicaSet event lists all of them, so fix the pod spec instead of lowering the namespace level.", "A RoleBinding gave the default ServiceAccount the admin ClusterRole, so every pod in the namespace could administer it; deleting that one binding removes the grant.", "An empty podSelector with policyTypes Ingress and no rules denies ingress to every pod until a rule allows it.", "nginx:latest moves over time; an exact tag makes the running image reproducible and reviewable."]
   };
   Object.keys(d).forEach(function (k) { KL.debrief[k] = d[k]; });
 })(typeof window !== 'undefined' ? window : globalThis);
@@ -12349,7 +12735,19 @@ EOF`] }),
     's213-sts-canary': { trap: "Changing the image first lets the controller start replacing pods from the highest ordinal down before the partition is set.", why: { m: ["One patch with the partition and the image together keeps pods 0 to 2 untouched.", "Pods below the partition stay on the old revision, so the canary stays small until the partition is lowered."] } },
     's214-sts-finish-rollout': { trap: "Deleting the old pods by hand recreates them on the old revision, because they sit below the partition.", why: { m: ["rollout status already reports the partitioned roll out as complete, so it is not a signal that the release is finished.", "Lowering the partition to 0 hands the remaining pods to the controller, which updates them from the highest ordinal down."] } },
     's215-admin-cert-renew': { trap: "Renewing all certificates and restarting the control plane fixes a problem that is only in the admin client certificate and still leaves the workstation copy expired.", why: { m: ["check-expiration shows which single certificate is invalid, so only admin.conf needs renewing.", "kubectl reads the copy on the workstation, so the renewed file has to be copied there after the renewal."] } },
-    's216-gameday-three': { trap: "Assuming one root cause and changing several objects at once hides which edit fixed which symptom.", why: { m: ["Each symptom appears in a different place, so each needs its own look: pod status, Service port, ConfigMap key.", "Verify each workload on its own after its fix, so a still-failing one is not mistaken for the first."] } }
+    's216-gameday-three': { trap: "Assuming one root cause and changing several objects at once hides which edit fixed which symptom.", why: { m: ["Each symptom appears in a different place, so each needs its own look: pod status, Service port, ConfigMap key.", "Verify each workload on its own after its fix, so a still-failing one is not mistaken for the first."] } },
+    's217-netpol-and-or': { trap: "Adding a deny-all policy or a second policy to block scratch and rogue does nothing, because allow rules from every policy are added together.", why: { m: ["Policies only add allowed traffic, so the existing rule has to be narrowed.", "Putting both selectors in one list item makes them an AND; two items make an OR."] } },
+    's218-missing-sa-view': { trap: "Deleting serviceAccountName from the Deployment gets pods running, but as the default account in the namespace, which can hold permissions nobody intended.", why: { m: ["Create the named account instead, so the workload keeps its own identity.", "A ClusterRoleBinding for view would grant read access in every namespace, not just this one."] } },
+    's219-runasnonroot': { trap: "Setting runAsNonRoot to false or removing the securityContext makes the error go away and removes the control the platform team required.", why: { m: ["The kubelet cannot verify a named user, so a numeric runAsUser above zero is what satisfies the check.", "The policy stays in force and the container still starts."] } },
+    's220-ingress-pathtype-port': { trap: "Changing /api to a catch-all path or adding a wildcard host stops the 404 but routes traffic the team never agreed to.", why: { m: ["Prefix on /api matches the path and everything below it and nothing else.", "The backend port must match a port the Service exposes, which is 80 here."] } },
+    's221-inventory-report': { trap: "Typing the pod names or images into the files by hand passes today and is wrong as soon as a pod changes.", why: { m: ["Output options such as custom-columns, --sort-by and jsonpath always reflect the cluster.", "A jsonpath on one named pod avoids picking the node out of a larger listing."] } },
+    's222-audit-rule-order': { trap: "Adding more rules above the catch-all does not help if the catch-all stays on top, and raising Secrets to RequestResponse to see more detail writes secret values into the log.", why: { m: ["The first matching rule wins, so the rule with no selectors has to be last.", "Metadata for Secrets records who accessed what without the content."] } },
+    's223-kubelet-hardening': { trap: "Fixing only anonymous access leaves AlwaysAllow in place, so any caller that authenticates can still run commands through the kubelet.", why: { m: ["All three settings are separate findings: authentication, authorization and the open port.", "Webhook authorization makes the kubelet check each request with the API server."] } },
+    's224-helm-drift': { trap: "Running kubectl scale again, or editing the Deployment, makes it look right today while the release still records the old value and resets it on the next upgrade.", why: { m: ["The release is the source of truth for anything it manages.", "Use --reuse-values so one changed setting does not reset the others."] } },
+    's225-kustomize-patch-target': { trap: "Renaming the Deployment in the base to web makes the patch match, but changes every other overlay that builds from that base.", why: { m: ["Fix the overlay: it is the file that is wrong.", "A patch that matches nothing is silent, so compare the build output with what you wanted."] } },
+    's226-ingress-to-gateway': { trap: "Deleting the Ingress before the Gateway and HTTPRoute exist takes the site down, and a route with the wrong parentRefs name attaches to nothing.", why: { m: ["Build the new path first, check it, then remove the old one.", "Hostnames and path matches belong on the HTTPRoute, the listener on the Gateway."] } },
+    's227-gameday-five': { trap: "Deleting frontend-lockdown or the Service to start fresh hides the cause, and raising the node's memory or loosening the policy to 'allow all' fixes one symptom by weakening the cluster.", why: { m: ["Change the one wrong field in each object and test again.", "Faults in different layers need different evidence: events for pods, endpoints for Services, policies for blocked traffic."] } },
+    's228-gameday-cks': { trap: "Relabelling the namespace to baseline or privileged makes books start but removes the control the whole namespace relies on.", why: { m: ["Fix the pod spec: the ReplicaSet event lists exactly what restricted wants.", "Delete only the binding that grants default the admin role, not every binding in the namespace."] } }
   });
 })(typeof window !== 'undefined' ? window : globalThis);
 
@@ -13490,6 +13888,68 @@ EOF`] }),
 })();
 
 </script>
+<script>/* assets/js/data/quiz-more.js */
+/* Further quiz questions: multiple choice, type-the-command and put-the-steps-in-order. Original wording; no exam content. */
+(function () {
+  'use strict';
+  var KL = window.KL = window.KL || {};
+  KL.quizExtra = KL.quizExtra || []; KL.quizCmd = KL.quizCmd || []; KL.quizOrder = KL.quizOrder || [];
+  // mcq tuple: [q, cat, diff, opts, answerIndex, explanation, tracks]
+  [
+    ['In a NetworkPolicy `from` list, what is the difference between one item holding a namespaceSelector and a podSelector, and two separate items?', 'Networking', 'Hard', ['No difference', 'One item ANDs them, two items OR them', 'One item ORs them, two items AND them', 'Two items are rejected by the API server'], 1, 'Selectors in the same list item must both match (AND). Separate items are alternatives (OR). Mixing these up over-allows traffic.', 'CKA,CKAD,CKS'],
+    ['A NetworkPolicy has only `podSelector: {}` and `policyTypes: [Ingress]`. What does it do?', 'Networking', 'Medium', ['Allows all ingress to pods in the namespace', 'Denies all ingress to pods in the namespace', 'Denies all egress', 'Does nothing without ingress rules'], 1, 'An empty podSelector selects every pod in the namespace; with Ingress listed and no rules, nothing is allowed in.', 'CKA,CKAD,CKS'],
+    ['Two NetworkPolicies select the same pod. One allows port 80 from `app=a`, the other port 443 from `app=b`. What is allowed?', 'Networking', 'Medium', ['Only the intersection, which is nothing', 'The union of both rules', 'Only the policy created first', 'Only the policy with the lower name'], 1, 'NetworkPolicies are additive: the allowed traffic is the union of all rules from all policies that select the pod.', 'CKA,CKAD,CKS'],
+    ['A Deployment references `serviceAccountName: build-bot` that does not exist. Where do you see the error?', 'Troubleshooting', 'Medium', ['In pod logs', 'In ReplicaSet events as a failed create', 'In kubelet logs only', 'In the node conditions'], 1, 'The pod is never created, so there is no pod to describe. The ReplicaSet events say it could not look up the service account.', 'CKA,CKAD'],
+    ['What does the `bind` verb on a ClusterRole let a user do?', 'Security', 'Hard', ['Attach the role to a node', 'Create bindings to that role without holding its permissions', 'Read the role', 'Delete bindings made by others'], 1, 'Without bind (or escalate), the API server stops users granting permissions they do not themselves hold.', 'CKA,CKS'],
+    ['A container has `runAsNonRoot: true` and the image runs as root. What status does the pod show?', 'Security', 'Medium', ['Running', 'CrashLoopBackOff', 'CreateContainerConfigError', 'Pending'], 2, 'The kubelet refuses to start the container; the event says the image will run as root.', 'CKAD,CKS'],
+    ['Why must `runAsUser` be numeric for runAsNonRoot to pass reliably?', 'Security', 'Hard', ['YAML cannot store names', 'The kubelet cannot map a user name to a UID to prove it is not root', 'Numbers are faster', 'Names are deprecated in the API'], 1, 'The kubelet can only verify a numeric UID. With a named user in the image it cannot tell, and refuses.', 'CKAD,CKS'],
+    ['StatefulSet `rollingUpdate.partition: 3` with 5 replicas. Which pods are updated?', 'Workloads', 'Hard', ['web-0 to web-2', 'web-3 and web-4', 'All five', 'None until deleted by hand'], 1, 'Pods with an ordinal greater than or equal to the partition are updated. Lower ordinals keep the old revision.', 'CKA'],
+    ['Which update strategy makes a StatefulSet change pods only when you delete them?', 'Workloads', 'Medium', ['RollingUpdate', 'OnDelete', 'Recreate', 'Manual'], 1, 'With OnDelete, the controller does not replace pods itself; a pod is recreated with the new template when you delete it.', 'CKA'],
+    ['`kubectl rollout status` says a partitioned StatefulSet rollout is complete. Are all pods on the new image?', 'Workloads', 'Hard', ['Yes, always', 'No, only pods at or above the partition', 'Only the last pod', 'It cannot say'], 1, 'Completion is measured against the partition. Lower the partition to continue.', 'CKA'],
+    ['What does `maxUnavailable: 1` with 4 replicas guarantee during a rolling update?', 'Workloads', 'Medium', ['At most one extra pod is created', 'At least three pods stay available', 'Exactly one pod updates at a time', 'The rollout never stalls'], 1, 'It caps how many pods may be unavailable. A bad image with a readiness probe stalls the rollout and keeps the old pods serving.', 'CKAD,CKA'],
+    ['Which command shows revisions and recorded change causes of a Deployment?', 'Workloads', 'Easy', ['kubectl rollout history deploy/web', 'kubectl describe rs', 'kubectl get revisions', 'kubectl logs deploy/web'], 0, 'History lists revision numbers; the CHANGE-CAUSE column comes from the kubernetes.io/change-cause annotation.', 'CKAD,CKA'],
+    ['A ConfigMap is mounted as a volume and then edited. What happens to the file in the pod?', 'Workloads', 'Medium', ['Nothing, ever', 'It updates after a short delay', 'The pod restarts', 'The edit is rejected'], 1, 'Mounted ConfigMap files are refreshed by the kubelet after a delay (subPath mounts are not).', 'CKAD'],
+    ['Environment variables from a ConfigMap, after the ConfigMap is edited:', 'Workloads', 'Medium', ['Update immediately in running pods', 'Stay as they were until the pod is restarted', 'Update after one minute', 'Are removed'], 1, 'Environment variables are read at container start. A rollout restart picks up the change.', 'CKAD'],
+    ['Which probe decides whether a pod receives Service traffic?', 'Troubleshooting', 'Easy', ['Liveness', 'Readiness', 'Startup', 'None'], 1, 'Failing readiness removes the pod from the Service endpoints; failing liveness restarts the container.', 'CKAD,CKA'],
+    ['A pod is Running but `kubectl get endpoints` for its Service is empty. First two things to check?', 'Troubleshooting', 'Medium', ['Node disk and kernel version', 'Selector against pod labels, and pod readiness', 'etcd health and quota', 'The ingress controller logs'], 1, 'Endpoints list only Ready pods whose labels match the Service selector.', 'CKA,CKAD'],
+    ['Which command lists what a ServiceAccount can do in a namespace?', 'Security', 'Medium', ['kubectl auth can-i --list --as=system:serviceaccount:ns:name -n ns', 'kubectl get sa -o rules', 'kubectl describe sa', 'kubectl rbac show'], 0, 'can-i with --list and --as impersonates the account and prints its permitted verbs.', 'CKA,CKS'],
+    ['A RoleBinding references a ClusterRole. Where do the permissions apply?', 'Security', 'Medium', ['Cluster-wide', 'Only in the RoleBinding namespace', 'In every namespace with the same label', 'Nowhere'], 1, 'A RoleBinding scopes whatever role it references to its own namespace.', 'CKA,CKAD,CKS'],
+    ['Which certificate renewal command renews only the admin client certificate on a kubeadm control plane?', 'Architecture', 'Hard', ['kubeadm certs renew all', 'kubeadm certs renew admin.conf', 'kubeadm renew admin', 'kubectl certificate approve admin'], 1, 'kubeadm certs renew takes a single certificate name. Copy the refreshed admin.conf to your workstation afterwards.', 'CKA'],
+    ['What does the scheduler do first with a Pending pod?', 'Scheduling', 'Medium', ['Scores nodes', 'Filters out nodes that cannot run it', 'Starts the container', 'Writes to etcd directly'], 1, 'Filtering removes unfit nodes (resources, taints, affinity); scoring ranks the rest; then the binding is written via the API server.', 'CKA'],
+    ['Which field gives a pod a higher chance of surviving node pressure eviction?', 'Scheduling', 'Medium', ['Higher requests equal to limits (Guaranteed QoS)', 'More replicas', 'A longer terminationGracePeriodSeconds', 'A bigger image'], 0, 'Guaranteed pods (requests equal to limits for all containers) are evicted last.', 'CKA,CKAD'],
+    ['What is the effect of a taint with effect `NoExecute`?', 'Scheduling', 'Medium', ['Only blocks new pods', 'Blocks new pods and evicts running pods without a toleration', 'Marks node for deletion', 'Lowers node priority'], 1, 'NoSchedule only blocks new pods; NoExecute also evicts pods that do not tolerate it.', 'CKA'],
+    ['A PVC is Pending with `WaitForFirstConsumer`. What is normal?', 'Storage', 'Medium', ['It is an error', 'It binds once a pod using it is scheduled', 'It needs a manual PV', 'It needs a restart of the provisioner'], 1, 'The volume is provisioned after scheduling so it lands where the pod can use it.', 'CKA'],
+    ['Which reclaim policy keeps the data when a PVC is deleted?', 'Storage', 'Easy', ['Delete', 'Retain', 'Recycle', 'Keep'], 1, 'Retain leaves the PV and data in place; an admin must clean it up before reuse.', 'CKA'],
+    ['Which API field pins a container image to exact content?', 'Security', 'Medium', ['A tag like :1.25', 'A digest, image@sha256:<64 hex>', ':latest', 'imagePullPolicy: Always'], 1, 'Tags can move; a digest identifies fixed content. A malformed digest gives InvalidImageName.', 'CKS,CKAD'],
+    ['What does `ndots:5` in a pod resolv.conf mean for `api.example.com` (two dots)?', 'Networking', 'Hard', ['It is tried as absolute first', 'It is tried with each search domain first, then as absolute', 'It is never resolved', 'It uses only /etc/hosts'], 1, 'Names with fewer dots than ndots go through the search list first, which costs extra DNS queries.', 'CKA'],
+    ['`internalTrafficPolicy: Local` on a Service means:', 'Networking', 'Hard', ['Only external clients are served', 'In-cluster traffic goes only to endpoints on the same node', 'Traffic is encrypted', 'Pods cannot reach the Service'], 1, 'With Local, a node with no local endpoint drops that traffic instead of forwarding it elsewhere.', 'CKA,CKAD']
+  ].forEach(function (x) { KL.quizExtra.push(x); });
+  // cmd tuple: [q, cat, diff, [accepted regex], example, explanation, tracks]
+  [
+    ['Show the rollout history of Deployment `web`.', 'Workloads', 'Easy', ['kubectl rollout history (deploy|deployment)[ /]web'], 'kubectl rollout history deployment/web', 'Add `--revision=N` to see one revision.', 'CKA,CKAD'],
+    ['Undo the last rollout of Deployment `web`.', 'Workloads', 'Easy', ['kubectl rollout undo (deploy|deployment)[ /]web'], 'kubectl rollout undo deployment/web', 'Use `--to-revision=N` for an older one.', 'CKA,CKAD'],
+    ['Restart all pods of Deployment `web` gracefully.', 'Workloads', 'Easy', ['kubectl rollout restart (deploy|deployment)[ /]web'], 'kubectl rollout restart deployment/web', 'It changes a template annotation so a normal rolling update follows.', 'CKA,CKAD'],
+    ['Create a ServiceAccount `reader` in namespace `apps`.', 'Security', 'Easy', ['kubectl create (sa|serviceaccount) reader -n apps', 'kubectl create (sa|serviceaccount) reader --namespace[= ]apps', 'kubectl create -n apps (sa|serviceaccount) reader'], 'kubectl create serviceaccount reader -n apps', 'Then bind a role to it.', 'CKA,CKAD'],
+    ['Bind ClusterRole `view` to ServiceAccount `reader` of namespace `apps`, only inside `apps`.', 'Security', 'Medium', ['kubectl create rolebinding \\S+ (-n|--namespace)[ =]apps --clusterrole[= ]view --serviceaccount[= ]apps:reader'], 'kubectl create rolebinding reader-view -n apps --clusterrole=view --serviceaccount=apps:reader', 'A RoleBinding limits the ClusterRole to its namespace.', 'CKA,CKAD,CKS'],
+    ['Check whether ServiceAccount `reader` of `apps` can delete pods in `apps`.', 'Security', 'Medium', ['kubectl auth can-i delete pods?( -n apps|--namespace[= ]apps) --as[= ]system:serviceaccount:apps:reader', 'kubectl auth can-i delete pods?( -n apps|--namespace[= ]apps) --as system:serviceaccount:apps:reader'], 'kubectl auth can-i delete pods -n apps --as system:serviceaccount:apps:reader', 'Prints yes or no.', 'CKA,CKS'],
+    ['Print the labels of namespace `ops`.', 'Networking', 'Easy', ['kubectl get (ns|namespace)[ /]ops --show-labels', 'kubectl describe (ns|namespace)[ /]ops'], 'kubectl get ns ops --show-labels', 'namespaceSelector matches these labels.', 'CKA,CKAD'],
+    ['Label namespace `ops` with `team=ops`.', 'Networking', 'Easy', ['kubectl label (ns|namespace)[ /]ops team=ops'], 'kubectl label ns ops team=ops', 'Needed before a namespaceSelector can match it.', 'CKA,CKAD,CKS'],
+    ['Check expiry of all kubeadm certificates.', 'Architecture', 'Medium', ['kubeadm certs check-expiration'], 'kubeadm certs check-expiration', 'Run on a control-plane node.', 'CKA'],
+    ['Renew only the kubeadm admin.conf certificate.', 'Architecture', 'Medium', ['kubeadm certs renew admin\\.conf'], 'kubeadm certs renew admin.conf', 'Copy the new admin.conf to your workstation.', 'CKA'],
+    ['Set the image of container `web` in StatefulSet `db` to `nginx:1.27`.', 'Workloads', 'Medium', ['kubectl set image (sts|statefulset)[ /]db web=nginx:1\\.27'], 'kubectl set image sts/db web=nginx:1.27', 'Works on any workload with a pod template.', 'CKA,CKAD'],
+    ['List events in namespace `shop`, newest last.', 'Troubleshooting', 'Easy', ['kubectl get events (-n|--namespace)[ =]shop --sort-by[= ]\\.?metadata\\.creationTimestamp', 'kubectl get events --sort-by[= ]\\.?metadata\\.(creationTimestamp|lastTimestamp) (-n|--namespace)[ =]shop', 'kubectl get events (-n|--namespace)[ =]shop --sort-by[= ]\\.?lastTimestamp'], 'kubectl get events -n shop --sort-by=.metadata.creationTimestamp', 'Events are the first stop for scheduling and creation errors.', 'CKA,CKAD']
+  ].forEach(function (x) { KL.quizCmd.push(x); });
+  // order tuple: [q, cat, diff, [steps in correct order], explanation, tracks]
+  [
+    ['Put the steps in order: shipping a canary on a StatefulSet.', 'Workloads', 'Hard', ['Patch partition and image together', 'Check the highest ordinal runs the new image', 'Watch Ready status and logs of the canary', 'Lower the partition to roll out the rest'], 'The partition protects lower ordinals while you test; lowering it releases the rest.', 'CKA'],
+    ['Put the steps in order: renewing an expired admin certificate on a kubeadm cluster.', 'Architecture', 'Hard', ['Check expiration on the control plane', 'Renew admin.conf', 'Copy the new admin.conf to the workstation', 'Run kubectl get nodes'], 'The workstation copy does not change when the file on the node is renewed.', 'CKA'],
+    ['Put the steps in order: opening one path through a default-deny NetworkPolicy.', 'Networking', 'Medium', ['Apply the default-deny policy', 'Confirm all clients are blocked', 'Apply a policy that allows one client to one server and port', 'Confirm the allowed and blocked clients'], 'Test after each step so you know which policy changed the behaviour.', 'CKA,CKAD,CKS'],
+    ['Put the steps in order: fixing a Deployment with no pods because its ServiceAccount is missing.', 'Troubleshooting', 'Medium', ['Read the ReplicaSet events', 'Create the ServiceAccount', 'Bind the least role it needs in the namespace', 'Check the pods are Running'], 'The pods retry on their own once the account exists.', 'CKA,CKAD'],
+    ['Put the steps in order: debugging a pod in CreateContainerConfigError.', 'Troubleshooting', 'Easy', ['kubectl get pods', 'kubectl describe pod', 'Read the Events section', 'Fix the referenced object or field'], 'The event names the missing ConfigMap key, Secret or security setting.', 'CKA,CKAD']
+  ].forEach(function (x) { KL.quizOrder.push(x); });
+})();
+
+</script>
 <script>/* assets/js/quiz.js */
 /* Quiz engine: mcq / cmd (type the command) / order (arrange steps). Filters, Leitner spaced repetition via KL.store. */
 (function () {
@@ -13719,17 +14179,22 @@ EOF`] }),
 
   // ───────── page ─────────
   var TABS = [['cp', '🧭 Control-plane flow'], ['life', '♻️ Pod lifecycle'], ['ru', '🔄 Rolling update'], ['np', '🛡️ NetworkPolicy']], player, tab = 'cp';
+  // extra scenes built from the concept data in field-more.js (chips that light up per step)
+  var EXTRA = [['sched', '📅 Scheduler'], ['svcep', '🔌 Service endpoints'], ['rbac', '🔑 RBAC'], ['netpolpeer', '🧱 Policy peers'], ['stspart', '🐤 StatefulSet canary'], ['ndots', '🔎 DNS ndots']];
+  function conceptOf(id) { return (KL.concepts || []).filter(function (c) { return c.id === id; })[0]; }
+  function renderChips(st, s) { st.innerHTML = '<div class="cp-items an-chips">' + s.items.map(function (x) { return '<div class="cp-it ' + (x.c || '') + '">' + String(x.l).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }) + '</div>'; }).join('') + '</div>'; }
   function opts(html) { $('anOpts').innerHTML = html; }
   function show(t) {
     tab = t; document.querySelectorAll('.an-tab').forEach(function (b) { b.classList.toggle('active', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t); });
     if (t === 'cp') { player.load(CP.steps, renderCP); opts(''); }
     else if (t === 'life') { opts('<label>Scenario <select id="lifeSel"><option value="ok">Healthy start</option><option value="img">Bad image tag</option><option value="crash">App crashes</option><option value="oom">Out of memory</option></select></label>'); $('lifeSel').onchange = function () { player.load(lifeSteps(this.value), renderLife); }; player.load(lifeSteps('ok'), renderLife); }
     else if (t === 'ru') { opts('<label>Replicas <input type="range" id="ruN" min="2" max="8" value="' + RU.n + '"> <b id="ruNv">' + RU.n + '</b></label><label>maxSurge <input type="range" id="ruS" min="0" max="3" value="' + RU.surge + '"> <b id="ruSv">' + RU.surge + '</b></label><label>maxUnavailable <input type="range" id="ruU" min="0" max="3" value="' + RU.unav + '"> <b id="ruUv">' + RU.unav + '</b></label><span class="an-warn" id="ruWarn"></span>'); var upd = function () { RU.n = +$('ruN').value; RU.surge = +$('ruS').value; RU.unav = +$('ruU').value; $('ruNv').textContent = RU.n; $('ruSv').textContent = RU.surge; $('ruUv').textContent = RU.unav; $('ruWarn').textContent = RU.surge === 0 && RU.unav === 0 ? '⚠ both 0 is invalid — the rollout could never progress' : ''; if (RU.surge || RU.unav) player.load(ruSteps(), renderRU); }; ['ruN', 'ruS', 'ruU'].forEach(function (id) { $(id).oninput = upd; }); player.load(ruSteps(), renderRU); }
+    else if (conceptOf(t)) { opts(''); player.load(conceptOf(t).steps.map(function (x) { return { items: x.items, cap: '<b>' + x.t + '</b> ' + x.note.replace(/`([^`]+)`/g, '<code>$1</code>') }; }), renderChips); }
     else { opts('<label><input type="checkbox" id="npOn"> Apply policy</label><label>Source <select id="npFrom"><option value="frontend">frontend (allowed)</option><option value="intruder">intruder</option></select></label>'); var u = function () { NP.on = $('npOn').checked; NP.from = $('npFrom').value; player.load(npSteps(), renderNP); }; $('npOn').onchange = u; $('npFrom').onchange = u; NP.on = false; NP.from = 'frontend'; player.load(npSteps(), renderNP); }
   }
   function renderPage() {
     var root = $('vizRoot'); if (!root || root.dataset.ready) return; root.dataset.ready = 1;
-    root.innerHTML = '<div class="section-header"><div class="section-tag">Visual Learning</div><h2 class="section-title">See how Kubernetes works</h2><p class="section-desc">Step through the four flows every exam asks about. Play, pause, or go step by step.</p></div><div class="an-tabs" role="tablist">' + TABS.map(function (t) { return '<button class="an-tab" role="tab" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="anHost" class="an-host"></div>';
+    root.innerHTML = '<div class="section-header"><div class="section-tag">Visual Learning</div><h2 class="section-title">See how Kubernetes works</h2><p class="section-desc">Step through the flows every exam asks about, from the control plane to RBAC, NetworkPolicy peers and StatefulSet canaries. Play, pause, or go step by step.</p></div><div class="an-tabs" role="tablist">' + TABS.concat(EXTRA.filter(function (e) { return conceptOf(e[0]); })).map(function (t) { return '<button class="an-tab" role="tab" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="anHost" class="an-host"></div>';
     player = new Player($('anHost')); root.querySelectorAll('.an-tab').forEach(function (b) { b.onclick = function () { show(b.dataset.t); }; }); show('cp');
   }
   KL.route('visualize', renderPage);
@@ -14240,6 +14705,17 @@ EOF`] }),
       var sum = ids.reduce(function (a, id) { return a + (parseInt(Labs.byId[id].time, 10) || 10); }, 0);
       out.push({ id: tr.toLowerCase() + '-curr', name: tr + ' Curriculum-weighted', track: tr, ids: ids, mins: Math.max(60, Math.min(120, Math.round(sum * 0.8 / 5) * 5)), curr: true });
     });
+    // difficulty-level mocks: a fixed, repeatable set of tasks at one level, so you can start gentle and work up
+    ['CKA', 'CKAD', 'CKS'].forEach(function (tr) {
+      ['Beginner', 'Intermediate', 'Advanced'].forEach(function (lv) {
+        var V = KL.versions, tv = V ? V.getTarget() : '';
+        var pool = Labs.list.filter(function (l) { return l.track.indexOf(tr) >= 0 && l.diff === lv && !l.capstone && !/incident/i.test(l.domain || '') && (parseInt(l.time, 10) || 10) <= 20 && (!V || V.status(l, tv).ok); });
+        if (pool.length < 6) return;
+        var ids = shuf(pool, rng('kubedrill:level:' + tr + ':' + lv)).slice(0, lv === 'Beginner' ? 8 : 10).map(function (l) { return l.id; });
+        var sum = ids.reduce(function (a, id) { return a + (parseInt(Labs.byId[id].time, 10) || 10); }, 0);
+        out.push({ id: tr.toLowerCase() + '-level-' + lv.toLowerCase(), name: tr + ' Mock · ' + lv, track: tr, ids: ids, mins: Math.max(45, Math.min(120, Math.round(sum * 0.8 / 5) * 5)), level: lv });
+      });
+    });
     ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { out.push({ id: tr.toLowerCase() + '-full', name: tr + ' Full mock', track: tr, ids: new Array(16), mins: 120, full: true }); });
     // numbered full mocks: the same 16 tasks and the same variant names every time, no task shared with an earlier numbered mock
     ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { for (var k = 1; k <= FIXED_N[tr]; k++) out.push({ id: tr.toLowerCase() + '-full-' + k, name: tr + ' Full mock ' + k, track: tr, ids: new Array(16), mins: 120, full: true, fixed: k }); });
@@ -14362,7 +14838,7 @@ EOF`] }),
     }
     var hist = store.data().exams.slice(-8).reverse();
     h += '<div class="ex-setup"><label>Track<select id="exTrack"><option value="CKA">CKA — Administrator</option><option value="CKAD">CKAD — Developer</option><option value="CKS">CKS — Security</option><option value="ALL">Mixed</option></select></label><label>Length<select id="exLen">' + Object.keys(PRESETS).map(function (k) { return '<option value="' + k + '">' + PRESETS[k].label + '</option>'; }).join('') + '</select></label><button class="btn-primary" id="exGo">▶ Start exam</button></div>' +
-      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. The <b>Full mock</b> is 16 tasks in 120 minutes, drawn by official domain weights, and different variants every attempt. <b>Full mock 1, 2, 3</b> are fixed sets (the same 16 tasks every time, none shared between them) so you can retake one and compare; the <b>hard</b> set favours Advanced tasks. Pass marks used: CKA 66%, CKAD 66%, CKS 67% (check the current handbook).</p>' + HONEST + '<div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
+      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. The <b>Full mock</b> is 16 tasks in 120 minutes, drawn by official domain weights, and different variants every attempt. <b>Full mock 1, 2, 3</b> are fixed sets (the same 16 tasks every time, none shared between them) so you can retake one and compare; the <b>hard</b> set favours Advanced tasks. <b>Mock · Beginner / Intermediate / Advanced</b> are fixed sets of tasks at one difficulty, so you can start gentle and work up. Pass marks used: CKA 66%, CKAD 66%, CKS 67% (check the current handbook).</p>' + HONEST + '<div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
       '<div class="ex-hist"><h3>Your attempts</h3>' + (hist.length ? '<table><tr><th>Date</th><th>Track</th><th>Score</th><th>Time</th></tr>' + hist.map(function (e) { return '<tr><td>' + new Date(e.date).toLocaleDateString() + '</td><td>' + e.track + '</td><td class="' + (e.pct >= 66 ? 'p' : 'f') + '">' + e.pct + '%</td><td>' + fmt(e.secs) + '</td></tr>'; }).join('') + '</table>' : '<p class="ex-note">No attempts yet.</p>') + '</div>' +
       '<p class="ex-note">Disclaimer: the simulator is a teaching model of Kubernetes behaviour, not the real exam environment. Practise on a real cluster with the kind lab packs as well.</p>';
     root.innerHTML = h; $('exGo').onclick = function () { S.start($('exTrack').value, $('exLen').value, $('exEnv').checked); };
@@ -14445,7 +14921,7 @@ EOF`] }),
   encLinks();
 
   // ── command palette ──
-  var PAGES = [['home', 'Home'], ['modules', 'Modules'], ['path', 'Learning path'], ['labs', 'Labs'], ['exam', 'Exam mode'], ['quiz', 'Quiz'], ['visualize', 'Visualize'], ['cheatsheet', 'Cheatsheet'], ['tools', 'Tools'], ['errors', 'Error encyclopedia'], ['progress', 'My progress'], ['compare', 'Compare KubeDrill']];
+  var PAGES = [['home', 'Home'], ['modules', 'Modules'], ['path', 'Learning path'], ['labs', 'Labs'], ['exam', 'Exam mode'], ['quiz', 'Quiz'], ['visualize', 'Visualize'], ['trainers', 'Trainers'], ['cheatsheet', 'Cheatsheet'], ['tools', 'Tools'], ['errors', 'Error encyclopedia'], ['progress', 'My progress'], ['compare', 'Compare KubeDrill']];
   var pal = { items: [], sel: 0 };
   function palItems() {
     var it = PAGES.map(function (p) { return { t: p[1], k: 'Page', h: '#' + p[0] }; });
@@ -14925,6 +15401,123 @@ EOF`] }),
 })(typeof window !== 'undefined' ? window : globalThis);
 
 </script>
+<script>/* assets/js/data/field-more.js */
+/* Field Guide additions: more concept animations (Visualize page), two troubleshooting flowcharts, one more fictional "3 a.m. page" episode.
+   Concepts and flows describe how Kubernetes works; no real incident is described here. */
+(function (root) {
+  'use strict';
+  var KL = root.KL = root.KL || {};
+  function row(labels, cls) { return labels.map(function (l, i) { return { l: l, c: (cls && cls[i]) || '' }; }); }
+  KL.concepts = KL.concepts || []; KL.flows = KL.flows || []; KL.stories = KL.stories || [];
+  KL.concepts.push(
+    { id: 'sched', title: 'How the scheduler picks a node', steps: [
+      { t: '1 · Pending pod', items: row(['node-a', 'node-b', 'node-c', 'node-d']), note: 'A pod with no node name is queued. The scheduler looks at every node.' },
+      { t: '2 · Filter', items: row(['node-a', 'node-b', 'node-c', 'node-d'], ['dim', 'ok', 'ok', 'dim']), note: 'Nodes that cannot run the pod drop out: not enough CPU or memory, an untolerated taint, a selector or affinity that does not match.' },
+      { t: '3 · Score', items: row(['node-a', 'node-b', 'node-c', 'node-d'], ['dim', 'hot', 'ok', 'dim']), note: 'The remaining nodes are ranked, for example by how much room they have and whether the image is already there.' },
+      { t: '4 · Bind', items: row(['node-a', 'node-b', 'node-c', 'node-d'], ['dim', 'hot', 'dim', 'dim']), note: 'The scheduler writes the chosen node into the pod through the API server. If every node was filtered out the pod stays Pending and an event says why.' }] },
+    { id: 'svcep', title: 'Service to endpoints: why traffic does not arrive', steps: [
+      { t: '1 · Selector', items: row(['Service', 'pod app=web', 'pod app=web', 'pod app=cache']), note: 'The Service selector picks pods by label. Pods with other labels are not part of it.' },
+      { t: '2 · Ready only', items: row(['Service', 'Ready', 'NotReady', 'other label'], ['hot', 'ok', 'wait', 'dim']), note: 'Only pods that pass their readiness probe appear in the endpoints. A NotReady pod gets no traffic.' },
+      { t: '3 · Port', items: row(['Service port 80', 'targetPort 8080', 'app listens 80'], ['hot', 'wait', 'ok']), note: 'targetPort must match the port the container really listens on. A mismatch gives a Service with endpoints that still fails.' },
+      { t: '4 · Check', items: row(['get endpoints', 'get pods --show-labels', 'describe svc'], ['ok', 'ok', 'ok']), note: 'Empty endpoints mean selector or readiness. Filled endpoints with failures mean port, NetworkPolicy or the app.' }] },
+    { id: 'rbac', title: 'RBAC: how a request is allowed', steps: [
+      { t: '1 · Who', items: row(['User / ServiceAccount', 'Groups'], ['hot', '']), note: 'The API server first authenticates the caller: a certificate, a token, or a ServiceAccount.' },
+      { t: '2 · Bindings', items: row(['RoleBinding', 'ClusterRoleBinding'], ['hot', 'ok']), note: 'It looks for bindings that name that subject. A RoleBinding counts only inside its namespace, even when it points to a ClusterRole.' },
+      { t: '3 · Rules', items: row(['verbs', 'resources', 'resourceNames'], ['ok', 'ok', 'ok']), note: 'A rule must match the verb, the resource and, when given, the object name. There are only allow rules; there is no deny.' },
+      { t: '4 · Decision', items: row(['Allowed', 'Forbidden'], ['ok', 'dim']), note: 'If no rule matches, the answer is Forbidden. Creating bindings for a role also needs the permissions in it, or the bind verb on that role.' }] },
+    { id: 'netpolpeer', title: 'NetworkPolicy peers: AND or OR', steps: [
+      { t: 'Two items = OR', items: row(['namespaceSelector', 'podSelector'], ['ok', 'ok']), note: 'Written as two list items, a peer matches if it fits either one: any pod in that namespace, or any pod with the label in the policy namespace.' },
+      { t: 'One item = AND', items: row(['namespaceSelector + podSelector'], ['hot']), note: 'Written in one item, a peer must be in that namespace and carry that label. This is usually what people mean.' },
+      { t: 'Policies add up', items: row(['policy 1', 'policy 2', 'allowed = both'], ['ok', 'ok', 'hot']), note: 'All policies that select a pod are combined. You cannot block with a second policy what a first one allows: narrow the first.' },
+      { t: 'Test it', items: row(['allowed client', 'same-namespace client', 'wrong-label client'], ['ok', 'dim', 'dim']), note: 'Connect from a client that should work and from each one that should not. Reading the YAML is not a test.' }] },
+    { id: 'stspart', title: 'StatefulSet partition: a canary by ordinal', steps: [
+      { t: 'Before', items: row(['web-0 v1', 'web-1 v1', 'web-2 v1', 'web-3 v1'], ['ok', 'ok', 'ok', 'ok']), note: 'Four pods on the old revision.' },
+      { t: 'partition: 3', items: row(['web-0 v1', 'web-1 v1', 'web-2 v1', 'web-3 v2'], ['ok', 'ok', 'ok', 'hot']), note: 'Only ordinals at or above 3 are updated. The controller works from the highest ordinal down and waits for each pod to be Ready.' },
+      { t: 'Lower it', items: row(['web-0 v1', 'web-1 v1', 'web-2 v2', 'web-3 v2'], ['ok', 'ok', 'hot', 'ok']), note: 'Setting partition 2 releases web-2. Set 0 to finish. rollout status says complete at each stop; that only refers to the partition.' },
+      { t: 'Done', items: row(['web-0 v2', 'web-1 v2', 'web-2 v2', 'web-3 v2'], ['ok', 'ok', 'ok', 'ok']), note: 'Deleting a pod below the partition brings it back on the old revision, so move the partition rather than delete pods.' }] },
+    { id: 'ndots', title: 'Pod DNS: what ndots does', steps: [
+      { t: '1 · Name', items: row(['api.partner.example.com']), note: 'A pod asks for a name with three dots. The default ndots is 5.' },
+      { t: '2 · Search list', items: row(['…svc.cluster.local', '…cluster.local', '…example.com', 'absolute name'], ['dim', 'dim', 'dim', 'wait']), note: 'Fewer dots than ndots, so each search domain is tried first and fails before the real name is tried.' },
+      { t: '3 · ndots: 1', items: row(['absolute name first'], ['ok']), note: 'dnsConfig options ndots 1 sends names with a dot straight out. Short Service names still work because they have no dot.' }] }
+  );
+  KL.flows.push(
+    { id: 'forbidden', title: 'Forbidden: who is denied what', start: 'f1', nodes: {
+      f1: { q: 'Does the message name a user or a ServiceAccount and a verb and resource?', cmd: 'kubectl <your command> 2>&1 | head', opts: [['Yes, it names them', 'f2'], ['It says Unauthorized / must be logged in', 'L_auth']] },
+      f2: { q: 'Does the identity have a binding in this namespace?', cmd: 'kubectl get rolebinding,clusterrolebinding -A -o wide | grep <name>', opts: [['No binding', 'L_nobind'], ['A binding exists', 'f3']] },
+      f3: { q: 'Does the bound role allow that verb on that resource?', cmd: 'kubectl auth can-i <verb> <resource> -n <ns> --as <subject>', opts: [['Role lacks the rule', 'L_rule'], ['It can, but creating bindings is refused', 'L_bind']] },
+      L_auth: { leaf: 1, title: 'Credentials, not permissions', fix: 'The API server does not know who you are: an expired certificate, a wrong kubeconfig context, or an expired token.', lab: 's73-expired-certs', caution: 'Do not widen RBAC for an authentication failure; it will not help and gives away access.' },
+      L_nobind: { leaf: 1, title: 'No binding for the subject', fix: 'Create the smallest binding that fits, in the namespace where it is needed. A missing ServiceAccount also blocks pods being created.', lab: 's218-missing-sa-view', caution: 'A ClusterRoleBinding grants in every namespace. Use a RoleBinding unless you mean it.' },
+      L_rule: { leaf: 1, title: 'Role is missing a rule', fix: 'Add only the verb and resource that were refused, with resourceNames when it is one object.', lab: 's11-rbac-sa', caution: 'Do not use a wildcard to make the error disappear.' },
+      L_bind: { leaf: 1, title: 'Cannot grant what you do not hold', fix: 'Allow the bind verb on that one role, by name, instead of copying its permissions.', lab: 's212-rbac-bind', caution: 'The escalate verb or a wildcard lets the subject grant anything.' } } },
+    { id: 'netblock', title: 'Pods cannot reach each other', start: 'n1', nodes: {
+      n1: { q: 'Does it work by pod IP, but not by Service name?', cmd: 'kubectl exec <pod> -- wget -qO- -T 2 <pod-ip>', opts: [['Pod IP works, name fails', 'L_dns'], ['Both fail', 'n2'], ['Both work from some pods, not others', 'n3']] },
+      n2: { q: 'Is there a NetworkPolicy selecting the destination?', cmd: 'kubectl get netpol -n <ns>', opts: [['Yes', 'n3'], ['No policy', 'L_svc']] },
+      n3: { q: 'Which clients are allowed by the policy list?', cmd: 'kubectl get netpol <name> -n <ns> -o yaml', opts: [['Too many clients get through', 'L_andor'], ['Needed client is blocked: other namespace', 'L_ns'], ['Needed client is blocked: egress', 'L_egress']] },
+      L_dns: { leaf: 1, title: 'DNS or search path', fix: 'Check the pod resolv.conf, CoreDNS pods and the name you used. Names with several dots can be slow because of ndots.', lab: 's211-ndots-dnsconfig', caution: 'Do not restart CoreDNS on a shared cluster before reading its logs.' },
+      L_svc: { leaf: 1, title: 'Service has no healthy endpoints', fix: 'Compare selector and labels, readiness, and targetPort.', lab: 's04-no-endpoints', caution: 'Do not loosen readiness to force traffic through.' },
+      L_andor: { leaf: 1, title: 'Peers ORed instead of ANDed', fix: 'A namespaceSelector and a podSelector in separate list items admit either one. Put both in the same item and test each client.', lab: 's217-netpol-and-or', caution: 'Adding a second policy cannot remove what the first allows.' },
+      L_ns: { leaf: 1, title: 'Other namespace not selected', fix: 'Label the source namespace and select it with namespaceSelector; a podSelector alone only matches the policy namespace.', lab: 's52-netpol-namespace', caution: 'Check namespace labels first: names are matched by label, not by name.' },
+      L_egress: { leaf: 1, title: 'Egress policy blocks the client', fix: 'The client namespace has an egress policy. Allow the destination and also DNS (port 53) when names are used.', lab: 's51-netpol-egress', caution: 'Do not open egress to 0.0.0.0/0 to make the test pass.' } } }
+  );
+  KL.stories.push({ id: 'ep4', title: 'Episode 4 — Locked Down, Locked Out', blurb: 'A security sweep goes out on Thursday. By Friday morning three teams cannot deploy.', chapters: [
+    { lab: 's219-runasnonroot', time: '07:10', page: 'Slack: “web in hardened has been in CreateContainerConfigError since the policy change.”', note: 'The control must stay. Satisfy it.' },
+    { lab: 's218-missing-sa-view', time: '08:05', page: 'Ticket: “reporter has no pods; it says it cannot find a service account.”', note: 'Give it an identity with the least access it needs.' },
+    { lab: 's217-netpol-and-or', time: '09:30', page: 'Security review: “scratch pods in ops can still reach the vault store.”', note: 'The policy was written to allow one client. Find out why more get in.' }] });
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>/* assets/js/data/trainers-data.js */
+/* Data for the Trainers page: real-world error messages to explain, and documentation-lookup tasks.
+   Error texts are the common forms printed by kubectl, the API server, the scheduler and the kubelet; wording differs slightly between versions.
+   Documentation items give the section path and page title to look for; kubernetes.io reorganises pages, so search by keyword if a title has moved. */
+(function () {
+  'use strict';
+  var KL = window.KL = window.KL || {};
+  // [id, error text, question, options, answer index, explanation, decoder/lab hint]
+  KL.errTrainer = [
+    ['e1', 'Error from server (Forbidden): pods "api-7d9" is forbidden: exceeded quota: team-a, requested: pods=1, used: pods=10, limited: pods=10', 'What blocked the pod?', ['The node has no free CPU', 'A ResourceQuota in the namespace is full', 'The image is missing', 'RBAC denies create'], 1, 'The message names the quota (team-a) and the counter that is full. Delete something or raise the quota; the scheduler is not involved yet.', 's15'],
+    ['e2', '0/3 nodes are available: 3 Insufficient memory.', 'Which component printed this, and what does it mean?', ['The kubelet: the container was OOM killed', 'The scheduler: no node has the requested memory free', 'The API server: quota exceeded', 'The controller manager: replica count too high'], 1, 'Scheduler events say how many nodes failed each filter. Lower the memory request or add capacity; limits are not used for scheduling.', 'cka-sched'],
+    ['e3', '0/3 nodes are available: 1 node(s) had untolerated taint {node-role.kubernetes.io/control-plane: }, 2 node(s) didn\'t match Pod\'s node affinity/selector.', 'What is the first thing to compare?', ['The pod nodeSelector and the worker node labels', 'The Service selector and pod labels', 'The readiness probe', 'The PVC access mode'], 0, 'Two nodes failed the selector or affinity check and the third is tainted. Compare the pod nodeSelector and affinity with kubectl get nodes --show-labels.', 'cka-sched'],
+    ['e4', 'Error: configmap "app-config" not found', 'Pod status is CreateContainerConfigError. What do you do?', ['Restart the node', 'Create the ConfigMap in the pod namespace, or fix the name', 'Increase the memory limit', 'Delete the Service'], 1, 'The container refers to a ConfigMap that does not exist in that namespace. Check the name and namespace; the pod starts once it exists.', 'ckad-config'],
+    ['e5', 'Failed to pull image "nginx:1.255": rpc error: code = NotFound desc = failed to pull and unpack image: not found', 'Likely cause?', ['The registry is down', 'The tag does not exist', 'The pod is out of memory', 'imagePullPolicy is Never'], 1, 'NotFound on pull means the registry answered and has no such tag. A timeout or no such host would point to the network instead.', 's01'],
+    ['e6', 'Back-off restarting failed container web in pod web-6b9 (CrashLoopBackOff)', 'What is the best first command?', ['kubectl logs web-6b9 --previous', 'kubectl delete node', 'kubectl get svc', 'kubectl top nodes'], 0, 'The container starts and exits. The log of the previous run and the exit code in describe show why.', 'ckad-debug'],
+    ['e7', 'Liveness probe failed: HTTP probe failed with statuscode: 404', 'What will the kubelet do, and what do you check?', ['Nothing; liveness only affects Services', 'Restart the container; check the probe path and port', 'Evict the pod; check node taints', 'Scale the Deployment'], 1, 'A failing liveness probe restarts the container. Compare the probe path and port with what the app serves.', 'ckad-probes'],
+    ['e8', 'Readiness probe failed: dial tcp 10.244.1.5:8080: connect: connection refused', 'Pod is Running 0/1. What does that mean for traffic?', ['It receives traffic anyway', 'It is removed from the Service endpoints until the probe passes', 'It is restarted every 10 seconds', 'It is moved to another node'], 1, 'Readiness gates traffic, not restarts. Check that the app listens on that port.', 'ckad-probes'],
+    ['e9', 'The Service "web" is invalid: spec.ports[0].nodePort: Invalid value: 80: provided port is not in the valid range. The range of valid ports is 30000-32767', 'Fix?', ['Open port 80 on the node firewall', 'Use a nodePort between 30000 and 32767, or omit it', 'Change the container port', 'Use ClusterIP and keep 80 as nodePort'], 1, 'NodePorts have a fixed default range. Leave nodePort empty to get one assigned.', 'cka-svc'],
+    ['e10', 'error: You must be logged in to the server (Unauthorized)', 'Which problem is this?', ['The caller lacks an RBAC rule', 'The API server could not authenticate the credentials', 'The namespace does not exist', 'The pod is Pending'], 1, 'Unauthorized (401) is authentication: an expired certificate or token or the wrong context. Forbidden (403) is authorisation.', 's73'],
+    ['e11', 'Error from server (Forbidden): pods is forbidden: User "dev-ann" cannot list resource "pods" in API group "" in the namespace "prod"', 'What is missing?', ['A valid certificate', 'A Role or ClusterRole rule and binding for dev-ann in prod', 'A larger quota', 'A NetworkPolicy'], 1, 'The user is known but not allowed. Check can-i --as, then bindings in that namespace.', 'cka-rbac'],
+    ['e12', 'error validating data: ValidationError(Deployment.spec): missing required field "selector" in io.k8s.api.apps.v1.DeploymentSpec', 'What do you add?', ['spec.selector.matchLabels matching the template labels', 'metadata.annotations', 'spec.strategy', 'A Service'], 0, 'apps/v1 Deployments need a selector that matches the pod template labels.', 'cka-deploy'],
+    ['e13', 'The Deployment "web" is invalid: spec.selector: Invalid value: ...: field is immutable', 'Why does the update fail?', ['Selectors cannot change after creation; delete and recreate', 'The image tag is wrong', 'The namespace is terminating', 'The node is cordoned'], 0, 'spec.selector is immutable on apps/v1 workloads. Recreate the object, or keep the original selector.', 'cka-deploy'],
+    ['e14', 'unable to recognize "app.yaml": no matches for kind "Foo" in version "apps/v1"', 'What does it mean?', ['The kind or API group/version does not exist in this cluster', 'The YAML has a tab character', 'The namespace is missing', 'Quota exceeded'], 0, 'Check kubectl api-resources for the kind and its group; a CRD may not be installed.', 'ckad-crd'],
+    ['e15', 'Error from server (NotFound): namespaces "payments" not found', 'What is the first fix?', ['Create the namespace or correct the name', 'Restart the API server', 'Add a toleration', 'Grant cluster-admin'], 0, 'Namespaced objects need an existing namespace. Check kubectl get ns and your current context namespace.', 'cka-ns'],
+    ['e16', 'pods "api" is forbidden: violates PodSecurity "restricted:latest": allowPrivilegeEscalation != false (container "api" must set securityContext.allowPrivilegeEscalation=false)', 'What do you change?', ['The namespace label', 'The pod securityContext to meet the listed requirements', 'The node kernel', 'The Service type'], 1, 'Fix the pod spec for every item the message lists. Relabelling the namespace removes the control.', 's219'],
+    ['e17', 'Error: container has runAsNonRoot and image will run as root', 'Fix?', ['Set a numeric runAsUser above 0', 'Set runAsNonRoot to false', 'Increase memory', 'Add a PVC'], 0, 'The kubelet cannot start an image that would run as UID 0 under runAsNonRoot. Give a numeric non-root UID.', 's219'],
+    ['e18', 'Last State: Terminated  Reason: OOMKilled  Exit Code: 137', 'What does it say?', ['The container exceeded its memory limit', 'The node ran out of disk', 'The image is corrupt', 'The probe failed'], 0, 'The kernel killed the container for exceeding its memory limit. Raise the limit or fix the leak.', 'ckad-limits'],
+    ['e19', 'pod has unbound immediate PersistentVolumeClaims', 'Where do you look next?', ['The PVC status and StorageClass events', 'The Service endpoints', 'The kubelet certificate', 'The pod DNS policy'], 0, 'The scheduler waits for the claim. Check whether a PV matches or the StorageClass can provision.', 'cka-pv'],
+    ['e20', 'The connection to the server localhost:8080 was refused - did you specify the right host or port?', 'The usual cause?', ['No kubeconfig is loaded, so kubectl falls back to localhost:8080', 'The API server certificate expired', 'The namespace is deleted', 'A NetworkPolicy blocks kubectl'], 0, 'kubectl used its default address. Set KUBECONFIG or copy admin.conf to ~/.kube/config.', 'cka-kubeconfig'],
+    ['e21', 'Error from server (Forbidden): serviceaccounts "build-bot" is forbidden: unable to create new content in namespace kube-system because it is being terminated', 'What state is the namespace in?', ['Terminating', 'Pending', 'Quota exceeded', 'Cordoned'], 0, 'A terminating namespace refuses new objects. Look for finalisers or objects that will not delete.', 'cka-ns'],
+    ['e22', 'Warning  FailedMount  MountVolume.SetUp failed for volume "cfg" : configmap "app-config" not found', 'The pod is stuck in ContainerCreating. What is wrong?', ['The kubelet cannot mount a volume that refers to a missing ConfigMap', 'The image pull is slow', 'The container is crashing', 'CPU is throttled'], 0, 'Volumes are set up before containers start. Create the object or fix the name.', 'ckad-config']
+  ];
+  // [id, task, options (section path > page), answer index, explanation]
+  KL.docsTrainer = [
+    ['d1', 'You need the fields of a Pod spec and what each one does.', ['Reference → API Reference → Workload Resources → Pod', 'Concepts → Overview → Components', 'Setup → Production environment → Container runtimes', 'Contribute → Documentation style guide'], 0, 'The API reference lists every field. kubectl explain pod.spec reads the same data offline and is faster in an exam.'],
+    ['d2', 'You forgot how to mount a ConfigMap as a volume.', ['Tasks → Configure Pods and Containers → Configure a Pod to Use a ConfigMap', 'Concepts → Security → Pod Security Standards', 'Tasks → Administer a Cluster → Certificate Management with kubeadm', 'Reference → Command line tools reference → kubeadm'], 0, 'The ConfigMap task page has copy-ready examples for env vars and volumes.'],
+    ['d3', 'You need a NetworkPolicy example that denies all ingress.', ['Concepts → Services, Load Balancing, and Networking → Network Policies', 'Concepts → Storage → Volumes', 'Tasks → Run Applications → Run a Stateless Application Using a Deployment', 'Reference → Glossary'], 0, 'The Network Policies concept page includes default-deny and selector examples, including the AND and OR forms.'],
+    ['d4', 'You need the syntax of a PersistentVolumeClaim and its access modes.', ['Concepts → Storage → Persistent Volumes', 'Concepts → Scheduling, Preemption and Eviction → Taints and Tolerations', 'Tasks → Access Applications in a Cluster → Port Forwarding', 'Setup → Best practices → Certificates'], 0, 'Persistent Volumes covers PV, PVC, access modes, reclaim policy and storage classes.'],
+    ['d5', 'You need to renew kubeadm certificates before they expire.', ['Tasks → Administer a Cluster → Certificate Management with kubeadm', 'Concepts → Workloads → Pods', 'Tasks → Configure Pods and Containers → Configure Liveness, Readiness and Startup Probes', 'Concepts → Configuration → Secrets'], 0, 'That page covers check-expiration and renew, and the note that control-plane components must be restarted.'],
+    ['d6', 'You need a taint and toleration example.', ['Concepts → Scheduling, Preemption and Eviction → Taints and Tolerations', 'Concepts → Overview → Objects In Kubernetes', 'Tasks → Manage Kubernetes Objects → Kustomize', 'Reference → Setup tools → kubeadm'], 0, 'The page has kubectl taint commands and a toleration snippet for each effect.'],
+    ['d7', 'You need to back up and restore etcd.', ['Tasks → Administer a Cluster → Operating etcd clusters for Kubernetes', 'Concepts → Architecture → Nodes', 'Tasks → Inject Data Into Applications → Define Environment Variables for a Container', 'Concepts → Workloads → Jobs'], 0, 'The etcd operating page has the snapshot save and restore commands and the TLS flags.'],
+    ['d8', 'You need liveness, readiness and startup probe fields.', ['Tasks → Configure Pods and Containers → Configure Liveness, Readiness and Startup Probes', 'Concepts → Cluster Administration → Logging Architecture', 'Concepts → Policy → Resource Quotas', 'Reference → Glossary'], 0, 'The task page shows httpGet, tcpSocket and exec probes with timing fields.'],
+    ['d9', 'You need to upgrade a kubeadm cluster by one minor version.', ['Tasks → Administer a Cluster → Upgrading kubeadm clusters', 'Concepts → Overview → Kubernetes Components', 'Concepts → Services, Load Balancing, and Networking → Ingress', 'Tasks → Tools → Install kubectl'], 0, 'The upgrade page gives the control plane order first, then each node with drain and uncordon.'],
+    ['d10', 'You need the rules for RBAC Roles, RoleBindings and ClusterRoles.', ['Reference → API Access Control → Using RBAC Authorization', 'Concepts → Storage → Storage Classes', 'Concepts → Workloads → CronJob', 'Setup → Production environment → Turnkey Cloud Solutions'], 0, 'The RBAC page has role and binding examples, aggregation rules and the escalation checks.'],
+    ['d11', 'You need an example of a Pod Security Admission namespace label.', ['Tasks → Configure Pods and Containers → Enforce Pod Security Standards with Namespace Labels', 'Concepts → Overview → Working with Kubernetes Objects', 'Concepts → Workloads → DaemonSet', 'Reference → kubectl → kubectl Quick Reference'], 0, 'That task page shows the enforce, audit and warn labels and how to try them with a dry run.'],
+    ['d12', 'You need quick imperative commands such as create, expose and set image.', ['Reference → Command line tools reference → kubectl Quick Reference', 'Concepts → Architecture → Cloud Controller Manager', 'Setup → Production environment → Creating a cluster with kubeadm', 'Concepts → Security → Multi-tenancy'], 0, 'The quick reference lists common commands, output options and JSONPath examples.'],
+    ['d13', 'You need the HTTPRoute fields of the Gateway API.', ['Gateway API documentation → HTTPRoute (gateway-api.sigs.k8s.io)', 'Concepts → Workloads → ReplicaSet', 'Tasks → Administer a Cluster → Namespaces Walkthrough', 'Concepts → Storage → Ephemeral Volumes'], 0, 'The Gateway API is documented on its own site rather than under the core API reference. Know which site to search.'],
+    ['d14', 'You need to schedule pods by spreading them across zones.', ['Concepts → Scheduling, Preemption and Eviction → Pod Topology Spread Constraints', 'Concepts → Storage → Volume Snapshots', 'Tasks → Administer a Cluster → Configure Default Memory Requests and Limits', 'Reference → Glossary'], 0, 'The page explains topologyKey, maxSkew and whenUnsatisfiable with an example.']
+  ];
+})();
+
+</script>
 <script>/* assets/js/more.js */
 /* Cautions, terminal skins, troubleshooting flowcharts, diagram traffic/pending/ingress helpers. Local only. */
 (function () {
@@ -15283,6 +15876,7 @@ EOF`] }),
     var r = run(), host = $('lrDia'); if (!r || !host || r.mode !== 'learn') return;
     try { if (!snap || snap.id !== r.sim) snap = { id: r.sim, m: podMap(r.sim) }; } catch (e) { /* ignore */ }
     var p = $('lrVz'); if (!p) { p = document.createElement('details'); p.id = 'lrVz'; p.className = 'vz-panel'; p.open = true; host.parentNode.insertBefore(p, host.nextSibling); }
+    hintMeter(false);
     try { p.innerHTML = '<summary>Scheduler and cluster view</summary><div class="vz-body">' + panelHtml(r.sim) + '</div>'; } catch (e) { p.innerHTML = '<summary>Scheduler and cluster view</summary><p class="vz-note">view unavailable: ' + esc(e.message) + '</p>'; }
   }
 
@@ -15303,10 +15897,90 @@ EOF`] }),
     }
     snap = { id: r.sim, m: now };
     render();
+    var jr = journey(line, e.detail.res); if (jr && r.mode === 'learn') drawJourney(jr);
     // rollout tint: pods of the same revision share a colour bar on the diagram
     document.querySelectorAll('#lrDia .dia-pod').forEach(function (el) { var kk = (el.dataset.k || '').split('/'), p = s.get('Pod', kk[0], kk[1]); if (!p) return; var rv = (p.metadata.labels || {})['controller-revision-hash'] || (p.metadata.labels || {})['pod-template-hash'] || ''; if (!rv) return; var hh = 0, i; for (i = 0; i < rv.length; i++) hh = (hh * 31 + rv.charCodeAt(i)) % 360; el.style.setProperty('--rev', 'hsl(' + hh + ',75%,62%)'); el.classList.add('has-rev'); el.title = el.title.replace(/ — revision .*$/, '') + ' — revision ' + rv; });
+    wave(s); hintMeter(false);
   });
   if ($('lrDia')) retry(0);
+
+  // ── request journey: the API path of the last command, animated in order and always spelled out as text ──
+  var JSTEP = { kubectl: 'kubectl', api: 'API server', etcd: 'etcd', ctl: 'controllers', sch: 'scheduler', kub: 'kubelet' };
+  function journey(line, res) {
+    var m = /^\s*(?:kubectl|k)\s+(\S+)\s*(\S*)/.exec(line || ''); if (!m) return null; var v = m[1], t = m[2] || '', failed = res && res.code && res.code !== 0;
+    var read = /^(get|describe|logs|top|explain|api-resources|auth|config|version|cluster-info|events|diff|wait)$/.test(v) || (v === 'rollout' && /status|history/.test(t));
+    var path = read ? ['kubectl', 'api', 'etcd'] : /^(delete)$/.test(v) ? ['kubectl', 'api', 'etcd', 'kub'] : /^(taint|cordon|uncordon|drain|label|annotate|patch|edit|set|scale|apply|create|run|replace|rollout|expose|autoscale)$/.test(v) ? ['kubectl', 'api', 'etcd', 'ctl', 'sch', 'kub'] : null;
+    if (!path) return null;
+    if (/^(label|annotate|cordon|uncordon)$/.test(v) || (v === 'taint')) path = ['kubectl', 'api', 'etcd'].concat(v === 'taint' || v === 'cordon' || v === 'uncordon' ? ['sch'] : []);
+    if (failed) path = ['kubectl', 'api'];
+    return { path: path, failed: failed };
+  }
+  function drawJourney(j) {
+    var p = $('lrVz'); if (!p) return; var host = p.querySelector('.vz-jr'); if (!host) { host = document.createElement('div'); host.className = 'vz-jr'; p.appendChild(host); }
+    var steps = j.path.map(function (k, i) { return '<span class="vz-js' + (j.failed && i === j.path.length - 1 ? ' rej' : '') + '" style="animation-delay:' + (i * 110) + 'ms">' + JSTEP[k] + '</span>'; }).join('<span class="vz-ja" aria-hidden="true">›</span>');
+    host.innerHTML = '<b>Last request</b> ' + steps + (j.failed ? ' <em>rejected at the API server</em>' : '');
+    host.setAttribute('aria-label', 'Last request path: ' + j.path.map(function (k) { return JSTEP[k]; }).join(', then ') + (j.failed ? ', rejected' : ''));
+  }
+
+  // ── NetworkPolicy view: hover or focus a shielded pod to see who may reach it (dots) and who is blocked (dashed, crossed) ──
+  function npClear() { document.querySelectorAll('.dia-np').forEach(function (n) { n.remove(); }); }
+  function npDraw(el) {
+    npClear(); var r = run(), root = $('lrDia'); if (!r || !root || !el) return; var s = r.sim, k = (el.dataset.k || '').split('/'), to = s.get('Pod', k[0], k[1]); if (!to || typeof s.netpolAllows !== 'function') return;
+    var port = ((to.spec.containers[0] || {}).ports || [{}])[0].containerPort || 80, allowed = [], blocked = [];
+    root.querySelectorAll('.dia-pod').forEach(function (o) { if (o === el) return; var kk = (o.dataset.k || '').split('/'), f = s.get('Pod', kk[0], kk[1]); if (!f) return; var ok = false; try { ok = s.netpolAllows(f, to, port) && (typeof s.egressAllows !== 'function' || s.egressAllows(f, to, port)); } catch (e) { ok = true; } (ok ? allowed : blocked).push(o); });
+    var tr = document.createElement('div'); tr.className = 'dia-trace dia-np'; tr.innerHTML = 'NetworkPolicy view for <b>' + esc(k[1]) + '</b> on port ' + port + ': <b>' + allowed.length + '</b> pod' + (allowed.length === 1 ? '' : 's') + ' may connect, <span class="bad">' + blocked.length + ' blocked</span>';
+    root.insertBefore(tr, root.firstChild);
+    var rb = root.getBoundingClientRect(), tb = el.getBoundingClientRect(), ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg'), inner = '';
+    svg.setAttribute('class', 'dia-lines dia-np'); svg.setAttribute('width', root.scrollWidth); svg.setAttribute('height', root.scrollHeight); svg.setAttribute('aria-hidden', 'true');
+    var x2 = tb.left - rb.left + tb.width / 2 + root.scrollLeft, y2 = tb.top - rb.top + tb.height / 2 + root.scrollTop;
+    function pth(o) { var b = o.getBoundingClientRect(), x1 = b.left - rb.left + b.width / 2 + root.scrollLeft, y1 = b.top - rb.top + b.height / 2 + root.scrollTop; return { d: 'M' + x1 + ',' + y1 + ' Q' + ((x1 + x2) / 2) + ',' + (Math.min(y1, y2) - 30) + ' ' + x2 + ',' + y2, mx: (x1 + x2) / 2, my: Math.min(y1, y2) - 14 }; }
+    allowed.forEach(function (o) { var q = pth(o); inner += '<path d="' + q.d + '"/>' + (off() ? '' : '<circle r="3.5"><animateMotion dur="1.2s" repeatCount="indefinite" path="' + q.d + '"/></circle>'); });
+    blocked.forEach(function (o) { var q = pth(o); inner += '<path class="blk" d="' + q.d + '"/><text x="' + q.mx + '" y="' + q.my + '" class="blk" text-anchor="middle">✕</text>'; });
+    svg.innerHTML = inner; root.appendChild(svg);
+  }
+  document.addEventListener('mouseover', function (e) { var p = e.target.closest && e.target.closest('#lrDia .dia-pod.shield'); if (p) npDraw(p); });
+  document.addEventListener('focusin', function (e) { var p = e.target.closest && e.target.closest('#lrDia .dia-pod.shield'); if (p) npDraw(p); });
+  document.addEventListener('mouseout', function (e) { if (e.target.closest && e.target.closest('#lrDia .dia-pod.shield')) npClear(); });
+  document.addEventListener('focusout', function (e) { if (e.target.closest && e.target.closest('#lrDia .dia-pod.shield')) npClear(); });
+
+  // ── hint cost made visible: pips in the lab bar, the newest one pops in ──
+  function hintMeter(grew) {
+    var r = run(), bar = document.querySelector('.lr-bar'); if (!r || !bar || r.mode !== 'learn') return;
+    var total = r.lab.tasks.reduce(function (n, t) { return n + (t.hints || []).length; }, 0), used = 0; try { used = KL.store.hintsUsed(r.lab.id); } catch (e) { /* ignore */ }
+    var el = $('vzHint'); if (!el) { el = document.createElement('div'); el.id = 'vzHint'; el.className = 'vz-hintm'; bar.appendChild(el); }
+    var pips = ''; for (var i = 0; i < Math.min(total, 12); i++) pips += '<i class="' + (i < used ? 'on' : '') + (grew && i === used - 1 ? ' new' : '') + '"></i>';
+    el.innerHTML = '<span class="vz-hp" aria-hidden="true">' + pips + '</span><span>' + (used ? used + ' hint' + (used === 1 ? '' : 's') + ' used' : 'no hints used') + '</span>';
+    el.title = used ? 'Hints are recorded for this lab. A solve without hints is a stronger signal that you know the fix.' : 'No hints used yet';
+  }
+  window.addEventListener('kl:hint', function () { setTimeout(function () { hintMeter(true); }, 30); });
+
+  // ── fix confirmation: the task tick pops and the objects that task checks pulse in the diagram ──
+  var okSeen = {};
+  function fixConfirm() {
+    var r = run(); if (!r || r.mode !== 'learn') return; var key = r.lab.id; okSeen[key] = okSeen[key] || null;
+    var now = {}; document.querySelectorAll('#lrTasks .lr-task.ok').forEach(function (li) { now[li.dataset.id] = li; });
+    if (okSeen[key] === null) { okSeen[key] = Object.keys(now); return; }
+    Object.keys(now).forEach(function (id) {
+      if (okSeen[key].indexOf(id) >= 0) return; okSeen[key].push(id); if (off()) return;
+      tag(now[id].querySelector('.lr-tick'), 'vz-tickpop', 500);
+      var t = r.lab.tasks.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+      (t.assert || []).forEach(function (a) {
+        if (!a.ref) return; var pr = String(a.ref).split('/'), nm = pr[1], ns = a.ns || r.lab.ns, sel = [];
+        if (pr[0] === 'svc' || pr[0] === 'service') sel.push('#lrDia .dia-svc[data-svc="' + ns + '/' + nm + '"]'); else if (pr[0] === 'pod') sel.push('#lrDia .dia-pod[data-k="' + ns + '/' + nm + '"]'); else if (/^(deploy|deployment|sts|statefulset|ds|daemonset|job|rs)$/.test(pr[0])) sel.push('#lrDia .dia-pod[data-k^="' + ns + '/' + nm + '-"]');
+        sel.forEach(function (q) { document.querySelectorAll(q).forEach(function (el) { tag(el, 'vz-fixed', 900); }); });
+      });
+    });
+  }
+  new MutationObserver(function () { clearTimeout(fixConfirm.t); fixConfirm.t = setTimeout(fixConfirm, 60); }).observe(document.body, { childList: true, subtree: true });
+
+  // ── rollout wave: pods whose revision changed pulse in order ──
+  var revSnap = {};
+  function wave(s) {
+    var els = [], now = {};
+    document.querySelectorAll('#lrDia .dia-pod').forEach(function (el) { var kk = (el.dataset.k || '').split('/'), p = s.get('Pod', kk[0], kk[1]); if (!p) return; var rv = (p.metadata.labels || {})['controller-revision-hash'] || (p.metadata.labels || {})['pod-template-hash'] || ''; now[el.dataset.k] = rv; if (rv && revSnap[el.dataset.k] !== undefined && revSnap[el.dataset.k] !== rv) els.push(el); });
+    if (!off()) els.sort(function (a, b) { return a.dataset.k < b.dataset.k ? -1 : 1; }).forEach(function (el, i) { el.style.animationDelay = (i * 90) + 'ms'; tag(el, 'vz-wave', 700 + i * 90); });
+    revSnap = now;
+  }
   KL.vz = { render: render };
 })();
 
@@ -15390,6 +16064,226 @@ EOF`] }),
   window.addEventListener('kl:cmd', function () { setTimeout(all, 150); });
   setTimeout(all, 300);
   KL.touches = { refresh: all };
+})();
+
+</script>
+<script>/* assets/js/flash.js */
+/* Flashcards: the quiz bank as flip cards (question front, answer and explanation back). Grades feed the same spaced-repetition store as the quiz.
+   The flip is a CSS rotateY; with reduced motion or the Motion toggle off the card swaps faces instantly. Keys: Space flips, 1 = missed it, 2 = knew it. */
+(function () {
+  'use strict';
+  var KL = window.KL = window.KL || {};
+  function $(i) { return document.getElementById(i); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function fmt(s) { return esc(s).replace(/`([^`]+)`/g, '<code>$1</code>'); }
+  var S = { deck: [], i: 0, ok: 0, flipped: false };
+  function pick() {
+    var tr = ($('quizTrackFilter') || {}).value || 'all', cat = ($('quizCatFilter') || {}).value || 'all', df = ($('quizDiffFilter') || {}).value || 'all';
+    var d = (KL.quizAll || []).filter(function (q) { return (tr === 'all' || (q.tr || []).indexOf(tr) >= 0) && (cat === 'all' || q.cat === cat) && (df === 'all' || q.diff === df); });
+    for (var i = d.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = d[i]; d[i] = d[j]; d[j] = t; }
+    return d.slice(0, 15);
+  }
+  function answer(q) { return q.type === 'mcq' ? q.opts[q.ans] : q.type === 'cmd' ? q.show : (q.show || (q.opts && q.opts[q.ans]) || ''); }
+  function draw() {
+    var host = $('flashRoot'); if (!host) return;
+    if (S.i >= S.deck.length) { host.innerHTML = '<div class="fc-done"><h3>Deck finished</h3><p>' + S.ok + ' of ' + S.deck.length + ' marked as known. Missed cards come back through spaced repetition in the quiz.</p><button class="btn-primary" id="fcAgain" type="button">New deck</button> <button class="btn-secondary" id="fcExit" type="button">Back to quiz</button></div>'; $('fcAgain').onclick = start; $('fcExit').onclick = exit; return; }
+    var q = S.deck[S.i]; S.flipped = false;
+    host.innerHTML = '<div class="fc-meta"><span>Card ' + (S.i + 1) + ' of ' + S.deck.length + ' · ' + esc(q.cat || '') + ' · ' + esc(q.diff || '') + '</span><button class="lr-linkbtn" id="fcExit" type="button">Back to quiz</button></div>' +
+      '<div class="fc-card" id="fcCard" role="button" tabindex="0" aria-pressed="false" aria-label="Flashcard. Press Space to flip."><div class="fc-in">' +
+      '<div class="fc-face fc-front"><p class="fc-q">' + fmt(q.q) + '</p><span class="fc-hint">Space or click to flip</span></div>' +
+      '<div class="fc-face fc-back" aria-hidden="true"><p class="fc-a">' + fmt(answer(q)) + '</p><p class="fc-e">' + fmt(q.exp || '') + '</p></div></div></div>' +
+      '<div class="fc-grade" id="fcGrade" hidden><button class="btn-secondary" id="fcNo" type="button">1 · Missed it</button> <button class="btn-primary" id="fcYes" type="button">2 · Knew it</button></div>';
+    $('fcExit').onclick = exit; $('fcCard').onclick = flip;
+    $('fcNo').onclick = function () { grade(false); }; $('fcYes').onclick = function () { grade(true); };
+    $('fcCard').focus();
+  }
+  function flip() { var c = $('fcCard'); if (!c) return; S.flipped = !S.flipped; c.classList.toggle('flipped', S.flipped); c.setAttribute('aria-pressed', S.flipped); c.querySelector('.fc-back').setAttribute('aria-hidden', !S.flipped); c.querySelector('.fc-front').setAttribute('aria-hidden', S.flipped); $('fcGrade').hidden = !S.flipped; }
+  function grade(ok) { var q = S.deck[S.i]; try { KL.store.qRecord(q.id, ok); } catch (e) { /* ignore */ } if (ok) S.ok++; S.i++; draw(); }
+  function start() { S = { deck: pick(), i: 0, ok: 0, flipped: false }; var q = $('quizCard'); if (q) { /* quiz cards stay in the page; flashcards replace the view */ } var pg = $('page-quiz'); pg.classList.add('fc-on'); var h = $('flashRoot'); if (!h) { h = document.createElement('div'); h.id = 'flashRoot'; h.className = 'fc-root'; var qc = $('quizCard'); qc.parentNode.insertBefore(h, qc); } if (!S.deck.length) { h.innerHTML = '<p>No questions match these filters.</p><button class="btn-secondary" id="fcExit" type="button">Back to quiz</button>'; $('fcExit').onclick = exit; return; } draw(); }
+  function exit() { var pg = $('page-quiz'); pg.classList.remove('fc-on'); var h = $('flashRoot'); if (h) h.remove(); }
+  document.addEventListener('keydown', function (e) {
+    if (!document.body.contains($('fcCard')) || /INPUT|SELECT|TEXTAREA/.test((e.target || {}).tagName)) return;
+    if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); flip(); } else if (S.flipped && e.key === '1') grade(false); else if (S.flipped && e.key === '2') grade(true);
+  });
+  function inject() {
+    var f = $('quizModeFilter'); if (!f || $('fcStart')) return;
+    var b = document.createElement('button'); b.id = 'fcStart'; b.type = 'button'; b.className = 'btn-secondary fc-start'; b.textContent = '🃏 Flashcards'; b.onclick = start; f.parentNode.appendChild(b);
+  }
+  new MutationObserver(inject).observe(document.body, { childList: true, subtree: true }); inject();
+  KL.flash = { start: start };
+})();
+
+</script>
+<script>/* assets/js/trainers.js */
+/* Trainers page (#trainers): weak-spot drills, explain-the-error, documentation search and a study-plan generator.
+   Everything runs on this device. Weak spots come from your own quiz and lab records; the plan is a schedule, not a prediction of any result. */
+(function () {
+  'use strict';
+  var KL = window.KL, $ = function (id) { return document.getElementById(id); }, KEY = 'kubedrill:trainers';
+  var S = { tab: 'weak', sess: null, plan: null };
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function load() { try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; } }
+  function save(d) { try { localStorage.setItem(KEY, JSON.stringify(d)); } catch (e) { /* ignore */ } }
+  function shuffle(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+  function pct(x) { return Math.round(x * 100); }
+  var TABS = [['weak', 'Weak spots'], ['err', 'Explain the error'], ['docs', 'Docs search'], ['plan', 'Study plan']];
+
+  // ── weak-spot analysis ──
+  function quizWeakness() {
+    var by = {}; (KL.quizAll || []).filter(function (q) { return q.type === 'mcq'; }).forEach(function (q) {
+      var st = KL.store.qState(q.id), c = by[q.cat] = by[q.cat] || { cat: q.cat, n: 0, seen: 0, wrong: 0, due: 0, qs: [] };
+      c.n++; c.qs.push(q); if (st) { c.seen += st.seen; c.wrong += st.wrong; if (KL.store.qDue(q.id)) c.due++; }
+    });
+    return Object.keys(by).map(function (k) { var c = by[k], rate = c.seen ? c.wrong / c.seen : 0.5; c.score = rate * 0.8 + (c.due / c.n) * 0.2 + (c.seen === 0 ? 0.05 : 0); return c; }).sort(function (a, b) { return b.score - a.score; });
+  }
+  function labWeakness() {
+    var out = []; var seen = {};
+    ['CKA', 'CKAD', 'CKS'].forEach(function (tr) {
+      (KL.COMP.tree[tr] || []).forEach(function (d) { d[1].forEach(function (c) {
+        if (seen[c[0]]) return; seen[c[0]] = 1;
+        var labs = KL.COMP.labsFor(c[0]).filter(function (id) { return KL.Labs.byId[id]; }); if (!labs.length) return;
+        var done = labs.filter(function (id) { return KL.store.labDone(id); }).length, hints = labs.reduce(function (a, id) { return a + KL.store.hintsUsed(id); }, 0);
+        out.push({ id: c[0], name: c[1], track: tr, n: labs.length, done: done, hints: hints, labs: labs, score: (labs.length - done) / labs.length * 0.7 + Math.min(1, hints / (labs.length * 3)) * 0.3 });
+      }); });
+    });
+    return out.sort(function (a, b) { return b.score - a.score; });
+  }
+  function bar(p, cls) { return '<span class="tr-bar"><i class="' + (cls || '') + '" style="width:' + Math.max(2, p) + '%"></i></span>'; }
+  function weakHtml() {
+    var q = quizWeakness().slice(0, 5), l = labWeakness().slice(0, 5);
+    if (S.sess) return sessionHtml();
+    var any = KL.Labs.list.some(function (x) { return KL.store.labDone(x.id); }) || Object.keys(KL.store.data().quiz || {}).length;
+    return '<div class="tr-card"><h3>Your weakest areas</h3><p class="pro-note">' + (any ? 'Ranked from your own quiz answers and lab records on this device.' : 'You have no records yet, so this starts from areas with no practice. Answer a few questions and it adapts.') + '</p>' +
+      '<div class="tr-two"><div><h4>Quiz topics</h4>' + q.map(function (c) { return '<div class="tr-row"><span>' + esc(c.cat) + '</span>' + bar(pct(c.score), 'warn') + '<em>' + (c.seen ? pct(1 - c.wrong / c.seen) + '% right' : 'not tried') + '</em></div>'; }).join('') + '</div>' +
+      '<div><h4>Competencies (labs)</h4>' + l.map(function (c) { return '<div class="tr-row"><span>' + esc(c.name) + ' <small>' + c.track + '</small></span>' + bar(pct(c.done / c.n)) + '<em>' + c.done + '/' + c.n + ' labs</em></div>'; }).join('') + '</div></div>' +
+      '<p><button class="btn-primary" id="trStart">Start a 10-minute session</button></p><p class="pro-note">Six questions from your weakest topics (overdue and missed first), then one lab to try next. Answers feed the same spaced-repetition record as the Quiz.</p></div>';
+  }
+  function startSession() {
+    var wk = quizWeakness().slice(0, 3), pool = [];
+    wk.forEach(function (c) { var qs = c.qs.slice().sort(function (a, b) { var sa = KL.store.qState(a.id), sb = KL.store.qState(b.id); var ra = sa ? (KL.store.qDue(a.id) ? 2 : 0) + (sa.ok ? 0 : 1) : 1, rb = sb ? (KL.store.qDue(b.id) ? 2 : 0) + (sb.ok ? 0 : 1) : 1; return rb - ra || Math.random() - 0.5; }); pool = pool.concat(qs.slice(0, 3)); });
+    var qs = shuffle(pool).slice(0, 6), lw = labWeakness(), pick = null, rank = { Beginner: 0, Intermediate: 1, Advanced: 2, Expert: 3 };
+    for (var i = 0; i < lw.length && !pick; i++) { var cand = lw[i].labs.filter(function (id) { return !KL.store.labDone(id); }).sort(function (a, b) { return (rank[KL.Labs.byId[a].diff] || 0) - (rank[KL.Labs.byId[b].diff] || 0); })[0]; if (cand) pick = { id: cand, comp: lw[i].name }; }
+    S.sess = { qs: qs, i: 0, ok: 0, picked: null, lab: pick };
+  }
+  function sessionHtml() {
+    var s = S.sess;
+    if (s.i >= s.qs.length) {
+      var lab = s.lab && KL.Labs.byId[s.lab.id];
+      return '<div class="tr-card"><h3>Session done: ' + s.ok + ' of ' + s.qs.length + ' right</h3>' + (lab ? '<p>Next lab for <b>' + esc(s.lab.comp) + '</b>: <a href="#lab/' + lab.id + '">' + esc(lab.num + ' ' + lab.title) + '</a> (' + esc(lab.diff) + ', ' + esc(lab.time) + ').</p>' : '<p>You have finished every lab in your weakest areas.</p>') +
+        '<p><button class="btn-primary" id="trAgain">Another session</button> <button class="btn-secondary" id="trBack">Back to weak spots</button></p></div>';
+    }
+    var q = s.qs[s.i], a = s.picked;
+    return '<div class="tr-card"><div class="tr-meta">Question ' + (s.i + 1) + ' of ' + s.qs.length + ' · ' + esc(q.cat) + '</div><h3 class="tr-q">' + esc(q.q) + '</h3><div class="tr-opts">' + q.opts.map(function (o, k) {
+      var cls = a === null ? '' : (k === q.ans ? ' good' : (k === a ? ' bad' : ' dim')); return '<button class="tr-opt' + cls + '" data-k="' + k + '"' + (a !== null ? ' disabled' : '') + '>' + esc(o) + '</button>'; }).join('') + '</div>' +
+      (a !== null ? '<p class="tr-exp" role="status"><b>' + (a === q.ans ? 'Right.' : 'Not quite.') + '</b> ' + esc(q.exp || '') + '</p><p><button class="btn-primary" id="trNext">' + (s.i + 1 < s.qs.length ? 'Next' : 'Finish') + '</button></p>' : '') + '</div>';
+  }
+  function bindWeak() {
+    var st = $('trStart'); if (st) st.onclick = function () { startSession(); draw(); };
+    document.querySelectorAll('.tr-opt').forEach(function (b) { b.onclick = function () { var s = S.sess, q = s.qs[s.i]; s.picked = +b.dataset.k; var ok = s.picked === q.ans; if (ok) s.ok++; KL.store.qRecord(q.id, ok); draw(); var nx = $('trNext'); if (nx) nx.focus(); }; });
+    var nx = $('trNext'); if (nx) nx.onclick = function () { S.sess.i++; S.sess.picked = null; draw(); };
+    var ag = $('trAgain'); if (ag) ag.onclick = function () { startSession(); draw(); };
+    var bk = $('trBack'); if (bk) bk.onclick = function () { S.sess = null; draw(); };
+  }
+
+  // ── multiple-choice trainers (errors and docs) ──
+  function mcHtml(kind) {
+    var data = kind === 'err' ? KL.errTrainer : KL.docsTrainer, key = 'run_' + kind, r = S[key];
+    if (!r) { var d = load(), wrong = (d[kind + 'Wrong'] || []), order = shuffle(data).sort(function (a, b) { return (wrong.indexOf(b[0]) >= 0 ? 1 : 0) - (wrong.indexOf(a[0]) >= 0 ? 1 : 0); }).slice(0, 8);
+      return '<div class="tr-card"><h3>' + (kind === 'err' ? 'Explain the error' : 'Docs search') + '</h3><p class="pro-note">' + (kind === 'err' ? 'A real-looking error message, four possible readings. The skill is to say which layer printed it and what to check first. ' + data.length + ' messages; ones you missed come back first.' : 'You have a task and the Kubernetes docs open. Which section holds the answer? Page titles can move: search by keyword if one has. ' + data.length + ' tasks.') + '</p><p><button class="btn-primary" id="mcGo">Start 8 questions</button></p>' + (kind === 'docs' ? '<p class="pro-note">For timed lookups of single fields, use the <a href="#drills">doc races on Drills</a>.</p>' : '') + '</div>' + '<div hidden id="mcOrder">' + esc(JSON.stringify(order.map(function (x) { return x[0]; }))) + '</div>'; }
+    var it = data.filter(function (x) { return x[0] === r.ids[r.i]; })[0];
+    if (!it) { return '<div class="tr-card"><h3>Done: ' + r.ok + ' of ' + r.ids.length + ' right</h3><p><button class="btn-primary" id="mcAgain">Another round</button></p></div>'; }
+    var errish = kind === 'err', opts = errish ? it[3] : it[2], ans = errish ? it[4] : it[3], exp = errish ? it[5] : it[4], a = r.picked;
+    return '<div class="tr-card"><div class="tr-meta">' + (r.i + 1) + ' of ' + r.ids.length + '</div>' + (errish ? '<pre class="tr-err">' + esc(it[1]) + '</pre><h3 class="tr-q">' + esc(it[2]) + '</h3>' : '<h3 class="tr-q">' + esc(it[1]) + '</h3>') + '<div class="tr-opts">' + opts.map(function (o, k) {
+      var cls = a === null ? '' : (k === ans ? ' good' : (k === a ? ' bad' : ' dim')); return '<button class="tr-opt' + cls + '" data-k="' + k + '"' + (a !== null ? ' disabled' : '') + '>' + esc(o) + '</button>'; }).join('') + '</div>' +
+      (a !== null ? '<p class="tr-exp" role="status"><b>' + (a === ans ? 'Right.' : 'Not quite.') + '</b> ' + esc(exp) + (errish ? ' <a href="#decode">Open the error decoder</a>.' : '') + '</p><p><button class="btn-primary" id="mcNext">' + (r.i + 1 < r.ids.length ? 'Next' : 'Finish') + '</button></p>' : '') + '</div>';
+  }
+  function bindMc(kind) {
+    var data = kind === 'err' ? KL.errTrainer : KL.docsTrainer, key = 'run_' + kind;
+    var go = $('mcGo'); if (go) go.onclick = function () { var ids = JSON.parse($('mcOrder').textContent); S[key] = { ids: ids, i: 0, ok: 0, picked: null }; draw(); };
+    var ag = $('mcAgain'); if (ag) ag.onclick = function () { S[key] = null; draw(); };
+    document.querySelectorAll('.tr-opt').forEach(function (b) { b.onclick = function () { var r = S[key], it = data.filter(function (x) { return x[0] === r.ids[r.i]; })[0], ans = kind === 'err' ? it[4] : it[3]; r.picked = +b.dataset.k; var ok = r.picked === ans; if (ok) r.ok++;
+      var d = load(), w = d[kind + 'Wrong'] || []; w = w.filter(function (x) { return x !== it[0]; }); if (!ok) w.push(it[0]); d[kind + 'Wrong'] = w; save(d); KL.store.touchDay(); draw(); var nx = $('mcNext'); if (nx) nx.focus(); }; });
+    var nx = $('mcNext'); if (nx) nx.onclick = function () { S[key].i++; S[key].picked = null; draw(); };
+  }
+
+  // ── study plan ──
+  function dayKey(d) { return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); }
+  function parseDay(s) { var p = String(s).split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function minutesOf(lab) { return parseInt(lab.time, 10) || 12; }
+  function buildPlan(o) {
+    var today = parseDay(dayKey(new Date())), exam = parseDay(o.date), total = Math.round((exam - today) / 86400000);
+    if (!(total >= 5)) return { error: 'The exam date must be at least 5 days away.' };
+    total = Math.min(total, 150); var perDay = Math.max(25, Math.round(o.hours * 60 / 6));
+    var rank = { Beginner: 0, Intermediate: 1, Advanced: 2, Expert: 3 }, lvlShift = { new: 0, some: 1, exp: 2 }[o.level] || 0;
+    var domains = (KL.COMP.tree[o.track] || []).map(function (d) { return { name: d[0], labs: [].concat.apply([], d[1].map(function (c) { return KL.COMP.labsFor(c[0]); })).filter(function (id, i, a) { var l = KL.Labs.byId[id]; return l && a.indexOf(id) === i && l.track.indexOf(o.track) >= 0 && l.id.indexOf('capstone') < 0 && !/CAPSTONE/.test(l.title); }) }; }).filter(function (d) { return d.labs.length; });
+    var queue = []; var maxLen = Math.max.apply(null, domains.map(function (d) { return d.labs.length; }).concat(1));
+    domains.forEach(function (d) { d.labs.sort(function (a, b) { return Math.abs((rank[KL.Labs.byId[a].diff] || 0) - lvlShift - 0.5) - Math.abs((rank[KL.Labs.byId[b].diff] || 0) - lvlShift - 0.5); }); });
+    for (var i = 0; i < maxLen; i++) domains.forEach(function (d) { if (d.labs[i] && !KL.store.labDone(d.labs[i])) queue.push(d.labs[i]); });
+    var mocks = (KL.exam && KL.exam.bundles ? KL.exam.bundles() : []).filter(function (b) { return b.track === o.track; });
+    var full = mocks.filter(function (b) { return !b.level; }), lvls = mocks.filter(function (b) { return b.level; });
+    var days = [], mockStart = Math.max(1, total - Math.max(3, Math.round(total * 0.12))), qi = 0, weakCats = quizWeakness().slice(0, 4).map(function (c) { return c.cat; });
+    for (var d = 0; d < total; d++) {
+      var date = new Date(today.getTime() + d * 86400000), items = [], left = perDay, dow = date.getDay();
+      var rest = (d % 7 === 6) || d === total - 1;
+      if (d === total - 1) { items.push({ t: 'rest', label: 'Day before the exam: light review of the cheatsheet, set up your terminal habits, sleep.', mins: 20 }); }
+      else if (rest) { items.push({ t: 'rest', label: 'Rest day. A 10-minute flashcard round is enough.', href: '#quiz', mins: 10 }); }
+      else if (d >= mockStart) {
+        var k = d - mockStart, m = full[k % Math.max(1, full.length)] || lvls[lvls.length - 1];
+        if (m && k % 2 === 0) items.push({ t: 'mock', label: m.name + ' under exam rules', href: '#exam', mins: Math.min(m.mins, Math.max(60, perDay)) });
+        else items.push({ t: 'review', label: 'Review every task you missed in the last mock, then redo it from scratch.', href: '#labs', mins: perDay });
+      } else {
+        var phase = d / mockStart;
+        if (phase < 0.2 && d === 0) items.push({ t: 'doc', label: 'Set up: aliases, vim, kubectl explain, and the docs search trainer.', href: '#trainers', mins: 25 }), left -= 25;
+        while (left > 0 && queue.length) { var id = queue[0], lab = KL.Labs.byId[id], mm = minutesOf(lab); if (items.length && mm > left + 8) break; queue.shift(); items.push({ t: 'lab', id: id, label: lab.num + ' ' + lab.title, href: '#lab/' + id, mins: mm }); left -= mm; }
+        if (left >= 10) { var cat = weakCats[qi++ % Math.max(1, weakCats.length)]; items.push({ t: 'drill', label: phase < 0.5 ? 'Quiz round: ' + (cat || 'mixed topics') : 'Weak-spot session on the Trainers page', href: phase < 0.5 ? '#quiz' : '#trainers', mins: Math.min(20, left) }); }
+        if (!items.length) items.push({ t: 'drill', label: 'Command drills', href: '#drills', mins: perDay });
+      }
+      days.push({ date: dayKey(date), items: items });
+    }
+    return { created: dayKey(new Date()), track: o.track, exam: o.date, hours: o.hours, level: o.level, days: days, labsLeft: queue.length };
+  }
+  function planHtml() {
+    var d = load(), p = S.plan = S.plan || d.plan || null, o = d.planOpts || { track: 'CKA', hours: 8, level: 'some', date: dayKey(new Date(Date.now() + 56 * 86400000)) };
+    var form = '<div class="tr-card"><h3>Study plan</h3><p class="pro-note">A day-by-day schedule built from the labs, quizzes and mocks in this app. Six study days a week, one rest day. It is a schedule, not a promise about any result.</p><div class="tr-form">' +
+      '<label>Exam <select id="plTrack">' + ['CKA', 'CKAD', 'CKS'].map(function (t) { return '<option' + (o.track === t ? ' selected' : '') + '>' + t + '</option>'; }).join('') + '</select></label>' +
+      '<label>Exam date <input type="date" id="plDate" value="' + esc(o.date) + '"></label>' +
+      '<label>Hours per week <input type="number" id="plHours" min="2" max="40" value="' + o.hours + '"></label>' +
+      '<label>Experience <select id="plLevel"><option value="new"' + (o.level === 'new' ? ' selected' : '') + '>New to Kubernetes</option><option value="some"' + (o.level === 'some' ? ' selected' : '') + '>Some hands-on</option><option value="exp"' + (o.level === 'exp' ? ' selected' : '') + '>Use it at work</option></select></label>' +
+      '<button class="btn-primary" id="plGo">' + (p ? 'Rebuild plan' : 'Build my plan') + '</button></div><p id="plErr" class="tr-bad" role="alert"></p></div>';
+    if (!p) return form;
+    var done = d.planDone || {}, todayK = dayKey(new Date()), tot = 0, dn = 0;
+    p.days.forEach(function (dy, di) { dy.items.forEach(function (it, ii) { tot++; if (done[di + ':' + ii] || (it.t === 'lab' && KL.store.labDone(it.id))) dn++; }); });
+    var wk = '', weeks = Math.ceil(p.days.length / 7);
+    for (var w = 0; w < weeks; w++) {
+      wk += '<details class="tr-week"' + (p.days.slice(w * 7, w * 7 + 7).some(function (x) { return x.date === todayK; }) || (w === 0 && todayK > p.days[p.days.length - 1].date) ? ' open' : (w === 0 ? ' open' : '')) + '><summary>Week ' + (w + 1) + '</summary>' + p.days.slice(w * 7, w * 7 + 7).map(function (dy, k) {
+        var di = w * 7 + k; return '<div class="tr-day' + (dy.date === todayK ? ' today' : '') + '"><b>' + esc(parseDay(dy.date).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' })) + (dy.date === todayK ? ' · today' : '') + '</b><ul>' + dy.items.map(function (it, ii) {
+          var ck = done[di + ':' + ii] || (it.t === 'lab' && KL.store.labDone(it.id)); return '<li><label><input type="checkbox" data-pk="' + di + ':' + ii + '"' + (ck ? ' checked' : '') + '> ' + (it.href ? '<a href="' + esc(it.href) + '">' + esc(it.label) + '</a>' : esc(it.label)) + ' <small>' + it.mins + ' min</small></label></li>'; }).join('') + '</ul></div>'; }).join('') + '</details>';
+    }
+    return form + '<div class="tr-card"><h3>' + esc(p.track) + ' plan: ' + p.days.length + ' days to ' + esc(p.exam) + '</h3><p>' + dn + ' of ' + tot + ' items done ' + bar(pct(dn / Math.max(1, tot))) + '</p>' + (p.labsLeft ? '<p class="pro-note">' + p.labsLeft + ' labs for this track did not fit before the exam; more hours a week would fit them.</p>' : '') +
+      '<p><button class="btn-secondary" id="plCopy">Copy as text</button> <button class="btn-secondary" id="plPrint">Print</button></p>' + wk + '</div>';
+  }
+  function planText(p) { return p.track + ' study plan, exam ' + p.exam + '\n\n' + p.days.map(function (dy) { return dy.date + '\n' + dy.items.map(function (it) { return '  - ' + it.label + ' (' + it.mins + ' min)'; }).join('\n'); }).join('\n'); }
+  function bindPlan() {
+    var go = $('plGo'); if (go) go.onclick = function () {
+      var o = { track: $('plTrack').value, date: $('plDate').value, hours: Math.max(2, Math.min(40, +$('plHours').value || 8)), level: $('plLevel').value };
+      var p = buildPlan(o); if (p.error) { $('plErr').textContent = p.error; return; }
+      var d = load(); d.plan = p; d.planOpts = o; d.planDone = {}; save(d); S.plan = p; draw();
+    };
+    document.querySelectorAll('[data-pk]').forEach(function (c) { c.onchange = function () { var d = load(); d.planDone = d.planDone || {}; if (c.checked) d.planDone[c.dataset.pk] = 1; else delete d.planDone[c.dataset.pk]; save(d); KL.store.touchDay(); }; });
+    var cp = $('plCopy'); if (cp) cp.onclick = function () { var t = planText(S.plan); try { navigator.clipboard.writeText(t); cp.textContent = 'Copied'; } catch (e) { cp.textContent = 'Copy failed'; } };
+    var pr = $('plPrint'); if (pr) pr.onclick = function () { document.querySelectorAll('.tr-week').forEach(function (x) { x.open = true; }); window.print(); };
+  }
+
+  function draw() {
+    var root = $('trRoot'); if (!root) return;
+    var body = S.tab === 'weak' ? weakHtml() : S.tab === 'plan' ? planHtml() : mcHtml(S.tab);
+    root.innerHTML = '<div class="section-header"><div class="section-tag">Practice</div><h2 class="section-title">Trainers</h2><p class="section-desc">Four short trainers aimed at how people actually lose points: weak topics, misread errors, slow docs lookups and an unplanned calendar.</p></div>' +
+      '<div class="an-tabs tr-tabs" role="tablist">' + TABS.map(function (t) { return '<button class="an-tab' + (S.tab === t[0] ? ' active' : '') + '" role="tab" aria-selected="' + (S.tab === t[0]) + '" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' + body;
+    root.querySelectorAll('.tr-tabs .an-tab').forEach(function (b) { b.onclick = function () { S.tab = b.dataset.t; draw(); }; });
+    if (S.tab === 'weak') bindWeak(); else if (S.tab === 'plan') bindPlan(); else bindMc(S.tab);
+  }
+  KL.route('trainers', draw);
+  KL.trainers = { buildPlan: buildPlan, quizWeakness: quizWeakness, labWeakness: labWeakness };
 })();
 
 </script>
@@ -16528,7 +17422,7 @@ EOF`] }),
     ['Storage', 'model', 'PV and PVC binding, StorageClass, WaitForFirstConsumer, reclaim policy, expansion flag. No real volumes or data.'],
     ['RBAC and admission', 'model', 'Roles, ClusterRoles, bindings, can-i, ResourceQuota, LimitRange, Pod Security labels. Aggregated roles and non-resource URLs may be incomplete.'],
     ['Metrics', 'script', 'kubectl top and HPA use synthetic load, so the numbers are plausible but not measured.'],
-    ['Scheduling constraints and admission checks (S198-S216)', 'script', 'The simulator applies rules written for these labs: a hostPort can be used by one pod per node, a local volume\'s node affinity limits the nodes, requests above limits and unsupported downward-API fields are refused, selectors and most Pod fields cannot be changed, imagePullPolicy Never needs the image on the node, a Job can be suspended, the podManagementPolicy of a StatefulSet is immutable, Service traffic-policy fields need a NodePort or LoadBalancer, a malformed image digest is InvalidImageName, RBAC refuses grants the user does not hold unless they have bind or escalate, a StatefulSet rolls out by revision with partition support, and an expired admin client certificate needs both the renewal and a fresh kubeconfig. They match the behaviour of a real API server and scheduler for these cases, but only these cases.'],
+    ['Scheduling constraints and admission checks (S198-S228)', 'script', 'The simulator applies rules written for these labs: a hostPort can be used by one pod per node, a local volume\'s node affinity limits the nodes, requests above limits and unsupported downward-API fields are refused, selectors and most Pod fields cannot be changed, imagePullPolicy Never needs the image on the node, a Job can be suspended, the podManagementPolicy of a StatefulSet is immutable, Service traffic-policy fields need a NodePort or LoadBalancer, a malformed image digest is InvalidImageName, RBAC refuses grants the user does not hold unless they have bind or escalate, a StatefulSet rolls out by revision with partition support, and an expired admin client certificate needs both the renewal and a fresh kubeconfig. They match the behaviour of a real API server and scheduler for these cases, but only these cases.'],
     ['Read-only root filesystem', 'script', 'Only S205 models the way the nginx image fails under readOnlyRootFilesystem. Older hardening labs (S77, S109) let nginx run with a read-only root and no writable volumes, which the real image would not do; treat their security settings as the lesson, not their runtime result.'],
     ['Control-plane failures (S173-S181)', 'script', 'A broken static-pod manifest (unknown flag, missing file, wrong etcd URL), a missing CNI config, a kube-proxy ConfigMap fault and an etcd NOSPACE alarm are modelled by rules written for these labs. Fixing the manifest brings the component back; no real process runs. The simulator does not model mTLS or a CNI plugin such as Cilium.'],
     ['Node and control-plane tasks', 'script', 'ssh, systemctl, journalctl, crictl, kubeadm, etcdctl and certificate checks follow scripted flows for the lab scenarios. openssl keys, CSRs and certificates, CertificateSigningRequest approval and certificate-based users are scripted (fake PEM files that carry the subject), not real cryptography.'],

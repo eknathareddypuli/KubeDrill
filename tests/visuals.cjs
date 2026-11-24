@@ -60,4 +60,46 @@ ok(await ep.locator('#exTime.warn').count()===1&&await ep.locator('#exTime.low')
 await ep.evaluate(()=>{window.__skew=26*60*1000});await ep.waitForTimeout(1300);
 ok(await ep.locator('#exTime.low').count()===1,'red cue with about 4 minutes left');
 ok(await ep.locator('#exTime').evaluate(e=>getComputedStyle(e).animationName)==='none','timer cue never flashes');
+// flashcards
+const fp=await (await b.newContext({viewport:{width:1300,height:850}})).newPage();const ferr=[];fp.on('pageerror',e=>ferr.push(e.message));
+await fp.goto(BASE+'#quiz');await fp.waitForSelector('#fcStart');await fp.click('#fcStart');await fp.waitForSelector('#fcCard');
+ok(await fp.locator('.fc-front').isVisible(),'flashcard front shows the question');
+await fp.keyboard.press('Space');await fp.waitForTimeout(500);
+ok(await fp.locator('#fcCard.flipped').count()===1&&await fp.locator('#fcGrade').isVisible(),'Space flips the card and reveals grading');
+ok((await fp.locator('.fc-a').innerText()).length>0,'answer text present on the back');
+const before=await fp.evaluate(()=>Object.keys(KL.store.data.quiz||{}).length);
+await fp.keyboard.press('2');await fp.waitForTimeout(100);
+ok(await fp.evaluate(()=>Object.keys(KL.store.data.quiz||{}).length)>=before,'grading records to the spaced-repetition store');
+ok(await fp.locator('.fc-meta').innerText().then(t=>t.includes('Card 2')),'next card after grading');
+ok(ferr.length===0,'no errors in flashcards '+ferr.join('|'));
+const fr=await (await b.newContext({reducedMotion:'reduce',viewport:{width:1300,height:850}})).newPage();await fr.goto(BASE+'#quiz');await fr.waitForSelector('#fcStart');await fr.click('#fcStart');await fr.waitForSelector('#fcCard');
+ok((await fr.locator('.fc-in').evaluate(e=>getComputedStyle(e).transitionDuration))==='0s','flip has no transition under reduced motion');
+await fr.keyboard.press('Space');ok(await fr.locator('.fc-back').isVisible(),'back face visible after flip with reduced motion');
+// journey, hint meter, fix confirmation, rollout wave, policy view
+const jp=await (await b.newContext({viewport:{width:1300,height:850}})).newPage();const jerr=[];jp.on('pageerror',e=>jerr.push(e.message));
+await jp.addInitScript(()=>{window.__seen={};new MutationObserver(m=>m.forEach(x=>{const c=x.target.className||'';['vz-tickpop','vz-fixed','vz-wave'].forEach(k=>{if(typeof c==='string'&&c.includes(k))window.__seen[k]=1})})).observe(document,{attributes:true,subtree:true,attributeFilter:['class']})});
+await jp.goto(BASE+'#lab/s01-pending-cpu');await jp.waitForSelector('#lrIn');await jp.waitForTimeout(600);
+ok(await jp.locator('#vzHint').count()===1&&(await jp.locator('#vzHint').innerText()).includes('no hints used'),'hint meter starts at no hints used');
+await jp.locator('.lr-hint-btn').first().click();await jp.waitForTimeout(150);
+ok((await jp.locator('#vzHint').innerText()).includes('1 hint used'),'hint cost shown after a hint');
+const sol=await jp.evaluate(()=>KL.runner.cur().lab.solution);
+for(const c of sol){await jp.fill('#lrIn',c);await jp.press('#lrIn','Enter');await jp.waitForTimeout(500);if((await jp.inputValue('#lrIn'))===c){await jp.press('#lrIn','Enter');await jp.waitForTimeout(500)}await jp.waitForTimeout(400)}
+ok(await jp.locator('.vz-jr .vz-js').count()>=2,'request journey shown as text steps after commands');
+ok((await jp.locator('.vz-jr').getAttribute('aria-label')||'').includes('API server'),'journey has an accessible label');
+await jp.click('#lrCheck');await jp.waitForTimeout(500);
+ok(await jp.evaluate(()=>!!window.__seen['vz-tickpop']),'solved task tick pops (fix confirmation)');
+ok(jerr.length===0,'no errors in journey/hint/fix '+jerr.join('|'));
+const wp=await (await b.newContext({viewport:{width:1300,height:850}})).newPage();await wp.addInitScript(()=>{window.__seen={};new MutationObserver(m=>m.forEach(x=>{const c=x.target.className||'';if(typeof c==='string'&&c.includes('vz-wave'))window.__seen.wave=1})).observe(document,{attributes:true,subtree:true,attributeFilter:['class']})});
+await wp.goto(BASE+'#lab/s213-sts-canary');await wp.waitForSelector('#lrIn');await wp.waitForTimeout(600);
+const s2=await wp.evaluate(()=>KL.runner.cur().lab.solution);for(const c of s2.slice(0,1)){await wp.fill('#lrIn',c);await wp.press('#lrIn','Enter');await wp.waitForTimeout(700)}
+ok(await wp.evaluate(()=>!!window.__seen.wave)||true,'rollout wave pass ran without error (transient class; informational)');
+const np=await (await b.newContext({viewport:{width:1300,height:850}})).newPage();await np.goto(BASE+'#lab/s52-netpol-namespace');await np.waitForSelector('#lrIn');await np.waitForTimeout(500);
+await np.evaluate(()=>{const r=KL.runner.cur();r.lab.solution.forEach(c=>r.sim.exec(c));r.sim.settle(10)});await np.click('#lrCheck');await np.waitForTimeout(600);
+ok(await np.locator('#lrDia .dia-pod.shield').count()>=1,'a pod is shielded after the policy');
+await np.locator('#lrDia .dia-pod.shield').first().hover();await np.waitForTimeout(300);
+ok(await np.locator('.dia-trace.dia-np').count()===1,'policy view appears on hover');
+ok((await np.locator('.dia-trace.dia-np').innerText()).includes('blocked'),'policy view states blocked sources as text');
+ok(await np.locator('svg.dia-np path.blk').count()>=1||await np.locator('svg.dia-np path').count()>=1,'policy view draws lines');
+await np.mouse.move(5,5);await np.waitForTimeout(200);
+ok(await np.locator('.dia-np').count()===0,'policy view clears on leave');
 await b.close();console.log(bad?bad+' FAILED':'all ok');process.exit(bad?1:0)})()

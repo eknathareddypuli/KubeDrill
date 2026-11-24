@@ -8,5 +8,8 @@ const { chromium } = require('playwright-core'); const path = require('path');
   const out = await pg.innerText('#lrOut'), fonts = await pg.evaluate(() => Array.from(document.fonts).filter(f => f.status === 'loaded').length);
   const ok = /ImagePull|ErrImage/.test(out) && !errs.length && !net.length;
   console.log(ok ? '✔' : '✘', 'single-file build: runner works, fonts loaded =', fonts, ', network requests =', net.length, ', errors =', errs.length); if (net.length) console.log(net); if (errs.length) console.log(errs);
-  await b.close(); process.exit(ok ? 0 : 1);
+  // every stylesheet must be inlined: the visuals, flashcard and trainer styles live in visuals.css
+  const css = await pg.evaluate(() => { let r = 0, links = document.querySelectorAll('link[rel=stylesheet]').length; for (const sh of document.styleSheets) { try { for (const x of sh.cssRules) { if (/\.vz-pill|\.fc-card|\.tr-card/.test(x.cssText)) r++; } } catch (e) { /* cross-origin */ } } return { r, links }; });
+  const ok2 = css.r >= 3 && css.links === 0; console.log(ok2 ? '✔' : '✘', 'single-file build: visuals.css inlined (' + css.r + ' matching rules, ' + css.links + ' stylesheet links)');
+  await b.close(); process.exit(ok && ok2 ? 0 : 1);
 })();
