@@ -115,3 +115,7 @@ html[data-motion=off] .vz-js,html[data-motion=off] .vz-hp i,html[data-motion=off
 .tr-week{border:1px solid var(--border);border-radius:10px;margin:8px 0;padding:6px 12px}.tr-week summary{cursor:pointer;font-weight:600;padding:4px 0}
 .tr-day{padding:8px 0;border-top:1px solid var(--border)}.tr-day.today{background:rgba(59,130,246,.08);border-radius:8px;padding:8px}.tr-day ul{list-style:none;margin:4px 0 0;padding:0}.tr-day li{margin:3px 0}.tr-day small{color:var(--text3,#64748b)}
 @media print{body *{visibility:hidden}#trRoot,#trRoot *{visibility:visible}#trRoot{position:absolute;left:0;top:0;width:100%}.tr-tabs,.tr-form,.btn-primary,.btn-secondary{display:none!important}}
+
+/* lab review + speed card */
+.lr-bench{margin-top:10px}.lr-bench h4{margin:0 0 6px}.lb-row{margin:4px 0}.lb-tip{opacity:.85}.lr-bench small{opacity:.7}
+.lb-item small{opacity:.7;margin-left:4px}
