@@ -65,3 +65,53 @@ html[data-motion=off] .vz-sweep{display:none}
 @keyframes vz-off{from{opacity:.3}to{opacity:1}}
 html:not([data-motion=off]) .off-badge:not([hidden]){animation:vz-off .6s ease-out}
 html[data-motion=off] .vz-flame,html[data-motion=off] .vz-slide{animation:none!important}
+/* flashcards */
+.fc-on .quiz-progress-bar,.fc-on #quizCard,.fc-on #quizResults,.fc-on #quizExplain,.fc-on #quizNext{display:none!important}
+.fc-root{max-width:640px;margin:14px auto}
+.fc-meta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--text2);margin-bottom:8px}
+.fc-card{perspective:1000px;min-height:230px;cursor:pointer;outline-offset:3px}
+.fc-in{position:relative;min-height:230px}
+.fc-face{position:absolute;inset:0;padding:22px 24px;border:1px solid var(--border);border-radius:14px;background:var(--bg2);display:flex;flex-direction:column;justify-content:center;gap:10px;backface-visibility:hidden;-webkit-backface-visibility:hidden;overflow:auto}
+.fc-back{transform:rotateY(180deg)}
+html:not([data-motion=off]) .fc-in{transition:transform .4s ease;transform-style:preserve-3d}
+html:not([data-motion=off]) .fc-card.flipped .fc-in{transform:rotateY(180deg)}
+html[data-motion=off] .fc-face{backface-visibility:visible}
+html[data-motion=off] .fc-back{transform:none;visibility:hidden}
+html[data-motion=off] .fc-card.flipped .fc-back{visibility:visible}
+html[data-motion=off] .fc-card.flipped .fc-front{visibility:hidden}
+.fc-q,.fc-a{font-size:1.05rem;margin:0}.fc-a{font-weight:600;color:var(--green)}.fc-e{margin:0;color:var(--text2);font-size:13.5px}.fc-hint{font-size:11.5px;color:var(--text3)}
+.fc-grade{display:flex;gap:10px;justify-content:center;margin-top:12px}.fc-done{text-align:center;padding:30px 0}
+/* request journey, policy view, hint cost, fix confirmation, rollout wave */
+.vz-jr{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:4px;padding:6px 12px 8px;font-size:12px;color:var(--text2)}
+.vz-js{padding:1px 8px;border:1px solid var(--border2);border-radius:10px}.vz-js.rej{border-color:#f87171;color:#f87171}
+.vz-ja{color:var(--text3)}
+@keyframes vz-hop{from{opacity:.2;transform:translateY(3px)}to{opacity:1;transform:none}}
+html:not([data-motion=off]) .vz-js{animation:vz-hop .22s ease-out both}
+.vz-hintm{display:inline-flex;align-items:center;gap:8px;margin-left:auto;font-size:12px;color:var(--text2)}
+.vz-hp{display:inline-flex;gap:3px}.vz-hp i{width:8px;height:8px;border-radius:50%;background:rgba(127,127,127,.3)}.vz-hp i.on{background:var(--warn)}
+@keyframes vz-pip{from{transform:scale(2.2)}to{transform:scale(1)}}
+html:not([data-motion=off]) .vz-hp i.new{animation:vz-pip .3s ease-out}
+@keyframes vz-tick{0%{transform:scale(1)}50%{transform:scale(1.5)}100%{transform:scale(1)}}
+html:not([data-motion=off]) .vz-tickpop{display:inline-block;animation:vz-tick .4s ease-out}
+@keyframes vz-fixed{0%{transform:scale(1)}40%{transform:scale(1.12)}100%{transform:scale(1)}}
+html:not([data-motion=off]) .vz-fixed{animation:vz-fixed .6s ease-out}
+@keyframes vz-wave{0%{transform:scale(1);opacity:1}40%{transform:scale(1.14);opacity:.6}100%{transform:scale(1);opacity:1}}
+html:not([data-motion=off]) .vz-wave{animation:vz-wave .55s ease-out both}
+html[data-motion=off] .vz-js,html[data-motion=off] .vz-hp i,html[data-motion=off] .vz-tickpop,html[data-motion=off] .vz-fixed,html[data-motion=off] .vz-wave{animation:none!important}
+/* Visualize scenes built from concept data */
+.an-stage .an-chips{position:absolute;inset:0;margin:0;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;padding:18px}
+.an-stage .an-chips .cp-it{font-size:.95rem;padding:14px 18px}
+/* Trainers page */
+.tr-card{border:1px solid var(--border);border-radius:14px;padding:18px;margin:14px 0;background:var(--bg2)}
+.tr-two{display:grid;grid-template-columns:1fr 1fr;gap:20px}@media(max-width:760px){.tr-two{grid-template-columns:1fr}}
+.tr-row{display:grid;grid-template-columns:minmax(120px,1.2fr) 1fr auto;gap:10px;align-items:center;margin:6px 0;font-size:.9rem}.tr-row em{font-style:normal;color:var(--text3,#64748b);font-size:.8rem}
+.tr-bar{display:block;height:8px;border-radius:6px;background:var(--border);overflow:hidden}.tr-bar i{display:block;height:100%;background:#3b82f6;border-radius:6px}.tr-bar i.warn{background:#f59e0b}
+.tr-meta{font-size:.8rem;color:var(--text3,#64748b);margin-bottom:6px}.tr-q{margin:6px 0 12px}
+.tr-err{white-space:pre-wrap;word-break:break-word;background:#0b1220;color:#e2e8f0;padding:12px 14px;border-radius:10px;font-size:.85rem;margin:8px 0 12px}
+.tr-opts{display:grid;gap:8px}.tr-opt{text-align:left;padding:11px 14px;border:1px solid var(--border);border-radius:10px;background:var(--bg);color:inherit;cursor:pointer;font:inherit}
+.tr-opt:hover:not([disabled]){border-color:#3b82f6}.tr-opt.good{border-color:#22c55e;background:rgba(34,197,94,.14)}.tr-opt.bad{border-color:#ef4444;background:rgba(239,68,68,.12)}.tr-opt.dim{opacity:.55}
+.tr-exp{margin:12px 0 4px}.tr-bad{color:#ef4444;min-height:1.2em}
+.tr-form{display:flex;flex-wrap:wrap;gap:12px;align-items:flex-end}.tr-form label{display:grid;gap:4px;font-size:.85rem}.tr-form input,.tr-form select{padding:8px 10px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:inherit;font:inherit}
+.tr-week{border:1px solid var(--border);border-radius:10px;margin:8px 0;padding:6px 12px}.tr-week summary{cursor:pointer;font-weight:600;padding:4px 0}
+.tr-day{padding:8px 0;border-top:1px solid var(--border)}.tr-day.today{background:rgba(59,130,246,.08);border-radius:8px;padding:8px}.tr-day ul{list-style:none;margin:4px 0 0;padding:0}.tr-day li{margin:3px 0}.tr-day small{color:var(--text3,#64748b)}
+@media print{body *{visibility:hidden}#trRoot,#trRoot *{visibility:visible}#trRoot{position:absolute;left:0;top:0;width:100%}.tr-tabs,.tr-form,.btn-primary,.btn-secondary{display:none!important}}
