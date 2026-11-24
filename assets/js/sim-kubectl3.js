@@ -1,6 +1,9 @@
 /* KubeDrill simulator — kubectl part 3: create/apply/delete/run/expose/scale/set/label/taint/drain/rollout/patch/kustomize */
 (function (root) {
   'use strict';
+  var VERBS = ['annotate', 'api-resources', 'api-versions', 'apply', 'attach', 'auth', 'autoscale', 'certificate', 'cluster-info', 'completion', 'config', 'cordon', 'cp', 'create', 'debug', 'delete', 'describe', 'diff', 'drain', 'edit', 'events', 'exec', 'explain', 'expose', 'get', 'kustomize', 'label', 'logs', 'options', 'patch', 'plugin', 'port-forward', 'replace', 'rollout', 'run', 'scale', 'set', 'taint', 'top', 'uncordon', 'version', 'wait'];
+  function lev(a, b) { var d = [], i, j; for (i = 0; i <= a.length; i++) { d[i] = [i]; } for (j = 1; j <= b.length; j++) d[0][j] = j; for (i = 1; i <= a.length; i++) for (j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1)); return d[a.length][b.length]; }
+  function didYouMean(v) { var hit = VERBS.filter(function (x) { return lev(v, x) <= 2 || (v.length > 2 && x.indexOf(v) === 0); }); return hit.length ? '\n\nDid you mean this?\n' + hit.slice(0, 3).map(function (x) { return '\t' + x; }).join('\n') : '\nSee \'kubectl --help\' for usage.'; }
   var Sim = root.KL ? root.KL.Sim : require('./sim.js');
   var P = Sim.prototype, KErr = Sim.KErr, U = Sim.util, Y = Sim.Y, clone = U.clone;
   function arr(v) { return v === undefined ? [] : Array.isArray(v) ? v : [v]; }
@@ -115,7 +118,7 @@
       case 'cp': throw new KErr('error: kubectl cp is not available in the simulator');
       case 'diff': return '';
     }
-    throw new KErr('error: unknown command "' + verb + '" for "kubectl"\n\nDid you mean this?\n\tget');
+    throw new KErr('error: unknown command "' + verb + '" for "kubectl"' + didYouMean(verb));
   };
 
   // ─── kubectl create <thing> ───
