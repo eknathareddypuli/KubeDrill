@@ -96,17 +96,22 @@
 
   // ───────── page ─────────
   var TABS = [['cp', '🧭 Control-plane flow'], ['life', '♻️ Pod lifecycle'], ['ru', '🔄 Rolling update'], ['np', '🛡️ NetworkPolicy']], player, tab = 'cp';
+  // extra scenes built from the concept data in field-more.js (chips that light up per step)
+  var EXTRA = [['sched', '📅 Scheduler'], ['svcep', '🔌 Service endpoints'], ['rbac', '🔑 RBAC'], ['netpolpeer', '🧱 Policy peers'], ['stspart', '🐤 StatefulSet canary'], ['ndots', '🔎 DNS ndots']];
+  function conceptOf(id) { return (KL.concepts || []).filter(function (c) { return c.id === id; })[0]; }
+  function renderChips(st, s) { st.innerHTML = '<div class="cp-items an-chips">' + s.items.map(function (x) { return '<div class="cp-it ' + (x.c || '') + '">' + String(x.l).replace(/[&<>]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]; }) + '</div>'; }).join('') + '</div>'; }
   function opts(html) { $('anOpts').innerHTML = html; }
   function show(t) {
     tab = t; document.querySelectorAll('.an-tab').forEach(function (b) { b.classList.toggle('active', b.dataset.t === t); b.setAttribute('aria-selected', b.dataset.t === t); });
     if (t === 'cp') { player.load(CP.steps, renderCP); opts(''); }
     else if (t === 'life') { opts('<label>Scenario <select id="lifeSel"><option value="ok">Healthy start</option><option value="img">Bad image tag</option><option value="crash">App crashes</option><option value="oom">Out of memory</option></select></label>'); $('lifeSel').onchange = function () { player.load(lifeSteps(this.value), renderLife); }; player.load(lifeSteps('ok'), renderLife); }
     else if (t === 'ru') { opts('<label>Replicas <input type="range" id="ruN" min="2" max="8" value="' + RU.n + '"> <b id="ruNv">' + RU.n + '</b></label><label>maxSurge <input type="range" id="ruS" min="0" max="3" value="' + RU.surge + '"> <b id="ruSv">' + RU.surge + '</b></label><label>maxUnavailable <input type="range" id="ruU" min="0" max="3" value="' + RU.unav + '"> <b id="ruUv">' + RU.unav + '</b></label><span class="an-warn" id="ruWarn"></span>'); var upd = function () { RU.n = +$('ruN').value; RU.surge = +$('ruS').value; RU.unav = +$('ruU').value; $('ruNv').textContent = RU.n; $('ruSv').textContent = RU.surge; $('ruUv').textContent = RU.unav; $('ruWarn').textContent = RU.surge === 0 && RU.unav === 0 ? '⚠ both 0 is invalid — the rollout could never progress' : ''; if (RU.surge || RU.unav) player.load(ruSteps(), renderRU); }; ['ruN', 'ruS', 'ruU'].forEach(function (id) { $(id).oninput = upd; }); player.load(ruSteps(), renderRU); }
+    else if (conceptOf(t)) { opts(''); player.load(conceptOf(t).steps.map(function (x) { return { items: x.items, cap: '<b>' + x.t + '</b> ' + x.note.replace(/`([^`]+)`/g, '<code>$1</code>') }; }), renderChips); }
     else { opts('<label><input type="checkbox" id="npOn"> Apply policy</label><label>Source <select id="npFrom"><option value="frontend">frontend (allowed)</option><option value="intruder">intruder</option></select></label>'); var u = function () { NP.on = $('npOn').checked; NP.from = $('npFrom').value; player.load(npSteps(), renderNP); }; $('npOn').onchange = u; $('npFrom').onchange = u; NP.on = false; NP.from = 'frontend'; player.load(npSteps(), renderNP); }
   }
   function renderPage() {
     var root = $('vizRoot'); if (!root || root.dataset.ready) return; root.dataset.ready = 1;
-    root.innerHTML = '<div class="section-header"><div class="section-tag">Visual Learning</div><h2 class="section-title">See how Kubernetes works</h2><p class="section-desc">Step through the four flows every exam asks about. Play, pause, or go step by step.</p></div><div class="an-tabs" role="tablist">' + TABS.map(function (t) { return '<button class="an-tab" role="tab" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="anHost" class="an-host"></div>';
+    root.innerHTML = '<div class="section-header"><div class="section-tag">Visual Learning</div><h2 class="section-title">See how Kubernetes works</h2><p class="section-desc">Step through the flows every exam asks about, from the control plane to RBAC, NetworkPolicy peers and StatefulSet canaries. Play, pause, or go step by step.</p></div><div class="an-tabs" role="tablist">' + TABS.concat(EXTRA.filter(function (e) { return conceptOf(e[0]); })).map(function (t) { return '<button class="an-tab" role="tab" data-t="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div id="anHost" class="an-host"></div>';
     player = new Player($('anHost')); root.querySelectorAll('.an-tab').forEach(function (b) { b.onclick = function () { show(b.dataset.t); }; }); show('cp');
   }
   KL.route('visualize', renderPage);

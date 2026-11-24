@@ -51,7 +51,7 @@
   encLinks();
 
   // ── command palette ──
-  var PAGES = [['home', 'Home'], ['modules', 'Modules'], ['path', 'Learning path'], ['labs', 'Labs'], ['exam', 'Exam mode'], ['quiz', 'Quiz'], ['visualize', 'Visualize'], ['cheatsheet', 'Cheatsheet'], ['tools', 'Tools'], ['errors', 'Error encyclopedia'], ['progress', 'My progress'], ['compare', 'Compare KubeDrill']];
+  var PAGES = [['home', 'Home'], ['modules', 'Modules'], ['path', 'Learning path'], ['labs', 'Labs'], ['exam', 'Exam mode'], ['quiz', 'Quiz'], ['visualize', 'Visualize'], ['trainers', 'Trainers'], ['cheatsheet', 'Cheatsheet'], ['tools', 'Tools'], ['errors', 'Error encyclopedia'], ['progress', 'My progress'], ['compare', 'Compare KubeDrill']];
   var pal = { items: [], sel: 0 };
   function palItems() {
     var it = PAGES.map(function (p) { return { t: p[1], k: 'Page', h: '#' + p[0] }; });

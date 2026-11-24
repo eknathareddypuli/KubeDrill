@@ -66,6 +66,7 @@
     var r = run(), host = $('lrDia'); if (!r || !host || r.mode !== 'learn') return;
     try { if (!snap || snap.id !== r.sim) snap = { id: r.sim, m: podMap(r.sim) }; } catch (e) { /* ignore */ }
     var p = $('lrVz'); if (!p) { p = document.createElement('details'); p.id = 'lrVz'; p.className = 'vz-panel'; p.open = true; host.parentNode.insertBefore(p, host.nextSibling); }
+    hintMeter(false);
     try { p.innerHTML = '<summary>Scheduler and cluster view</summary><div class="vz-body">' + panelHtml(r.sim) + '</div>'; } catch (e) { p.innerHTML = '<summary>Scheduler and cluster view</summary><p class="vz-note">view unavailable: ' + esc(e.message) + '</p>'; }
   }
 
@@ -86,9 +87,89 @@
     }
     snap = { id: r.sim, m: now };
     render();
+    var jr = journey(line, e.detail.res); if (jr && r.mode === 'learn') drawJourney(jr);
     // rollout tint: pods of the same revision share a colour bar on the diagram
     document.querySelectorAll('#lrDia .dia-pod').forEach(function (el) { var kk = (el.dataset.k || '').split('/'), p = s.get('Pod', kk[0], kk[1]); if (!p) return; var rv = (p.metadata.labels || {})['controller-revision-hash'] || (p.metadata.labels || {})['pod-template-hash'] || ''; if (!rv) return; var hh = 0, i; for (i = 0; i < rv.length; i++) hh = (hh * 31 + rv.charCodeAt(i)) % 360; el.style.setProperty('--rev', 'hsl(' + hh + ',75%,62%)'); el.classList.add('has-rev'); el.title = el.title.replace(/ — revision .*$/, '') + ' — revision ' + rv; });
+    wave(s); hintMeter(false);
   });
   if ($('lrDia')) retry(0);
+
+  // ── request journey: the API path of the last command, animated in order and always spelled out as text ──
+  var JSTEP = { kubectl: 'kubectl', api: 'API server', etcd: 'etcd', ctl: 'controllers', sch: 'scheduler', kub: 'kubelet' };
+  function journey(line, res) {
+    var m = /^\s*(?:kubectl|k)\s+(\S+)\s*(\S*)/.exec(line || ''); if (!m) return null; var v = m[1], t = m[2] || '', failed = res && res.code && res.code !== 0;
+    var read = /^(get|describe|logs|top|explain|api-resources|auth|config|version|cluster-info|events|diff|wait)$/.test(v) || (v === 'rollout' && /status|history/.test(t));
+    var path = read ? ['kubectl', 'api', 'etcd'] : /^(delete)$/.test(v) ? ['kubectl', 'api', 'etcd', 'kub'] : /^(taint|cordon|uncordon|drain|label|annotate|patch|edit|set|scale|apply|create|run|replace|rollout|expose|autoscale)$/.test(v) ? ['kubectl', 'api', 'etcd', 'ctl', 'sch', 'kub'] : null;
+    if (!path) return null;
+    if (/^(label|annotate|cordon|uncordon)$/.test(v) || (v === 'taint')) path = ['kubectl', 'api', 'etcd'].concat(v === 'taint' || v === 'cordon' || v === 'uncordon' ? ['sch'] : []);
+    if (failed) path = ['kubectl', 'api'];
+    return { path: path, failed: failed };
+  }
+  function drawJourney(j) {
+    var p = $('lrVz'); if (!p) return; var host = p.querySelector('.vz-jr'); if (!host) { host = document.createElement('div'); host.className = 'vz-jr'; p.appendChild(host); }
+    var steps = j.path.map(function (k, i) { return '<span class="vz-js' + (j.failed && i === j.path.length - 1 ? ' rej' : '') + '" style="animation-delay:' + (i * 110) + 'ms">' + JSTEP[k] + '</span>'; }).join('<span class="vz-ja" aria-hidden="true">›</span>');
+    host.innerHTML = '<b>Last request</b> ' + steps + (j.failed ? ' <em>rejected at the API server</em>' : '');
+    host.setAttribute('aria-label', 'Last request path: ' + j.path.map(function (k) { return JSTEP[k]; }).join(', then ') + (j.failed ? ', rejected' : ''));
+  }
+
+  // ── NetworkPolicy view: hover or focus a shielded pod to see who may reach it (dots) and who is blocked (dashed, crossed) ──
+  function npClear() { document.querySelectorAll('.dia-np').forEach(function (n) { n.remove(); }); }
+  function npDraw(el) {
+    npClear(); var r = run(), root = $('lrDia'); if (!r || !root || !el) return; var s = r.sim, k = (el.dataset.k || '').split('/'), to = s.get('Pod', k[0], k[1]); if (!to || typeof s.netpolAllows !== 'function') return;
+    var port = ((to.spec.containers[0] || {}).ports || [{}])[0].containerPort || 80, allowed = [], blocked = [];
+    root.querySelectorAll('.dia-pod').forEach(function (o) { if (o === el) return; var kk = (o.dataset.k || '').split('/'), f = s.get('Pod', kk[0], kk[1]); if (!f) return; var ok = false; try { ok = s.netpolAllows(f, to, port) && (typeof s.egressAllows !== 'function' || s.egressAllows(f, to, port)); } catch (e) { ok = true; } (ok ? allowed : blocked).push(o); });
+    var tr = document.createElement('div'); tr.className = 'dia-trace dia-np'; tr.innerHTML = 'NetworkPolicy view for <b>' + esc(k[1]) + '</b> on port ' + port + ': <b>' + allowed.length + '</b> pod' + (allowed.length === 1 ? '' : 's') + ' may connect, <span class="bad">' + blocked.length + ' blocked</span>';
+    root.insertBefore(tr, root.firstChild);
+    var rb = root.getBoundingClientRect(), tb = el.getBoundingClientRect(), ns = 'http://www.w3.org/2000/svg', svg = document.createElementNS(ns, 'svg'), inner = '';
+    svg.setAttribute('class', 'dia-lines dia-np'); svg.setAttribute('width', root.scrollWidth); svg.setAttribute('height', root.scrollHeight); svg.setAttribute('aria-hidden', 'true');
+    var x2 = tb.left - rb.left + tb.width / 2 + root.scrollLeft, y2 = tb.top - rb.top + tb.height / 2 + root.scrollTop;
+    function pth(o) { var b = o.getBoundingClientRect(), x1 = b.left - rb.left + b.width / 2 + root.scrollLeft, y1 = b.top - rb.top + b.height / 2 + root.scrollTop; return { d: 'M' + x1 + ',' + y1 + ' Q' + ((x1 + x2) / 2) + ',' + (Math.min(y1, y2) - 30) + ' ' + x2 + ',' + y2, mx: (x1 + x2) / 2, my: Math.min(y1, y2) - 14 }; }
+    allowed.forEach(function (o) { var q = pth(o); inner += '<path d="' + q.d + '"/>' + (off() ? '' : '<circle r="3.5"><animateMotion dur="1.2s" repeatCount="indefinite" path="' + q.d + '"/></circle>'); });
+    blocked.forEach(function (o) { var q = pth(o); inner += '<path class="blk" d="' + q.d + '"/><text x="' + q.mx + '" y="' + q.my + '" class="blk" text-anchor="middle">✕</text>'; });
+    svg.innerHTML = inner; root.appendChild(svg);
+  }
+  document.addEventListener('mouseover', function (e) { var p = e.target.closest && e.target.closest('#lrDia .dia-pod.shield'); if (p) npDraw(p); });
+  document.addEventListener('focusin', function (e) { var p = e.target.closest && e.target.closest('#lrDia .dia-pod.shield'); if (p) npDraw(p); });
+  document.addEventListener('mouseout', function (e) { if (e.target.closest && e.target.closest('#lrDia .dia-pod.shield')) npClear(); });
+  document.addEventListener('focusout', function (e) { if (e.target.closest && e.target.closest('#lrDia .dia-pod.shield')) npClear(); });
+
+  // ── hint cost made visible: pips in the lab bar, the newest one pops in ──
+  function hintMeter(grew) {
+    var r = run(), bar = document.querySelector('.lr-bar'); if (!r || !bar || r.mode !== 'learn') return;
+    var total = r.lab.tasks.reduce(function (n, t) { return n + (t.hints || []).length; }, 0), used = 0; try { used = KL.store.hintsUsed(r.lab.id); } catch (e) { /* ignore */ }
+    var el = $('vzHint'); if (!el) { el = document.createElement('div'); el.id = 'vzHint'; el.className = 'vz-hintm'; bar.appendChild(el); }
+    var pips = ''; for (var i = 0; i < Math.min(total, 12); i++) pips += '<i class="' + (i < used ? 'on' : '') + (grew && i === used - 1 ? ' new' : '') + '"></i>';
+    el.innerHTML = '<span class="vz-hp" aria-hidden="true">' + pips + '</span><span>' + (used ? used + ' hint' + (used === 1 ? '' : 's') + ' used' : 'no hints used') + '</span>';
+    el.title = used ? 'Hints are recorded for this lab. A solve without hints is a stronger signal that you know the fix.' : 'No hints used yet';
+  }
+  window.addEventListener('kl:hint', function () { setTimeout(function () { hintMeter(true); }, 30); });
+
+  // ── fix confirmation: the task tick pops and the objects that task checks pulse in the diagram ──
+  var okSeen = {};
+  function fixConfirm() {
+    var r = run(); if (!r || r.mode !== 'learn') return; var key = r.lab.id; okSeen[key] = okSeen[key] || null;
+    var now = {}; document.querySelectorAll('#lrTasks .lr-task.ok').forEach(function (li) { now[li.dataset.id] = li; });
+    if (okSeen[key] === null) { okSeen[key] = Object.keys(now); return; }
+    Object.keys(now).forEach(function (id) {
+      if (okSeen[key].indexOf(id) >= 0) return; okSeen[key].push(id); if (off()) return;
+      tag(now[id].querySelector('.lr-tick'), 'vz-tickpop', 500);
+      var t = r.lab.tasks.filter(function (x) { return x.id === id; })[0]; if (!t) return;
+      (t.assert || []).forEach(function (a) {
+        if (!a.ref) return; var pr = String(a.ref).split('/'), nm = pr[1], ns = a.ns || r.lab.ns, sel = [];
+        if (pr[0] === 'svc' || pr[0] === 'service') sel.push('#lrDia .dia-svc[data-svc="' + ns + '/' + nm + '"]'); else if (pr[0] === 'pod') sel.push('#lrDia .dia-pod[data-k="' + ns + '/' + nm + '"]'); else if (/^(deploy|deployment|sts|statefulset|ds|daemonset|job|rs)$/.test(pr[0])) sel.push('#lrDia .dia-pod[data-k^="' + ns + '/' + nm + '-"]');
+        sel.forEach(function (q) { document.querySelectorAll(q).forEach(function (el) { tag(el, 'vz-fixed', 900); }); });
+      });
+    });
+  }
+  new MutationObserver(function () { clearTimeout(fixConfirm.t); fixConfirm.t = setTimeout(fixConfirm, 60); }).observe(document.body, { childList: true, subtree: true });
+
+  // ── rollout wave: pods whose revision changed pulse in order ──
+  var revSnap = {};
+  function wave(s) {
+    var els = [], now = {};
+    document.querySelectorAll('#lrDia .dia-pod').forEach(function (el) { var kk = (el.dataset.k || '').split('/'), p = s.get('Pod', kk[0], kk[1]); if (!p) return; var rv = (p.metadata.labels || {})['controller-revision-hash'] || (p.metadata.labels || {})['pod-template-hash'] || ''; now[el.dataset.k] = rv; if (rv && revSnap[el.dataset.k] !== undefined && revSnap[el.dataset.k] !== rv) els.push(el); });
+    if (!off()) els.sort(function (a, b) { return a.dataset.k < b.dataset.k ? -1 : 1; }).forEach(function (el, i) { el.style.animationDelay = (i * 90) + 'ms'; tag(el, 'vz-wave', 700 + i * 90); });
+    revSnap = now;
+  }
   KL.vz = { render: render };
 })();

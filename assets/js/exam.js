@@ -56,6 +56,17 @@
       var sum = ids.reduce(function (a, id) { return a + (parseInt(Labs.byId[id].time, 10) || 10); }, 0);
       out.push({ id: tr.toLowerCase() + '-curr', name: tr + ' Curriculum-weighted', track: tr, ids: ids, mins: Math.max(60, Math.min(120, Math.round(sum * 0.8 / 5) * 5)), curr: true });
     });
+    // difficulty-level mocks: a fixed, repeatable set of tasks at one level, so you can start gentle and work up
+    ['CKA', 'CKAD', 'CKS'].forEach(function (tr) {
+      ['Beginner', 'Intermediate', 'Advanced'].forEach(function (lv) {
+        var V = KL.versions, tv = V ? V.getTarget() : '';
+        var pool = Labs.list.filter(function (l) { return l.track.indexOf(tr) >= 0 && l.diff === lv && !l.capstone && !/incident/i.test(l.domain || '') && (parseInt(l.time, 10) || 10) <= 20 && (!V || V.status(l, tv).ok); });
+        if (pool.length < 6) return;
+        var ids = shuf(pool, rng('kubedrill:level:' + tr + ':' + lv)).slice(0, lv === 'Beginner' ? 8 : 10).map(function (l) { return l.id; });
+        var sum = ids.reduce(function (a, id) { return a + (parseInt(Labs.byId[id].time, 10) || 10); }, 0);
+        out.push({ id: tr.toLowerCase() + '-level-' + lv.toLowerCase(), name: tr + ' Mock · ' + lv, track: tr, ids: ids, mins: Math.max(45, Math.min(120, Math.round(sum * 0.8 / 5) * 5)), level: lv });
+      });
+    });
     ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { out.push({ id: tr.toLowerCase() + '-full', name: tr + ' Full mock', track: tr, ids: new Array(16), mins: 120, full: true }); });
     // numbered full mocks: the same 16 tasks and the same variant names every time, no task shared with an earlier numbered mock
     ['CKA', 'CKAD', 'CKS'].forEach(function (tr) { for (var k = 1; k <= FIXED_N[tr]; k++) out.push({ id: tr.toLowerCase() + '-full-' + k, name: tr + ' Full mock ' + k, track: tr, ids: new Array(16), mins: 120, full: true, fixed: k }); });
@@ -178,7 +189,7 @@
     }
     var hist = store.data().exams.slice(-8).reverse();
     h += '<div class="ex-setup"><label>Track<select id="exTrack"><option value="CKA">CKA — Administrator</option><option value="CKAD">CKAD — Developer</option><option value="CKS">CKS — Security</option><option value="ALL">Mixed</option></select></label><label>Length<select id="exLen">' + Object.keys(PRESETS).map(function (k) { return '<option value="' + k + '">' + PRESETS[k].label + '</option>'; }).join('') + '</select></label><button class="btn-primary" id="exGo">▶ Start exam</button></div>' +
-      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. The <b>Full mock</b> is 16 tasks in 120 minutes, drawn by official domain weights, and different variants every attempt. <b>Full mock 1, 2, 3</b> are fixed sets (the same 16 tasks every time, none shared between them) so you can retake one and compare; the <b>hard</b> set favours Advanced tasks. Pass marks used: CKA 66%, CKAD 66%, CKS 67% (check the current handbook).</p>' + HONEST + '<div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
+      '<div class="ex-bundles"><h3>Mock exam bundles</h3><p class="ex-note">Fixed sets with weighted tasks and a domain report. The <b>Full mock</b> is 16 tasks in 120 minutes, drawn by official domain weights, and different variants every attempt. <b>Full mock 1, 2, 3</b> are fixed sets (the same 16 tasks every time, none shared between them) so you can retake one and compare; the <b>hard</b> set favours Advanced tasks. <b>Mock · Beginner / Intermediate / Advanced</b> are fixed sets of tasks at one difficulty, so you can start gentle and work up. Pass marks used: CKA 66%, CKAD 66%, CKS 67% (check the current handbook).</p>' + HONEST + '<div class="ex-bgrid">' + S.bundles().map(function (b) { return '<button class="ex-b" data-b="' + b.id + '"><b>' + b.name + '</b><span>' + b.ids.length + ' tasks · ' + b.mins + ' min</span></button>'; }).join('') + '</div><label class="ex-env"><input type="checkbox" id="exEnv" checked> Real exam environment <small>(no checker or cluster panel, several contexts — switch with <code>kubectl config use-context</code>)</small></label></div>' +
       '<div class="ex-hist"><h3>Your attempts</h3>' + (hist.length ? '<table><tr><th>Date</th><th>Track</th><th>Score</th><th>Time</th></tr>' + hist.map(function (e) { return '<tr><td>' + new Date(e.date).toLocaleDateString() + '</td><td>' + e.track + '</td><td class="' + (e.pct >= 66 ? 'p' : 'f') + '">' + e.pct + '%</td><td>' + fmt(e.secs) + '</td></tr>'; }).join('') + '</table>' : '<p class="ex-note">No attempts yet.</p>') + '</div>' +
       '<p class="ex-note">Disclaimer: the simulator is a teaching model of Kubernetes behaviour, not the real exam environment. Practise on a real cluster with the kind lab packs as well.</p>';
     root.innerHTML = h; $('exGo').onclick = function () { S.start($('exTrack').value, $('exLen').value, $('exEnv').checked); };
