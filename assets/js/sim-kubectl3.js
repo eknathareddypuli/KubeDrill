@@ -92,10 +92,15 @@
         if (!docs.length) throw new KErr('error: no objects passed to ' + verb);
         var out = [];
         if (verb === 'replace' && f.force) docs.forEach(function (o) { var d = self.kindOf(o); var ex = d && self.objs[self.key(d.kind, d.ns ? (o.metadata.namespace || self.ctxNs) : '', o.metadata.name)]; if (ex) { self.remove(ex); out.push(self.resName(ex) + ' deleted'); } });
+        var failed = 0;
         docs.forEach(function (o) {
-          if (verb === 'replace' && !f.force) { var d = self.kindOf(o), ex = d && self.objs[self.key(d.kind, d.ns ? (o.metadata.namespace || self.ctxNs) : '', o.metadata.name)]; if (!ex) throw self.notFound(d, o.metadata.name); }
-          var r = self.applyObj(o, verb === 'create' ? 'create' : 'apply', f); out.push(r.name + ' ' + (verb === 'replace' ? (r.action === 'created' ? 'replaced' : 'replaced') : r.action));
+          // like kubectl: a failing object is reported and the rest of the file is still processed
+          try {
+            if (verb === 'replace' && !f.force) { var d = self.kindOf(o), ex = d && self.objs[self.key(d.kind, d.ns ? (o.metadata.namespace || self.ctxNs) : '', o.metadata.name)]; if (!ex) throw self.notFound(d, o.metadata.name); }
+            var r = self.applyObj(o, verb === 'create' ? 'create' : 'apply', f); out.push(r.name + ' ' + (verb === 'replace' ? (r.action === 'created' ? 'replaced' : 'replaced') : r.action));
+          } catch (e) { if (!(e instanceof KErr) || docs.length < 2) throw e; failed++; out.push(e.message); }
         });
+        if (failed) throw new KErr(out.join('\n'));
         if (f.o === 'yaml' && docs.length) return Y.dump(docs[0]);
         return out.join('\n') + '\n';
       }

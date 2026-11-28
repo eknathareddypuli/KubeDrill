@@ -77,7 +77,7 @@
     if (first.indexOf('/') > 0) { pos.forEach(function (p) { var s = p.split('/'); var d = self.findKind(s[0]); if (!d) throw new KErr('error: the server doesn\'t have a resource type "' + s[0] + '"'); refs.push({ d: d, name: s[1] }); }); return refs; }
     var kinds = first.split(','), names = pos.slice(1);
     var ds = kinds.map(function (k) { var d = self.findKind(k); if (!d) { if (k === 'all') return 'all'; throw new KErr('error: the server doesn\'t have a resource type "' + k + '"'); } return d; });
-    if (ds[0] === 'all') ds = ['pods', 'services', 'deployments', 'replicasets', 'statefulsets', 'daemonsets', 'jobs', 'cronjobs'].map(function (k) { return self.findKind(k); });
+    if (ds.indexOf('all') >= 0) { var ALL = ['pods', 'services', 'deployments', 'replicasets', 'statefulsets', 'daemonsets', 'jobs', 'cronjobs'].map(function (k) { return self.findKind(k); }), ex = []; ds.forEach(function (d) { if (d === 'all') ALL.forEach(function (x) { if (ex.indexOf(x) < 0) ex.push(x); }); else if (ex.indexOf(d) < 0) ex.push(d); }); ds = ex; }
     if (!names.length) ds.forEach(function (d) { refs.push({ d: d, name: null }); });
     else names.forEach(function (n) { refs.push({ d: ds[0], name: n }); });
     void opts; return refs;
