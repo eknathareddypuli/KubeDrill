@@ -13,4 +13,6 @@ t('kubectl plugin list', 0, /plugins/);
 ['--help', 'install --help', 'upgrade -h', 'rollback --help', 'list --help', 'repo --help'].forEach(a => t('helm ' + a, 0, /Usage|Kubernetes package manager/));
 t('kubeadm --help', 0, /Usage:/); t('crictl --help', 0, /crictl/); t('crictl ps', 0, /CONTAINER/); t('crictl pods', 0, /POD ID/); t('crictl images', 0, /IMAGE/); t('crictl logs nosuchid', 1, /NotFound/); t('ssh cp1 "sudo crictl ps"', 0, /CONTAINER/);
 t('kubectl get --help | grep sort', 0, /sort-by/);
+// bad input must give a normal error, never a JavaScript error or the word undefined
+[['kubectl taint',1,/taint update/],['kubectl cordon',1,/USAGE/],['kubectl drain',1,/USAGE/],['kubectl uncordon',1,/USAGE/],['kubectl autoscale',1,/resource/],['kubectl auth',0,/Inspect authorization/],['kubectl create secret',1,/docker-registry/],['grep',2,/Usage/],['cp',1,/missing file operand/],['cp a',1,/missing destination/],['kubectl logs x/y',1,/./],['kubectl exec x/y -- ls',1,/./]].forEach(([c,code,re])=>{n++;let r;try{r=s.exec(c)}catch(e){bad++;console.log('THROW',c,e.message);return}const t=r.stdout+r.stderr;if(r.code!==code||!re.test(t)||/undefined|\[object/.test(t)){bad++;console.log('FAIL',c,r.code,t.slice(0,80))}});
 console.log(bad ? 'help: ' + bad + '/' + n + ' failed' : 'help: ' + n + ' ok'); process.exit(bad ? 1 : 0);

@@ -6,9 +6,9 @@ const d=await p.evaluate(()=>{const ids=new Set(KL.Labs.list.map(l=>l.id));const
  const lv=KL.exam.bundles().filter(x=>x.level);const lvOk=lv.every(x=>x.ids.every(id=>KL.Labs.byId[id]&&KL.Labs.byId[id].diff===x.level));
  const q=KL.quizAll;const dup=q.length-new Set(q.map(x=>x.id)).size;
  return {q:q.length,types:[...new Set(q.map(x=>x.type))],dup,walk:LABS.length,con:KL.concepts.length,flows:KL.flows.length,miss,lv:lv.length,lvOk,labs:KL.Labs.list.length}});
-ok(d.q>=358,'quiz count '+d.q);ok(d.types.length===3,'quiz types '+d.types);ok(d.dup===0,'no duplicate quiz ids');ok(d.walk===15,'15 walkthroughs');ok(d.con>=9,'explainers '+d.con);ok(d.flows>=7,'flows '+d.flows);ok(d.miss.length===0,'flow/story lab ids exist '+d.miss);ok(d.lv===8&&d.lvOk,'8 level mocks, each task at its level');ok(d.labs===233,'233 labs');
+ok(d.q>=358,'quiz count '+d.q);ok(d.types.length===3,'quiz types '+d.types);ok(d.dup===0,'no duplicate quiz ids');ok(d.walk===15,'15 walkthroughs');ok(d.con>=9,'explainers '+d.con);ok(d.flows>=7,'flows '+d.flows);ok(d.miss.length===0,'flow/story lab ids exist '+d.miss);ok(d.lv===8&&d.lvOk,'8 level mocks, each task at its level');ok(d.labs===239,'239 labs');
 await p.goto('file://'+process.cwd()+'/index.html#visualize');await p.waitForTimeout(800);
-ok(await p.locator('.an-tab').count()===10,'visualize has 10 tabs');
+ok(await p.locator('.an-tab').count()===12,'visualize has 12 tabs');
 await p.locator('.an-tab',{hasText:'StatefulSet canary'}).click();await p.waitForTimeout(300);
 ok(await p.locator('#anStage .cp-it').count()===4,'canary scene shows four pods');
 await p.click('#anNext');await p.waitForTimeout(200);
