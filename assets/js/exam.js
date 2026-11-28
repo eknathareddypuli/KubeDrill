@@ -104,11 +104,11 @@
     return ids.map(function (id) { return Labs.variantFor ? Labs.variantFor(id, seed + id) : id; });
   }
   S.fullIds = fullIds;
-  S.startBundle = function (bid, env) {
+  S.startBundle = function (bid, env, opts) {
     var b = S.bundles().filter(function (x) { return x.id === bid; })[0]; if (!b) return;
     var seed = String(Date.now()); if (b.full) b.ids = fullIds(b.track, seed, b.fixed !== undefined ? { fixed: b.fixed, hard: !!b.hard } : null);
     Promise.all(b.ids.map(function (id) { return KL.labRun(id, true); })).then(function () {
-      S.result = null; S.active = { track: b.track, ids: b.ids, start: Date.now(), end: Date.now() + b.mins * 60000, mins: b.mins, flags: {}, w: weightsFor(b.ids), env: !!env, name: b.name, curr: !!b.curr, full: !!b.full, tt: {}, cur: null }; saveActive();
+      S.result = null; S.active = { track: b.track, ids: b.ids, start: Date.now(), end: Date.now() + b.mins * 60000, mins: b.mins, flags: {}, w: weightsFor(b.ids), env: !!env, name: b.name, curr: !!b.curr, full: !!b.full, tt: {}, cur: null, rehearsal: !!(opts && opts.rehearsal) }; saveActive();
       if (location.hash === '#exam') render(); else location.hash = 'exam';
     });
   };
@@ -168,7 +168,7 @@
     var pct = wt ? Math.round(score / wt * 100) : 0, secs = Math.min(Math.round((Date.now() - a.start) / 1000), a.mins * 60);
     store.addExam({ date: Date.now(), track: a.name || a.track, pct: pct, got: got, tot: tot, secs: secs, n: a.ids.length });
     var domains = Object.keys(dom).map(function (k) { var off = a.curr && CURR[a.track] ? (CURR[a.track].filter(function (c) { return c[0] === k; })[0] || [0, 0])[1] : 0; return { name: k, pct: Math.round(dom[k].got / dom[k].w * 100), w: Math.round(dom[k].w), off: off }; }).sort(function (x, y) { return x.pct - y.pct; });
-    S.result = { rows: rows, pct: pct, got: got, tot: tot, secs: secs, track: a.name || a.track, domains: domains, weighted: true, coach: coach(runs, rows), pass: passFor(a.track), full: !!a.full, budget: a.mins * 60 / a.ids.length, timed: !!(a.tt && Object.keys(a.tt).length) };
+    S.result = { rehearsal: !!a.rehearsal, rows: rows, pct: pct, got: got, tot: tot, secs: secs, track: a.name || a.track, domains: domains, weighted: true, coach: coach(runs, rows), pass: passFor(a.track), full: !!a.full, budget: a.mins * 60 / a.ids.length, timed: !!(a.tt && Object.keys(a.tt).length) };
     render(); if (pct >= passFor(a.track) && KL.fx) KL.fx.confetti();
   }
   function render() {
@@ -183,7 +183,7 @@
     }
     if (S.result) {
       var r = S.result, pm = r.pass || passFor(r.track), pass = r.pct >= pm;
-      h += '<div class="ex-result ' + (pass ? 'pass' : 'fail') + '"><div class="ex-score">' + r.pct + '%</div><div class="ex-verdict">' + (pass ? '🏆 Above the pass mark (' + pm + '%) on this practice set' : '📚 Below the ' + pm + '% pass mark on this practice set') + '</div><div class="ex-sub">' + r.got + ' / ' + r.tot + ' checks · ' + fmt(r.secs) + ' used · ' + r.track + (r.weighted ? ' · weighted' : '') + '</div></div>' + (r.domains ? '<div class="ex-dom"><h3>Score by domain</h3>' + r.domains.map(function (d) { return '<div class="ex-dr"><span>' + esc(d.name) + (d.off ? ' <small>(exam weight ' + d.off + '%)</small>' : '') + '</span><div class="ex-db"><div class="' + (d.pct >= 66 ? 'ok' : 'no') + '" style="width:' + d.pct + '%"></div></div><b>' + d.pct + '%</b></div>'; }).join('') + '<p class="ex-note">Weakest area: <b>' + esc(r.domains[0].name) + '</b> — retry its tasks below in practice mode.</p></div>' : '') +
+      h += '<div class="ex-result ' + (pass ? 'pass' : 'fail') + '"><div class="ex-score">' + r.pct + '%</div><div class="ex-verdict">' + (pass ? '🏆 Above the pass mark (' + pm + '%) on this practice set' : '📚 Below the ' + pm + '% pass mark on this practice set') + '</div><div class="ex-sub">' + r.got + ' / ' + r.tot + ' checks · ' + fmt(r.secs) + ' used · ' + r.track + (r.weighted ? ' · weighted' : '') + '</div></div>' + (r.rehearsal ? '<p class="ex-note rh-honest"><b>Rehearsal, not the real exam.</b> These are our own tasks on our simulator. Use the result to see pacing and weak domains, not to predict a pass.</p>' : '') + (r.domains ? '<div class="ex-dom"><h3>Score by domain</h3>' + r.domains.map(function (d) { return '<div class="ex-dr"><span>' + esc(d.name) + (d.off ? ' <small>(exam weight ' + d.off + '%)</small>' : '') + '</span><div class="ex-db"><div class="' + (d.pct >= 66 ? 'ok' : 'no') + '" style="width:' + d.pct + '%"></div></div><b>' + d.pct + '%</b></div>'; }).join('') + '<p class="ex-note">Weakest area: <b>' + esc(r.domains[0].name) + '</b> — retry its tasks below in practice mode.</p></div>' : '') +
         (r.coach ? '<div class="ex-coach"><h3>⚡ Speed coach</h3><ul>' + r.coach.map(function (t) { return '<li>' + t + '</li>'; }).join('') + '</ul></div>' : '') + (r.timed ? reviewHtml(r) : '') + '<div class="ex-list">' + r.rows.map(function (x) { return '<div class="ex-q ' + (x.res.ok ? 'okq' : 'badq') + '"><span class="ex-n">' + (x.res.ok ? '✓' : '✗') + '</span><span class="ex-t">' + esc(x.lab.title) + '</span><span class="ex-w">' + (x.w ? x.w + '% · ' : '') + x.res.passed + '/' + x.res.total + '</span><a href="#lab/' + x.lab.id + '" onclick="KL.labRun(\'' + x.lab.id + '\',true)">retry in practice mode</a></div>'; }).join('') + '</div><button class="btn-primary" id="exAgain" style="margin-top:1.5rem">New exam</button>';
       h += HONEST; root.innerHTML = h; var tk = String(r.track || r.name || (S.last && S.last.track) || '').split(' ')[0]; if (KL.readinessHtml && /^(CKA|CKAD|CKS)$/.test(tk)) root.insertAdjacentHTML('beforeend', KL.readinessHtml(tk)); $('exAgain').onclick = function () { S.result = null; render(); }; return;
     }

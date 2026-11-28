@@ -175,5 +175,34 @@
     if (r && r.code === 127 && /crictl: command not found/.test(r.stderr)) { var cmd = a.slice(1).join(' ').replace(/^(['"])(.*)\1$/, '$2').trim().replace(/^sudo\s+/, '').split(/\s+/); return this.crictlAll(cmd.slice(1)); }
     return r;
   };
+
+  // ── input validation for argument-less commands, and a safety net so a malformed command never surfaces a JavaScript error ──
+  var AUTHH = 'Inspect authorization.\n\nAvailable Commands:\n  can-i       Check whether an action is allowed\n  reconcile   Reconciles rules for RBAC role, role binding, cluster role, and cluster role binding objects\n  whoami      Experimental: Check self subject attributes\n\nUsage:\n  kubectl auth [flags] [options]\n' + FOOT;
+  var kin2 = P.kubectlInner;
+  P.kubectlInner = function (args, stdin) {
+    var w = (Array.isArray(args) ? args : String(args || '').trim().split(/\s+/)).filter(Boolean), v = w[0], rest = w.slice(1), posn = rest.filter(function (x) { return x[0] !== '-'; });
+    var KE = (this.constructor && this.constructor.KErr) || (root.KL && root.KL.Sim && root.KL.Sim.KErr) || Error, hint = '\nSee \'kubectl ' + v + ' --help\' for usage.';
+    var asks = v === 'help' || rest.some(function (x) { return x === '--help' || x === '-h'; });
+    if (!asks && /^(cordon|uncordon|drain)$/.test(v) && !posn.length && !rest.some(function (x) { return x === '-l' || /^--selector/.test(x) || /^-l./.test(x); })) throw new KE('error: USAGE: ' + v + ' NODE [flags]' + hint);
+    if (!asks && v === 'taint' && posn.length < 3) throw new KE(posn.length < 2 ? 'error: at least one taint update is required' : 'error: at least one taint update is required');
+    if (!asks && v === 'autoscale' && !posn.length && !rest.some(function (x) { return x === '-f' || /^--filename/.test(x); })) throw new KE('error: required resource not specified' + hint);
+    if (!asks && v === 'auth' && !posn.length) return AUTHH;
+    if (!asks && v === 'create' && posn[0] === 'secret' && !posn[1]) throw new KE('error: must specify one of: docker-registry, generic, tls' + hint);
+    try { var out = kin2.call(this, args, stdin); if (v === 'create' && typeof out === 'string' && /\/undefined created|"undefined" created/.test(out)) throw new KE('error: exactly one NAME is required, got 0' + hint); return out; }
+    catch (e) {
+      if (e && e.name === 'KErr' || (this.constructor && this.constructor.KErr && e instanceof this.constructor.KErr) || e instanceof KE) { if (/"undefined"/.test(String(e.message))) throw new KE('error: USAGE: ' + v + ' NAME [flags]' + hint); throw e; }
+      throw new KE('error: could not process this command (' + (v || 'kubectl') + '). Check the resource type and name, or run \'kubectl ' + (v || '') + ' --help\'.');
+    }
+  };
+  var run3 = P.runCmd;
+  P.runCmd = function (w, stdin) {
+    var c = w && w[0], a = (w || []).slice(1), pos = a.filter(function (x) { return x[0] !== '-' && x !== ''; });
+    var gpos0 = 0;
+    if (c === 'grep' && !pos.length) return bad('Usage: grep [OPTION]... PATTERNS [FILE]...\nTry \'grep --help\' for more information.\n', 2);
+    var gpos = []; for (var gi = 0; gi < a.length; gi++) { if (/^-[ABCm]$/.test(a[gi])) { gi++; continue; } if (a[gi][0] !== '-' && a[gi] !== '') gpos.push(a[gi]); }
+    if (c === 'grep' && gpos.length === 1 && (stdin === undefined || stdin === null) && !a.some(function (x) { return x === '-r' || x === '-R'; })) return { stdout: '', stderr: '', code: 1 };
+    if (c === 'cp' && pos.length < 2) return bad(pos.length ? 'cp: missing destination file operand after \'' + pos[0] + '\'\nTry \'cp --help\' for more information.\n' : 'cp: missing file operand\nTry \'cp --help\' for more information.\n', 1);
+    return run3.apply(this, arguments);
+  };
   Sim.explainKinds = Object.keys(KINDS);
 })(typeof window !== 'undefined' ? window : globalThis);

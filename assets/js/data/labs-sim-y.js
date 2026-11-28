@@ -88,5 +88,5 @@
       ],
       solution: ['kubectl get endpoints checkout -n depot', `kubectl patch svc checkout -n depot --type=json -p '[{"op":"replace","path":"/spec/ports/0/targetPort","value":80}]'`, 'kubectl get endpoints checkout -n depot'] })
   ]);
-  if (KL.COMP) KL.COMP.add({ 's229-pending-three-causes': 'cka-sched cka-pod cka-storage', 's230-crashloop-three-causes': 'cka-pod cka-logs ckad-debug', 's231-noendpoints-three-causes': 'cka-svc ckad-svc', 's232-configerror-three-causes': 'cka-pod ckad-config', 's233-noisy-namespace': 'cka-pod cka-svc cka-logs ckad-debug' });
+  if (KL.COMP) KL.COMP.add({ 's229-pending-three-causes': 'cka-sched cka-pod cka-pv', 's230-crashloop-three-causes': 'cka-pod cka-logs ckad-debug', 's231-noendpoints-three-causes': 'cka-svc ckad-svc', 's232-configerror-three-causes': 'cka-pod ckad-cm', 's233-noisy-namespace': 'cka-pod cka-svc cka-logs ckad-debug' });
 })(typeof window !== 'undefined' ? window : globalThis);
